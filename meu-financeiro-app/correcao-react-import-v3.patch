@@ -1,0 +1,55 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: ChatGPT <chatgpt@example.com>
+Date: Thu, 24 Sep 2026 00:00:00 +0000
+Subject: [PATCH] Corrige imports React para build Cloudflare
+
+---
+--- a/src/App.jsx
++++ b/src/App.jsx
+@@ -1,3 +1,4 @@
++import React from "react";
+ import { useEffect, useState } from "react";
+ import BottomNav from "./components/BottomNav";
+ import Home from "./pages/Home";
+--- a/src/components/BottomNav.jsx
++++ b/src/components/BottomNav.jsx
+@@ -1,3 +1,4 @@
++import React from "react";
+ import { Home, PlusCircle, History, CreditCard, Target } from "lucide-react";
+ 
+ export default function BottomNav({ page, onChange }) {
+--- a/src/pages/Cards.jsx
++++ b/src/pages/Cards.jsx
+@@ -1,3 +1,4 @@
++import React from "react";
+ import { useState } from "react";
+ const money = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+ 
+--- a/src/pages/Goals.jsx
++++ b/src/pages/Goals.jsx
+@@ -1,3 +1,4 @@
++import React from "react";
+ import { useState } from "react";
+ const money = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+ 
+--- a/src/pages/History.jsx
++++ b/src/pages/History.jsx
+@@ -1,3 +1,4 @@
++import React from "react";
+ import { useMemo, useState } from "react";
+ const money = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+ 
+--- a/src/pages/Home.jsx
++++ b/src/pages/Home.jsx
+@@ -1,3 +1,4 @@
++import React from "react";
+ const money = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+ 
+ export default function Home({ data, onNew }) {
+--- a/src/pages/NewEntry.jsx
++++ b/src/pages/NewEntry.jsx
+@@ -1,3 +1,4 @@
++import React from "react";
+ import { useState } from "react";
+ 
+ export default function NewEntry({ onSave, onCancel }) {

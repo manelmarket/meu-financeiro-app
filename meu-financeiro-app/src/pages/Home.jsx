@@ -1,3 +1,4 @@
+import React from "react";
 const money = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 export default function Home({ data, onNew }) {

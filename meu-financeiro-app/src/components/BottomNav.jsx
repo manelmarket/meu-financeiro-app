@@ -1,3 +1,4 @@
+import React from "react";
 import { Home, PlusCircle, History, CreditCard, Target } from "lucide-react";
 
 export default function BottomNav({ page, onChange }) {
