@@ -8,17 +8,25 @@ const money = (v) =>
   });
 
 
-export default function Cards({ data, onAdd, onDelete }) {
+export default function Cards({ data, onAdd, onDelete, onPurchase }) {
 
   const [nome,setNome]=useState("");
   const [limite,setLimite]=useState("");
 
+  const [cartaoSelecionado,setCartaoSelecionado]=useState(null);
+
+  const [descricao,setDescricao]=useState("");
+  const [valorCompra,setValorCompra]=useState("");
+
+
 
   function excluirCartao(id){
 
-    const confirmar = window.confirm(
+    const confirmar =
+    window.confirm(
       "Deseja realmente excluir este cartão?"
     );
+
 
     if(confirmar){
       onDelete(id);
@@ -27,206 +35,431 @@ export default function Cards({ data, onAdd, onDelete }) {
   }
 
 
-  return (
 
-    <div className="page">
+  function adicionarCompra(){
 
+    const valor =
+    Number(
+      String(valorCompra)
+      .replace(",",".")
+    );
 
-      <header className="topbar">
 
-        <div>
+    if(
+      descricao.trim()
+      &&
+      valor > 0
+    ){
 
-          <div className="eyebrow">
-            Crédito
-          </div>
+      onPurchase(
+        cartaoSelecionado,
+        {
+          id:Date.now(),
+          descricao:descricao.trim(),
+          valor
+        }
+      );
 
-          <h1>
-            💳 Meus cartões
-          </h1>
 
-        </div>
+      setDescricao("");
+      setValorCompra("");
+      setCartaoSelecionado(null);
 
-      </header>
+    }
 
+  }
 
 
-      {
-      data.cartoes.map(c=>(
 
-        <section
-          className="credit-card"
-          key={c.id}
-        >
 
+return (
 
-          <div style={{
-            display:"flex",
-            justifyContent:"space-between",
-            alignItems:"center"
-          }}>
+<div className="page">
 
-            <span>
-              {c.nome}
-            </span>
 
+<header className="topbar">
 
-            <button
-              onClick={()=>excluirCartao(c.id)}
-              style={{
-                border:"0",
-                background:"rgba(255,255,255,.15)",
-                color:"#fff",
-                borderRadius:"10px",
-                padding:"6px 10px",
-                fontSize:"12px",
-                cursor:"pointer"
-              }}
-            >
-              🗑 Excluir
-            </button>
+<div>
 
+<div className="eyebrow">
+Crédito
+</div>
 
-          </div>
+<h1>
+💳 Meus cartões
+</h1>
 
+</div>
 
+</header>
 
-          <strong>
-            {money(c.limite)}
-          </strong>
 
 
 
-          <small>
-            Usado {money(c.usado)}
-            {" · "}
-            Livre {money(c.limite-c.usado)}
-          </small>
 
+{
+data.cartoes.map(c=>{
 
 
-          <div className="bar dark">
+const fatura =
+(c.compras || [])
+.reduce(
+(total,item)=>total+item.valor,
+0
+);
 
-            <i
-              style={{
-                width:`${Math.min(
-                  100,
-                  c.usado/c.limite*100
-                )}%`
-              }}
-            />
 
-          </div>
+const disponivel =
+c.limite - fatura;
 
 
 
-          <small>
-            Vencimento dia {c.vencimento}
-          </small>
+return (
 
+<section
+className="credit-card"
+key={c.id}
+>
 
 
-        </section>
 
-      ))
+<div style={{
+display:"flex",
+justifyContent:"space-between",
+alignItems:"center"
+}}>
 
-      }
 
+<span>
+{c.nome}
+</span>
 
 
-      <section className="section-card form">
+<button
 
+onClick={()=>excluirCartao(c.id)}
 
-        <h2>
-          Adicionar cartão
-        </h2>
+style={{
+border:"0",
+background:"rgba(255,255,255,.15)",
+color:"#fff",
+borderRadius:"10px",
+padding:"6px 10px",
+fontSize:"12px"
+}}
 
+>
 
+🗑
 
-        <label>
+</button>
 
-          Nome
 
-          <input
-            value={nome}
-            onChange={
-              e=>setNome(e.target.value)
-            }
-            placeholder="Ex.: Inter"
-          />
+</div>
 
-        </label>
 
 
 
 
-        <label>
+<small>
+Limite
+</small>
 
-          Limite
 
-          <input
-            inputMode="decimal"
-            value={limite}
-            onChange={
-              e=>setLimite(e.target.value)
-            }
-            placeholder="5000"
-          />
+<strong>
+{money(c.limite)}
+</strong>
 
-        </label>
 
 
 
+<small>
+Fatura atual:
+{money(fatura)}
+</small>
 
-        <button
 
-          className="primary"
 
-          onClick={()=>{
 
-            const v =
-            Number(
-              String(limite)
-              .replace(",",".")
-            );
+<small>
+Disponível:
+{money(disponivel)}
+</small>
 
 
-            if(nome.trim() && v>0){
 
-              onAdd({
 
-                id:Date.now(),
 
-                nome:nome.trim(),
+<div className="bar dark">
 
-                limite:v,
+<i
+style={{
+width:`${Math.min(
+100,
+(fatura/c.limite)*100
+)}%`
+}}
+/>
 
-                usado:0,
+</div>
 
-                vencimento:10
 
-              });
 
 
-              setNome("");
+<small>
+Vencimento dia {c.vencimento}
+</small>
 
-              setLimite("");
 
-            }
 
-          }}
 
-        >
+<button
 
-          Adicionar
+className="primary"
 
-        </button>
+style={{
+marginTop:"12px"
+}}
 
+onClick={()=>
+setCartaoSelecionado(c.id)
+}
 
-      </section>
+>
 
++ Compra
 
-    </div>
+</button>
 
-  );
+
+
+
+
+{
+(c.compras || []).map(compra=>(
+
+<div
+key={compra.id}
+style={{
+marginTop:"10px",
+fontSize:"13px"
+}}
+>
+
+{compra.descricao}
+
+-
+{money(compra.valor)}
+
+</div>
+
+))
+
+}
+
+
+
+</section>
+
+
+)
+
+
+})
+
+}
+
+
+
+
+
+{
+cartaoSelecionado &&
+
+
+<section className="section-card form">
+
+
+<h2>
+Nova compra
+</h2>
+
+
+<label>
+
+Descrição
+
+<input
+
+value={descricao}
+
+onChange={
+e=>setDescricao(e.target.value)
+}
+
+placeholder="Ex: Mercado"
+
+/>
+
+</label>
+
+
+
+<label>
+
+Valor
+
+<input
+
+inputMode="decimal"
+
+value={valorCompra}
+
+onChange={
+e=>setValorCompra(e.target.value)
+}
+
+placeholder="250"
+
+/>
+
+</label>
+
+
+
+<button
+
+className="primary"
+
+onClick={adicionarCompra}
+
+>
+
+Salvar compra
+
+</button>
+
+
+
+</section>
+
+}
+
+
+
+
+
+
+
+<section className="section-card form">
+
+
+<h2>
+Adicionar cartão
+</h2>
+
+
+
+<label>
+
+Nome
+
+<input
+
+value={nome}
+
+onChange={
+e=>setNome(e.target.value)
+}
+
+placeholder="Ex: Nubank"
+
+/>
+
+</label>
+
+
+
+<label>
+
+Limite
+
+<input
+
+inputMode="decimal"
+
+value={limite}
+
+onChange={
+e=>setLimite(e.target.value)
+}
+
+placeholder="5000"
+
+/>
+
+</label>
+
+
+
+
+<button
+
+className="primary"
+
+onClick={()=>{
+
+
+const v =
+Number(
+String(limite)
+.replace(",",".")
+);
+
+
+
+if(
+nome.trim()
+&&
+v>0
+){
+
+onAdd({
+
+id:Date.now(),
+
+nome:nome.trim(),
+
+limite:v,
+
+vencimento:10,
+
+compras:[]
+
+});
+
+
+setNome("");
+setLimite("");
+
+}
+
+
+}}
+
+>
+
+Adicionar
+
+</button>
+
+
+
+</section>
+
+
+</div>
+
+)
 
 }

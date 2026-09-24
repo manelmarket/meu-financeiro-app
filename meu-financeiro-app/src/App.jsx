@@ -24,7 +24,36 @@ export default function App(){
   }
   function addCard(card){ setData(d=>({...d,cartoes:[...d.cartoes,card]})); }
   function deleteCard(id){
+function addPurchase(cardId, purchase){
 
+setData(d=>({
+
+...d,
+
+cartoes:d.cartoes.map(c=>{
+
+if(c.id===cardId){
+
+return {
+
+...c,
+
+compras:[
+...(c.compras || []),
+purchase
+]
+
+};
+
+}
+
+return c;
+
+})
+
+}));
+
+}
  setData(d=>({
    ...d,
    cartoes:d.cartoes.filter(
@@ -43,7 +72,7 @@ else if(page==="history") content=<History data={data} onDelete={deleteEntry} />
 
 else if(page==="reports") content=<Reports data={data} />;
 
-else if(page==="cards") content=<Cards data={data} onAdd={addCard} onDelete={deleteCard} />;
+else if(page==="cards") content=<Cards data={data} onAdd={addCard} onDelete={deleteCard} onPurchase={addPurchase} />;
 
 else if(page==="goals") content=<Goals data={data} onAdd={addGoal} />;
 
