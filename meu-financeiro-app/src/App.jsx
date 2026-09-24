@@ -2,6 +2,7 @@ import React from "react";
 import { useEffect, useState } from "react";
 import BottomNav from "./components/BottomNav";
 import Home from "./pages/Home";
+import Reports from "./pages/Reports";
 import NewEntry from "./pages/NewEntry";
 import History from "./pages/History";
 import Cards from "./pages/Cards";
@@ -25,11 +26,18 @@ export default function App(){
   function addGoal(goal){ setData(d=>({...d,metas:[...d.metas,goal]})); }
 
   let content;
-  if(page==="new") content=<NewEntry onSave={addEntry} onCancel={()=>setPage("home")} />;
-  else if(page==="history") content=<History data={data} onDelete={deleteEntry} />;
-  else if(page==="cards") content=<Cards data={data} onAdd={addCard} />;
-  else if(page==="goals") content=<Goals data={data} onAdd={addGoal} />;
-  else content=<Home data={data} onNew={()=>setPage("new")} />;
+
+if(page==="new") content=<NewEntry onSave={addEntry} onCancel={()=>setPage("home")} />;
+
+else if(page==="history") content=<History data={data} onDelete={deleteEntry} />;
+
+else if(page==="reports") content=<Reports data={data} />;
+
+else if(page==="cards") content=<Cards data={data} onAdd={addCard} />;
+
+else if(page==="goals") content=<Goals data={data} onAdd={addGoal} />;
+
+else content=<Home data={data} onNew={()=>setPage("new")} />;
 
   return <div className="app-shell">
     {content}

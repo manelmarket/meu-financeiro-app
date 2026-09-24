@@ -1,14 +1,14 @@
 import React from "react";
-import { Home, PlusCircle, History, CreditCard, Target } from "lucide-react";
+import { Home, PlusCircle, History, CreditCard, Target, BarChart3 } from "lucide-react";
 
 export default function BottomNav({ page, onChange }) {
-  const items = [
-    ["home", Home, "Início"],
-    ["history", History, "Histórico"],
-    ["new", PlusCircle, "Novo"],
-    ["cards", CreditCard, "Cartões"],
-    ["goals", Target, "Metas"],
-  ];
+  const items=[
+["home",Home,"Início"],
+["reports",BarChart3,"Relatórios"],
+["new",PlusCircle,"Novo"],
+["cards",CreditCard,"Cartões"],
+["goals",Target,"Metas"]
+];
 
   return (
     <nav className="bottom-nav">
