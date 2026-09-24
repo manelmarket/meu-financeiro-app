@@ -23,6 +23,16 @@ export default function App(){
     setData(d=>({...d,lancamentos:d.lancamentos.filter(x=>x.id!==id)}));
   }
   function addCard(card){ setData(d=>({...d,cartoes:[...d.cartoes,card]})); }
+  function deleteCard(id){
+
+ setData(d=>({
+   ...d,
+   cartoes:d.cartoes.filter(
+     c=>c.id!==id
+   )
+ }));
+
+}
   function addGoal(goal){ setData(d=>({...d,metas:[...d.metas,goal]})); }
 
   let content;
@@ -33,7 +43,7 @@ else if(page==="history") content=<History data={data} onDelete={deleteEntry} />
 
 else if(page==="reports") content=<Reports data={data} />;
 
-else if(page==="cards") content=<Cards data={data} onAdd={addCard} />;
+else if(page==="cards") content=<Cards data={data} onAdd={addCard} onDelete={deleteCard} />;
 
 else if(page==="goals") content=<Goals data={data} onAdd={addGoal} />;
 
