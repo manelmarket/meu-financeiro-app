@@ -23,6 +23,33 @@ export default function App(){
     setData(d=>({...d,lancamentos:d.lancamentos.filter(x=>x.id!==id)}));
   }
   function addCard(card){ setData(d=>({...d,cartoes:[...d.cartoes,card]})); }
+function addPurchase(cardId, purchase){
+
+ setData(d=>({
+
+   ...d,
+
+   cartoes:d.cartoes.map(c=>{
+
+     if(c.id===cardId){
+
+       return {
+         ...c,
+         compras:[
+           ...(c.compras || []),
+           purchase
+         ]
+       };
+
+     }
+
+     return c;
+
+   })
+
+ }));
+
+}
   function deleteCard(id){
 function addPurchase(cardId, purchase){
 
