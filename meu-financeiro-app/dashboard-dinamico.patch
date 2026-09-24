@@ -1,0 +1,21 @@
+From 00499129cb7845b398f70d0e3c5c5a1c44213b2d Mon Sep 17 00:00:00 2001
+From: ChatGPT <chatgpt@example.com>
+Date: Thu, 24 Sep 2026 01:59:56 +0000
+Subject: [PATCH] Prepara dashboard dinamico
+
+---
+ src/pages/Home.jsx | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/pages/Home.jsx b/src/pages/Home.jsx
+index 5a55a71..f36ea65 100644
+--- a/src/pages/Home.jsx
++++ b/src/pages/Home.jsx
+@@ -1,3 +1,4 @@
++/* Dashboard dinâmico preparado */
+ const money = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+ 
+ export default function Home({ data, onNew }) {
+-- 
+2.47.3
+

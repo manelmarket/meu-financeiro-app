@@ -1,0 +1,64 @@
+From 9f6fa2afbe2434de1f3c0de63ce63c5dbcba5f04 Mon Sep 17 00:00:00 2001
+From: ChatGPT <chatgpt@example.com>
+Date: Thu, 24 Sep 2026 02:01:47 +0000
+Subject: [PATCH] Adiciona base de relatorios e graficos
+
+---
+ src/pages/Reports.jsx | 24 ++++++++++++++++++++++++
+ src/utils/finance.js  | 13 +++++++++++++
+ 2 files changed, 37 insertions(+)
+ create mode 100644 src/pages/Reports.jsx
+ create mode 100644 src/utils/finance.js
+
+diff --git a/src/pages/Reports.jsx b/src/pages/Reports.jsx
+new file mode 100644
+index 0000000..de9205f
+--- /dev/null
++++ b/src/pages/Reports.jsx
+@@ -0,0 +1,24 @@
++import React from "react";
++import { totals, byCategory } from "../utils/finance";
++
++export default function Reports({data={lancamentos:[]}}){
++  const t = totals(data.lancamentos || []);
++  const cats = byCategory(data.lancamentos || []);
++
++  return (
++    <div className="page">
++      <h1>Relatórios</h1>
++      <div className="section-card">
++        <p>Entradas: R$ {t.entradas}</p>
++        <p>Gastos: R$ {t.gastos}</p>
++        <p>Saldo: R$ {t.saldo}</p>
++      </div>
++      <div className="section-card">
++        <h2>Gastos por categoria</h2>
++        {Object.entries(cats).map(([k,v])=>
++          <p key={k}>{k}: R$ {v}</p>
++        )}
++      </div>
++    </div>
++  );
++}
+diff --git a/src/utils/finance.js b/src/utils/finance.js
+new file mode 100644
+index 0000000..bab8207
+--- /dev/null
++++ b/src/utils/finance.js
+@@ -0,0 +1,13 @@
++export function totals(items){
++  const entradas = items.filter(i=>i.tipo==="entrada").reduce((a,b)=>a+b.valor,0);
++  const gastos = items.filter(i=>i.tipo==="saida").reduce((a,b)=>a+b.valor,0);
++  return { entradas, gastos, saldo: entradas - gastos };
++}
++
++export function byCategory(items){
++  const result = {};
++  items.filter(i=>i.tipo==="saida").forEach(i=>{
++    result[i.categoria] = (result[i.categoria] || 0) + i.valor;
++  });
++  return result;
++}
+-- 
+2.47.3
+
