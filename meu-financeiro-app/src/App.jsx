@@ -8,10 +8,12 @@ import History from "./pages/History";
 import Cards from "./pages/Cards";
 import Goals from "./pages/Goals";
 import { loadData, saveData, resetData } from "./storage/storage";
+import CardDetails from "./pages/CardDetails";
 
 export default function App(){
   const [page,setPage]=useState("home");
   const [data,setData]=useState(()=>loadData());
+  const [selectedCard,setSelectedCard]=useState(null);
 
   useEffect(()=>{ saveData(data); },[data]);
 
@@ -98,8 +100,24 @@ if(page==="new") content=<NewEntry onSave={addEntry} onCancel={()=>setPage("home
 else if(page==="history") content=<History data={data} onDelete={deleteEntry} />;
 
 else if(page==="reports") content=<Reports data={data} />;
+else if(page==="card-details") 
+content=
+<CardDetails 
+card={selectedCard}
+onBack={()=>setPage("cards")}
+onPurchase={addPurchase}
+/>;
 
-else if(page==="cards") content=<Cards data={data} onAdd={addCard} onDelete={deleteCard} onPurchase={addPurchase} />;
+else if(page==="cards") content=<Cards 
+data={data} 
+onAdd={addCard} 
+onDelete={deleteCard} 
+onPurchase={addPurchase}
+onOpen={(card)=>{
+setSelectedCard(card);
+setPage("card-details");
+}}
+/>;
 
 else if(page==="goals") content=<Goals data={data} onAdd={addGoal} />;
 

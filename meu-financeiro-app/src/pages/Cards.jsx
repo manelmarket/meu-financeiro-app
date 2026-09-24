@@ -8,7 +8,7 @@ const money = (v) =>
   });
 
 
-export default function Cards({ data, onAdd, onDelete, onPurchase }) {
+export default function Cards({ data, onAdd, onDelete, onPurchase, onOpen }) {
 
   const [nome,setNome]=useState("");
   const [limite,setLimite]=useState("");
@@ -119,6 +119,8 @@ return (
 <section
 className="credit-card"
 key={c.id}
+onClick={()=>onOpen(c)}
+style={{cursor:"pointer"}}
 >
 
 
@@ -137,7 +139,10 @@ alignItems:"center"
 
 <button
 
-onClick={()=>excluirCartao(c.id)}
+onClick={(e)=>{
+e.stopPropagation();
+excluirCartao(c.id);
+}}
 
 style={{
 border:"0",
@@ -221,9 +226,10 @@ style={{
 marginTop:"12px"
 }}
 
-onClick={()=>
-setCartaoSelecionado(c.id)
-}
+onClick={(e)=>{
+e.stopPropagation();
+setCartaoSelecionado(c.id);
+}}
 
 >
 
