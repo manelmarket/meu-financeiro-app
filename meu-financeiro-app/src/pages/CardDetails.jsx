@@ -71,6 +71,50 @@ export default function CardDetails({
   );
 
 
+  const comprasExibicao =
+  compras.reduce((lista,item)=>{
+
+    const chave =
+    item.parcelaAtual
+    ?
+    `${item.descricao}-${item.data}-${item.valor}`
+    :
+    item.id;
+
+
+    const existente =
+    lista.find(
+      x=>x.chave===chave
+    );
+
+
+    if(existente){
+
+      existente.totalParcelas =
+      item.totalParcelas || existente.totalParcelas;
+
+      existente.parcelas.push(item);
+
+    }else{
+
+      lista.push({
+
+        chave,
+
+        ...item,
+
+        parcelas:[item]
+
+      });
+
+    }
+
+
+    return lista;
+
+  },[]);
+
+
 
   const fatura =
   compras.reduce(
@@ -334,7 +378,7 @@ export default function CardDetails({
         :
 
 
-        compras.map(item=>(
+        comprasExibicao.map(item=>(
 
 
           <div
