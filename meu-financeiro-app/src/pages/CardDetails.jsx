@@ -140,10 +140,24 @@ export default function CardDetails({
 
   const limiteComprometido =
 compras.reduce(
-  (total,item)=>
-    total + Number(
-      item.valorOriginal || item.valor || 0
-    ),
+  (total,item)=>{
+
+    const valorComprometido =
+    item.valorOriginal
+    ||
+    (
+      item.totalParcelas
+      ?
+      Number(item.valor || 0) *
+      Number(item.totalParcelas)
+      :
+      Number(item.valor || 0)
+    );
+
+
+    return total + valorComprometido;
+
+  },
   0
 );
 
