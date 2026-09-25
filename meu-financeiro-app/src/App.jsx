@@ -144,37 +144,44 @@ export default function App(){
     }));
 
   }
-function deletePurchase(cardId, purchaseId){
-
-  setData(d=>({
-
-    ...d,
-
-    cartoes:d.cartoes.map(c=>{
-
-      if(c.id===cardId){
-
-        return {
-
-          ...c,
-
-          compras:(c.compras || [])
-          .filter(
-            compra=>compra.id!==purchaseId
-          )
-
-        };
-
-      }
 
 
-      return c;
 
-    })
 
-  }));
 
-}
+  function deletePurchase(cardId,purchaseId){
+
+    setData(d=>({
+
+      ...d,
+
+      cartoes:d.cartoes.map(c=>{
+
+        if(c.id===cardId){
+
+          return {
+
+            ...c,
+
+            compras:(c.compras || [])
+            .filter(
+              compra =>
+              String(compra.id) !== String(purchaseId)
+            )
+
+          };
+
+        }
+
+
+        return c;
+
+      })
+
+    }));
+
+  }
+
 
 
 
@@ -250,15 +257,15 @@ function deletePurchase(cardId, purchaseId){
     content=
     <CardDetails
 
- card={selectedCard}
+      card={selectedCard}
 
- onBack={()=>setPage("cards")}
+      onBack={()=>setPage("cards")}
 
- onPurchase={addPurchase}
+      onPurchase={addPurchase}
 
- onDeletePurchase={deletePurchase}
+      onDeletePurchase={deletePurchase}
 
-/>;
+    />;
 
   }
 
@@ -320,7 +327,9 @@ function deletePurchase(cardId, purchaseId){
       data={data}
 
       onNew={()=>{
+
         setPage("new");
+
       }}
 
     />;
@@ -341,9 +350,13 @@ function deletePurchase(cardId, purchaseId){
       {
       page!=="new" &&
       <BottomNav
+
         page={page}
+
         onChange={setPage}
+
       />
+
       }
 
 
