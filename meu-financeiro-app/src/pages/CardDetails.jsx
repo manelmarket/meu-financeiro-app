@@ -347,9 +347,9 @@ item=>item && item.valor > 0
             }
             <button
 
-onClick={()=>
-  onDeletePurchase(card.id,item.id)
-}
+onClick={()=>{
+  console.log("TIPO:", typeof onDeletePurchase);
+console.log("VALOR:", onDeletePurchase);
 
 style={{
   marginTop:"8px",

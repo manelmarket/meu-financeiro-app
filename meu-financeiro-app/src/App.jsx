@@ -144,7 +144,37 @@ export default function App(){
     }));
 
   }
+function deletePurchase(cardId, purchaseId){
 
+  setData(d=>({
+
+    ...d,
+
+    cartoes:d.cartoes.map(c=>{
+
+      if(c.id===cardId){
+
+        return {
+
+          ...c,
+
+          compras:(c.compras || [])
+          .filter(
+            compra=>compra.id!==purchaseId
+          )
+
+        };
+
+      }
+
+
+      return c;
+
+    })
+
+  }));
+
+}
 
 
 
@@ -220,15 +250,15 @@ export default function App(){
     content=
     <CardDetails
 
-      card={selectedCard}
+ card={selectedCard}
 
-      onBack={()=>{
-        setPage("cards");
-      }}
+ onBack={()=>setPage("cards")}
 
-      onPurchase={addPurchase}
+ onPurchase={addPurchase}
 
-    />;
+ onDeletePurchase={deletePurchase}
+
+/>;
 
   }
 
