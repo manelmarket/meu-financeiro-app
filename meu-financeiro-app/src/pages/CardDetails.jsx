@@ -711,8 +711,13 @@ export default function CardDetails({
             value={parcelas}
 
             onChange={
-              e=>setParcelas(e.target.value)
-            }
+  e=>
+  setParcelas(
+    Number(
+      e.target.value.replace("x","")
+    )
+  )
+}
 
           >
 
