@@ -11,10 +11,15 @@ export default function CardDetails({
   card,
   onBack,
   onPurchase,
-  onDeletePurchase
+  onDeletePurchase,
+  onEditPurchase
 }) {
 
+
   const [showForm,setShowForm] = useState(false);
+
+  const [editingId,setEditingId] = useState(null);
+
 
   const [descricao,setDescricao] = useState("");
 
@@ -42,7 +47,6 @@ export default function CardDetails({
           Cartão não encontrado
         </h1>
 
-
         <button
           className="primary"
           onClick={onBack}
@@ -59,10 +63,10 @@ export default function CardDetails({
 
 
   const compras =
-(card.compras || [])
-.filter(
-item=>item && item.valor > 0
-);
+  (card.compras || [])
+  .filter(
+    item=>item && item.valor > 0
+  );
 
 
 
@@ -93,7 +97,7 @@ item=>item && item.valor > 0
     new FileReader();
 
 
-    leitor.onload = ()=>{
+    leitor.onload=()=>{
 
       setFotoCupom(
         leitor.result
@@ -103,6 +107,51 @@ item=>item && item.valor > 0
 
 
     leitor.readAsDataURL(arquivo);
+
+  }
+
+
+
+  function limparFormulario(){
+
+    setDescricao("");
+
+    setValor("");
+
+    setCategoria("Alimentação");
+
+    setData(
+      new Date().toISOString().slice(0,10)
+    );
+
+    setParcelas(1);
+
+    setFotoCupom("");
+
+    setEditingId(null);
+
+  }
+
+
+
+
+  function abrirEdicao(item){
+
+    setEditingId(item.id);
+
+    setDescricao(item.descricao);
+
+    setValor(item.valor);
+
+    setCategoria(item.categoria);
+
+    setData(item.data);
+
+    setParcelas(item.parcelas || 1);
+
+    setFotoCupom(item.fotoCupom || "");
+
+    setShowForm(true);
 
   }
 
@@ -119,6 +168,7 @@ item=>item && item.valor > 0
     );
 
 
+
     if(
       !descricao.trim()
       ||
@@ -132,8 +182,6 @@ item=>item && item.valor > 0
 
 
     const compra = {
-
-      id:Date.now(),
 
       descricao:
       descricao.trim(),
@@ -153,21 +201,35 @@ item=>item && item.valor > 0
 
 
 
-    onPurchase(
-      card.id,
-      compra
-    );
+    if(editingId){
+
+
+      onEditPurchase(
+        card.id,
+        editingId,
+        compra
+      );
+
+
+    }else{
+
+
+      onPurchase(
+        card.id,
+        {
+          ...compra,
+          id:Date.now()
+        }
+      );
+
+
+    }
 
 
 
-    setDescricao("");
-
-    setValor("");
-
-    setFotoCupom("");
+    limparFormulario();
 
     setShowForm(false);
-
 
   }
 
@@ -180,9 +242,7 @@ item=>item && item.valor > 0
     <div className="page">
 
 
-
       <header className="topbar">
-
 
         <button
 
@@ -201,7 +261,6 @@ item=>item && item.valor > 0
         </button>
 
 
-
         <div>
 
           <div className="eyebrow">
@@ -213,7 +272,6 @@ item=>item && item.valor > 0
             💳 {card.nome}
           </h1>
 
-
         </div>
 
 
@@ -223,9 +281,7 @@ item=>item && item.valor > 0
 
 
 
-
       <section className="credit-card">
-
 
         <small>
           Limite
@@ -237,12 +293,10 @@ item=>item && item.valor > 0
         </strong>
 
 
-
         <small>
           Fatura atual:
           {money(fatura)}
         </small>
-
 
 
         <small>
@@ -251,9 +305,7 @@ item=>item && item.valor > 0
         </small>
 
 
-
       </section>
-
 
 
 
@@ -269,7 +321,8 @@ item=>item && item.valor > 0
 
 
         {
-        compras.length === 0 ?
+        compras.length===0 ?
+
 
         <p>
           Nenhuma compra lançada
@@ -281,6 +334,7 @@ item=>item && item.valor > 0
 
         compras.map(item=>(
 
+
           <div
 
             key={item.id}
@@ -291,6 +345,7 @@ item=>item && item.valor > 0
             }}
 
           >
+
 
             <div style={{
               display:"flex",
@@ -325,51 +380,89 @@ item=>item && item.valor > 0
             {
             item.fotoCupom &&
 
-            <div>
+            <img
 
-              <img
+              src={item.fotoCupom}
 
-                src={item.fotoCupom}
+              alt="Cupom"
 
-                alt="Cupom"
+              style={{
+                width:"100%",
+                maxWidth:"220px",
+                borderRadius:"12px",
+                marginTop:"10px"
+              }}
 
-                style={{
-                  width:"100%",
-                  maxWidth:"220px",
-                  borderRadius:"12px",
-                  marginTop:"10px"
-                }}
-
-              />
-
-            </div>
+            />
 
             }
-            <button
 
-onClick={()=>{
 
-  console.log("TIPO:", typeof onDeletePurchase);
-  console.log("VALOR:", onDeletePurchase);
 
-  onDeletePurchase(card.id,item.id);
+            <div style={{
+              display:"flex",
+              gap:"8px",
+              marginTop:"10px"
+            }}>
 
-}}
 
-style={{
-  marginTop:"8px",
-  border:"0",
-  background:"#fee2e2",
-  color:"#dc2626",
-  borderRadius:"8px",
-  padding:"6px 10px",
-  cursor:"pointer"
-}}
+              <button
 
->
-🗑 Excluir
-</button>
+                onClick={()=>
+                  abrirEdicao(item)
+                }
 
+                style={{
+                  border:0,
+                  background:"#dbeafe",
+                  color:"#2563eb",
+                  borderRadius:"8px",
+                  padding:"6px 10px"
+                }}
+
+              >
+
+                ✏️ Editar
+
+              </button>
+
+
+
+              <button
+
+                onClick={()=>{
+
+                  if(
+                    window.confirm(
+                      "Deseja excluir esta compra?"
+                    )
+                  ){
+
+                    onDeletePurchase(
+                      card.id,
+                      item.id
+                    );
+
+                  }
+
+                }}
+
+                style={{
+                  border:0,
+                  background:"#fee2e2",
+                  color:"#dc2626",
+                  borderRadius:"8px",
+                  padding:"6px 10px"
+                }}
+
+              >
+
+                🗑 Excluir
+
+              </button>
+
+
+            </div>
 
 
           </div>
@@ -381,11 +474,19 @@ style={{
 
 
 
+
+
         <button
 
           className="primary"
 
-          onClick={()=>setShowForm(!showForm)}
+          onClick={()=>{
+
+            limparFormulario();
+
+            setShowForm(!showForm);
+
+          }}
 
           style={{
             marginTop:"20px"
@@ -405,9 +506,6 @@ style={{
 
 
 
-
-
-
       {
       showForm &&
 
@@ -416,7 +514,15 @@ style={{
 
 
         <h2>
-          Nova compra
+
+          {
+          editingId
+          ?
+          "Editar compra"
+          :
+          "Nova compra"
+          }
+
         </h2>
 
 
@@ -433,12 +539,9 @@ style={{
               e=>setDescricao(e.target.value)
             }
 
-            placeholder="Ex: Mercado"
-
           />
 
         </label>
-
 
 
 
@@ -457,12 +560,9 @@ style={{
               e=>setValor(e.target.value)
             }
 
-            placeholder="250"
-
           />
 
         </label>
-
 
 
 
@@ -501,12 +601,9 @@ style={{
               Outros
             </option>
 
-
           </select>
 
-
         </label>
-
 
 
 
@@ -528,7 +625,6 @@ style={{
           />
 
         </label>
-
 
 
 
@@ -569,7 +665,6 @@ style={{
 
 
 
-
         <label>
 
           Foto do cupom
@@ -585,7 +680,6 @@ style={{
           />
 
         </label>
-
 
 
 
@@ -619,7 +713,7 @@ style={{
 
         >
 
-          Salvar compra
+          Salvar
 
         </button>
 
@@ -627,9 +721,7 @@ style={{
 
       </section>
 
-
       }
-
 
 
     </div>
