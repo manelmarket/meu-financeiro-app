@@ -142,17 +142,30 @@ export default function CardDetails({
 compras.reduce(
   (total,item)=>{
 
-    const valorComprometido =
-    item.valorOriginal
-    ||
-    (
-      item.totalParcelas
-      ?
+    let valorComprometido = 0;
+
+
+    if(item.valorOriginal){
+
+      valorComprometido =
+      Number(item.valorOriginal);
+
+    }
+
+    else if(item.totalParcelas){
+
+      valorComprometido =
       Number(item.valor || 0) *
-      Number(item.totalParcelas)
-      :
-      Number(item.valor || 0)
-    );
+      Number(item.totalParcelas);
+
+    }
+
+    else{
+
+      valorComprometido =
+      Number(item.valor || 0);
+
+    }
 
 
     return total + valorComprometido;
