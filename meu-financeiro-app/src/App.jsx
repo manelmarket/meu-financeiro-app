@@ -125,13 +125,41 @@ export default function App(){
 
         if(c.id===cardId){
 
+          const parcelas =
+          Number(purchase.parcelas || 1);
+
+          const compras = [];
+
+          for(let i = 0; i < parcelas; i++){
+
+            compras.push({
+
+              ...purchase,
+
+              id:
+              Date.now() + i,
+
+              valor:
+              Number(purchase.valor || 0) / parcelas,
+
+              parcelaAtual:
+              i + 1,
+
+              totalParcelas:
+              parcelas
+
+            });
+
+          }
+
+
           return {
 
             ...c,
 
             compras:[
               ...(c.compras || []),
-              purchase
+              ...compras
             ]
 
           };
