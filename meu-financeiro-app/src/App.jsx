@@ -126,7 +126,13 @@ export default function App(){
         if(c.id===cardId){
 
           const parcelas =
-          Number(purchase.parcelas || 1);
+          Math.max(
+            1,
+            Number(
+              String(purchase.parcelas || 1)
+              .replace("x","")
+            )
+          );
 
           const compras = [];
 
