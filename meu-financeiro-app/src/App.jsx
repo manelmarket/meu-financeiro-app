@@ -147,13 +147,6 @@ export default function App(){
 
 const idCompra = Date.now();
 
-const valorTotal =
-Number(purchase.valor || 0);
-
-
-const valorParcela =
-valorTotal / parcelas;
-
 
 for(let i = 0; i < parcelas; i++){
 
