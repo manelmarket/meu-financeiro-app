@@ -20,6 +20,8 @@ export default function CardDetails({
 
   const [editingId,setEditingId] = useState(null);
 
+  const [showCupom,setShowCupom] = useState(null);
+
 
   const [descricao,setDescricao] = useState("");
 
@@ -372,6 +374,8 @@ export default function CardDetails({
               {item.categoria}
               {" • "}
               {item.data}
+              {" • "}
+              Parcelas: {item.parcelas || 1}x
 
             </small>
 
@@ -380,20 +384,26 @@ export default function CardDetails({
             {
             item.fotoCupom &&
 
-            <img
+            <button
 
-              src={item.fotoCupom}
-
-              alt="Cupom"
+              onClick={()=>
+                setShowCupom(item.fotoCupom)
+              }
 
               style={{
-                width:"100%",
-                maxWidth:"220px",
-                borderRadius:"12px",
-                marginTop:"10px"
+                marginTop:"10px",
+                border:0,
+                background:"#e0f2fe",
+                color:"#0369a1",
+                borderRadius:"8px",
+                padding:"8px 12px"
               }}
 
-            />
+            >
+
+              📷 Ver cupom
+
+            </button>
 
             }
 
@@ -723,6 +733,52 @@ export default function CardDetails({
 
       }
 
+
+      {
+      showCupom &&
+
+      <div
+        style={{
+          position:"fixed",
+          inset:0,
+          background:"rgba(0,0,0,.7)",
+          display:"flex",
+          alignItems:"center",
+          justifyContent:"center",
+          zIndex:999
+        }}
+      >
+
+        <div
+          style={{
+            background:"#fff",
+            padding:"20px",
+            borderRadius:"15px"
+          }}
+        >
+
+          <img
+            src={showCupom}
+            alt="Cupom"
+            style={{
+              maxWidth:"90vw",
+              maxHeight:"80vh"
+            }}
+          />
+
+          <button
+            onClick={()=>
+              setShowCupom(null)
+            }
+          >
+            Fechar
+          </button>
+
+        </div>
+
+      </div>
+
+      }
 
     </div>
 
