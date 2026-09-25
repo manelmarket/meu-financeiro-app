@@ -10,9 +10,9 @@ const money = (v) =>
 export default function CardDetails({
   card,
   onBack,
-  onPurchase
+  onPurchase,
+  onDeletePurchase
 }) {
-
 
   const [showForm,setShowForm] = useState(false);
 
@@ -59,8 +59,10 @@ export default function CardDetails({
 
 
   const compras =
-  (card.compras || [])
-  .filter(item=>item);
+(card.compras || [])
+.filter(
+item=>item && item.valor > 0
+);
 
 
 
@@ -343,6 +345,25 @@ export default function CardDetails({
             </div>
 
             }
+            <button
+
+onClick={()=>
+  onDeletePurchase(card.id,item.id)
+}
+
+style={{
+  marginTop:"8px",
+  border:"0",
+  background:"#fee2e2",
+  color:"#dc2626",
+  borderRadius:"8px",
+  padding:"6px 10px",
+  cursor:"pointer"
+}}
+
+>
+🗑 Excluir
+</button>
 
 
 
