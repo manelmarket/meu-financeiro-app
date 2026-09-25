@@ -32,7 +32,6 @@ export default function App(){
 
 
 
-  // mantém o cartão aberto sempre atualizado
   useEffect(()=>{
 
     if(selectedCard){
@@ -142,6 +141,59 @@ export default function App(){
 
         return c;
 
+
+      })
+
+    }));
+
+  }
+
+
+
+
+
+  function editPurchase(cardId,purchaseId,updatedPurchase){
+
+    setData(d=>({
+
+      ...d,
+
+      cartoes:d.cartoes.map(c=>{
+
+        if(c.id===cardId){
+
+          return {
+
+            ...c,
+
+            compras:(c.compras || [])
+            .map(compra=>{
+
+              if(
+                String(compra.id) === String(purchaseId)
+              ){
+
+                return {
+
+                  ...compra,
+
+                  ...updatedPurchase
+
+                };
+
+              }
+
+
+              return compra;
+
+            })
+
+          };
+
+        }
+
+
+        return c;
 
       })
 
@@ -279,6 +331,8 @@ export default function App(){
       onPurchase={addPurchase}
 
       onDeletePurchase={deletePurchase}
+
+      onEditPurchase={editPurchase}
 
     />;
 
