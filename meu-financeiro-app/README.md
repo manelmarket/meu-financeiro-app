@@ -30,3 +30,4 @@ Abra o endereço mostrado pelo Vite no navegador.
 - PWA
 - GitHub + Cloudflare Pages
 # update deploy
+# deploy refresh
