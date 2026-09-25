@@ -348,8 +348,13 @@ item=>item && item.valor > 0
             <button
 
 onClick={()=>{
+
   console.log("TIPO:", typeof onDeletePurchase);
-console.log("VALOR:", onDeletePurchase);
+  console.log("VALOR:", onDeletePurchase);
+
+  onDeletePurchase(card.id,item.id);
+
+}}
 
 style={{
   marginTop:"8px",
