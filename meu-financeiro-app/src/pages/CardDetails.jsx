@@ -14,7 +14,7 @@ export default function CardDetails({
   onBack,
   onPurchase
 }){
-
+  if(!card) return null;
 
 const fatura =
 (card.compras || [])
@@ -165,7 +165,7 @@ padding:"10px 0"
 
 className="primary"
 
-onClick={()=>onPurchase(card.id)}
+onClick={()=>onPurchase(card.id, {})}
 
 style={{
 marginTop:"20px"
