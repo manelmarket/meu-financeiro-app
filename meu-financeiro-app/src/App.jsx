@@ -117,70 +117,94 @@ export default function App(){
 
   function addPurchase(cardId,purchase){
 
-    setData(d=>({
+  setData(d=>({
 
-      ...d,
+    ...d,
 
-      cartoes:d.cartoes.map(c=>{
+    cartoes:d.cartoes.map(c=>{
 
-        if(c.id===cardId){
+      if(c.id===cardId){
 
-          const parcelas =
-          Math.max(
-            1,
-            Number(
-              String(purchase.parcelas || 1)
-              .replace("x","")
-            )
-          );
-
-          const compras = [];
-
-          for(let i = 0; i < parcelas; i++){
-
-            compras.push({
-
-              ...purchase,
-
-              id:
-              Date.now() + i,
-
-              valor:
-              Number(purchase.valor || 0) / parcelas,
-
-              parcelaAtual:
-              i + 1,
-
-              totalParcelas:
-              parcelas
-
-            });
-
-          }
+        const parcelas =
+        Math.max(
+          1,
+          Number(
+            String(purchase.parcelas || 1)
+            .replace("x","")
+          )
+        );
 
 
-          return {
+        const valorTotal =
+        Number(purchase.valor || 0);
 
-            ...c,
 
-            compras:[
-              ...(c.compras || []),
-              ...compras
-            ]
+        const valorParcela =
+        valorTotal / parcelas;
 
-          };
+
+        const compras = [];
+
+
+        for(let i = 0; i < parcelas; i++){
+
+          compras.push({
+
+            ...purchase,
+
+            id:
+            Date.now() + i,
+
+
+            // valor que aparece na fatura do mês
+            valor:
+            valorParcela,
+
+
+            // valor real comprometido no limite
+            valorOriginal:
+            valorTotal,
+
+
+            valorParcela,
+
+
+            parcelaAtual:
+            i + 1,
+
+
+            totalParcelas:
+            parcelas
+
+
+          });
 
         }
 
 
-        return c;
+
+        return {
+
+          ...c,
+
+          compras:[
+            ...(c.compras || []),
+            ...compras
+          ]
+
+        };
+
+      }
 
 
-      })
+      return c;
 
-    }));
 
-  }
+    })
+
+  }));
+
+}
 
 
 
