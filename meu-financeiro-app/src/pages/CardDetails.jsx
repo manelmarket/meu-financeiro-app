@@ -750,12 +750,9 @@ card.limite - limiteComprometido;
             onChange={
   e=>
   setParcelas(
-    Number(
-      e.target.value.replace("x","")
-    )
+    Number(e.target.value)
   )
 }
-
           >
 
             {
@@ -765,9 +762,12 @@ card.limite - limiteComprometido;
             )
             .map(num=>(
 
-              <option key={num}>
-                {num}x
-              </option>
+              <option
+  key={num}
+  value={num}
+>
+  {num}x
+</option>
 
             ))
             }
