@@ -32,6 +32,29 @@ export default function App(){
 
 
 
+  // mantém o cartão aberto sempre atualizado
+  useEffect(()=>{
+
+    if(selectedCard){
+
+      const atualizado =
+      data.cartoes.find(
+        c=>c.id===selectedCard.id
+      );
+
+
+      if(atualizado){
+
+        setSelectedCard(atualizado);
+
+      }
+
+    }
+
+  },[data]);
+
+
+
 
 
   function addEntry(item){
@@ -209,8 +232,6 @@ export default function App(){
 
 
 
-
-
   if(page==="new"){
 
     content=
@@ -220,8 +241,6 @@ export default function App(){
     />;
 
   }
-
-
 
 
 
@@ -237,8 +256,6 @@ export default function App(){
 
 
 
-
-
   else if(page==="reports"){
 
     content=
@@ -247,8 +264,6 @@ export default function App(){
     />;
 
   }
-
-
 
 
 
@@ -268,8 +283,6 @@ export default function App(){
     />;
 
   }
-
-
 
 
 
@@ -300,8 +313,6 @@ export default function App(){
 
 
 
-
-
   else if(page==="goals"){
 
     content=
@@ -314,8 +325,6 @@ export default function App(){
     />;
 
   }
-
-
 
 
 
@@ -356,7 +365,6 @@ export default function App(){
         onChange={setPage}
 
       />
-
       }
 
 
