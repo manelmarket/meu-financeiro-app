@@ -29,3 +29,4 @@ Abra o endereço mostrado pelo Vite no navegador.
 - Login e banco online
 - PWA
 - GitHub + Cloudflare Pages
+# update deploy
