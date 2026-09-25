@@ -145,41 +145,45 @@ export default function App(){
 
         const compras = [];
 
+const idCompra = Date.now();
 
-        for(let i = 0; i < parcelas; i++){
-
-          compras.push({
-
-            ...purchase,
-
-            id:
-            Date.now() + i,
+const valorTotal =
+Number(purchase.valor || 0);
 
 
-            // valor que aparece na fatura do mês
-            valor:
-            valorParcela,
+const valorParcela =
+valorTotal / parcelas;
 
 
-            // valor real comprometido no limite
-            valorOriginal:
-            valorTotal,
+for(let i = 0; i < parcelas; i++){
+
+  compras.push({
+
+    ...purchase,
+
+    id:
+    idCompra + i,
+
+    idCompra,
 
 
-            valorParcela,
+    valorTotal,
 
 
-            parcelaAtual:
-            i + 1,
+    valor:
+    valorParcela,
 
 
-            totalParcelas:
-            parcelas
+    parcelaAtual:
+    i + 1,
 
 
-          });
+    totalParcelas:
+    parcelas
 
-        }
+  });
+
+}
 
 
 
