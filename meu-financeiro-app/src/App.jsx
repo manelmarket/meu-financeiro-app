@@ -160,8 +160,10 @@ for(let i = 0; i < parcelas; i++){
     idCompra,
 
 
+        valorOriginal:
     valorTotal,
 
+    valorParcela,
 
     valor:
     valorParcela,
