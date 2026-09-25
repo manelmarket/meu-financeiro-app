@@ -1,12 +1,10 @@
 import React from "react";
 
-
 const money = (v) =>
-  v.toLocaleString("pt-BR", {
-    style:"currency",
-    currency:"BRL"
+  Number(v || 0).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
   });
-
 
 
 export default function CardDetails({
@@ -14,13 +12,44 @@ export default function CardDetails({
   onBack,
   onPurchase
 }){
-  if(!card) return null;
+
+
+if(!card){
+
+return (
+
+<div className="page">
+
+<h1>
+Cartão não encontrado
+</h1>
+
+
+<button
+className="primary"
+onClick={onBack}
+>
+Voltar
+</button>
+
+
+</div>
+
+);
+
+}
+
+
+
+const compras =
+(card.compras || [])
+.filter(item=>item);
+
+
 
 const fatura =
-(card.compras || [])
-.filter(item=>item)
-.reduce(
-(total,item)=>total+item.valor,
+compras.reduce(
+(total,item)=>total + Number(item.valor || 0),
 0
 );
 
@@ -40,15 +69,21 @@ return (
 
 
 <button
+
 onClick={onBack}
+
 style={{
 border:0,
 background:"transparent",
-fontSize:"20px"
+fontSize:"24px"
 }}
+
 >
+
 ←
+
 </button>
+
 
 
 <div>
@@ -118,7 +153,8 @@ Compras
 
 {
 
-(card.compras || []).length === 0 ?
+compras.length === 0 ?
+
 
 <p>
 Nenhuma compra lançada
@@ -127,18 +163,19 @@ Nenhuma compra lançada
 
 :
 
-(card.compras || [])
-.filter(item=>item)
-.map(item=>(
 
+compras.map(item=>(
 
 <div
+
 key={item.id}
+
 style={{
 display:"flex",
 justifyContent:"space-between",
 padding:"10px 0"
 }}
+
 >
 
 <span>
@@ -161,11 +198,12 @@ padding:"10px 0"
 
 
 
+
 <button
 
 className="primary"
 
-onClick={()=>onPurchase(card.id, {})}
+onClick={()=>onPurchase(card.id,{})}
 
 style={{
 marginTop:"20px"
@@ -183,7 +221,6 @@ marginTop:"20px"
 
 
 </div>
-
 
 )
 
