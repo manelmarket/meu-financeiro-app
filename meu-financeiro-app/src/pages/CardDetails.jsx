@@ -432,7 +432,15 @@ export default function CardDetails({
               {" • "}
               {item.data}
               {" • "}
-              Parcelas: {item.parcelas || 1}x
+              Parcelas: {
+                item.totalParcelas
+                ||
+                item.parcelas?.length
+                ||
+                item.parcelas
+                ||
+                1
+              }x
 
             </small>
 
