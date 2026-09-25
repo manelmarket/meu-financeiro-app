@@ -138,8 +138,18 @@ export default function CardDetails({
 
 
 
-  const disponivel =
-  card.limite - fatura;
+  const limiteComprometido =
+compras.reduce(
+  (total,item)=>
+    total + Number(
+      item.valorOriginal || item.valor || 0
+    ),
+  0
+);
+
+
+const disponivel =
+card.limite - limiteComprometido;
 
 
 
