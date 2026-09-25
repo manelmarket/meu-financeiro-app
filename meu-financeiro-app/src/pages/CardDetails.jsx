@@ -14,7 +14,7 @@ export default function CardDetails({
 }){
 
 
-if(!card){
+if (!card) {
 
 return (
 
