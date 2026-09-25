@@ -118,8 +118,21 @@ export default function CardDetails({
 
   const fatura =
   compras.reduce(
-    (total,item)=>
-      total + Number(item.valor || 0),
+    (total,item)=>{
+
+      if(
+        item.parcelaAtual &&
+        item.parcelaAtual !== 1
+      ){
+
+        return total;
+
+      }
+
+
+      return total + Number(item.valor || 0);
+
+    },
     0
   );
 
