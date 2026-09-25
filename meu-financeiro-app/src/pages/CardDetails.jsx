@@ -432,15 +432,13 @@ export default function CardDetails({
               {" • "}
               {item.data}
               {" • "}
-              Parcelas: {
+              {
                 item.totalParcelas
-                ||
-                item.parcelas?.length
-                ||
-                item.parcelas
-                ||
-                1
-              }x
+                ?
+                `💳 Parcela ${item.parcelaAtual}/${item.totalParcelas}`
+                :
+                `Parcelas: ${item.parcelas || 1}x`
+              }
 
             </small>
 
