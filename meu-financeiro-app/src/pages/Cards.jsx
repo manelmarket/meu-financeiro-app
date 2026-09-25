@@ -2,9 +2,9 @@ import React from "react";
 import { useState } from "react";
 
 const money = (v) =>
-  v.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL"
+  Number(v || 0).toLocaleString("pt-BR", {
+    style:"currency",
+    currency:"BRL"
   });
 
 
