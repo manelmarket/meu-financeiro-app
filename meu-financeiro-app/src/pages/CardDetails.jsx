@@ -18,6 +18,7 @@ export default function CardDetails({
 
 const fatura =
 (card.compras || [])
+.filter(item=>item)
 .reduce(
 (total,item)=>total+item.valor,
 0
@@ -126,7 +127,9 @@ Nenhuma compra lançada
 
 :
 
-(card.compras || []).map(item=>(
+(card.compras || [])
+.filter(item=>item)
+.map(item=>(
 
 
 <div

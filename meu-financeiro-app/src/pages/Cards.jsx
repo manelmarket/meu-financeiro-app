@@ -102,7 +102,8 @@ data.cartoes.map(c=>{
 
 
 const fatura =
-(c.compras || [])
+(card.compras || [])
+.filter(item=>item)
 .reduce(
 (total,item)=>total+item.valor,
 0
