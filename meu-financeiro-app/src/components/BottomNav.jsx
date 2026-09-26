@@ -6,6 +6,7 @@ export default function BottomNav({ page, onChange }) {
 ["home",Home,"Início"],
 ["reports",BarChart3,"Relatórios"],
 ["new",PlusCircle,"Novo"],
+["history",History,"Histórico"],
 ["cards",CreditCard,"Cartões"],
 ["goals",Target,"Metas"]
 ];

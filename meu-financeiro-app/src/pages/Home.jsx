@@ -1,57 +1,149 @@
-import React from "react";
-const money = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+import React, { useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { lerData, mesDaData, money, nomeMes, somarMeses, tituloMes, MESES } from "../lib/formato.js";
+import { resumoDoMes } from "../lib/mes.js";
 
-export default function Home({ data, onNew }) {
-  const entradas = data.lancamentos.filter(x => x.tipo === "entrada").reduce((a,b)=>a+b.valor,0);
-  const gastos = data.lancamentos.filter(x => x.tipo === "saida").reduce((a,b)=>a+b.valor,0);
-  const saldo = entradas - gastos;
+export default function Home({ data, hoje, onNew, onOpenBills, onOpenCard }) {
+  const mesHoje = mesDaData(hoje);
+  const [mes, setMes] = useState(mesHoje);
+  const r = useMemo(() => resumoDoMes(data, mes, hoje), [data, mes, hoje]);
 
-  const categorias = data.lancamentos.filter(x=>x.tipo==="saida").reduce((acc, x)=>{
-    acc[x.categoria]=(acc[x.categoria]||0)+x.valor; return acc;
-  }, {});
-  const max = Math.max(1, ...Object.values(categorias));
+  const maior = Math.max(1, ...r.categorias.map(([, v]) => v));
+  const futuro = mes > mesHoje;
 
   return (
     <div className="page">
       <header className="topbar">
-        <div><div className="eyebrow">Meu Financeiro</div><h1>Olá, {data.usuario.nome} 👋</h1></div>
-        <div className="month">Setembro 2026</div>
+        <div>
+          <div className="eyebrow">Meu mês</div>
+          <h1>Olá, {data.usuario?.nome || "você"} 👋</h1>
+        </div>
       </header>
 
+      <div className="month-picker">
+        <button aria-label="Mês anterior" onClick={() => setMes(somarMeses(mes, -1))}>
+          <ChevronLeft size={20} />
+        </button>
+        <div className="month-picker-label">
+          <strong>{tituloMes(mes)}</strong>
+          {futuro && <span className="tag">Previsão</span>}
+          {mes !== mesHoje && (
+            <button className="link" onClick={() => setMes(mesHoje)}>
+              voltar para o mês atual
+            </button>
+          )}
+        </div>
+        <button aria-label="Próximo mês" onClick={() => setMes(somarMeses(mes, 1))}>
+          <ChevronRight size={20} />
+        </button>
+      </div>
+
       <section className="balance-card">
-        <span>Saldo disponível</span>
-        <strong>{money(saldo)}</strong>
-        <small>Atualizado com seus lançamentos</small>
+        <span>Saldo do mês</span>
+        <strong className={r.saldo < 0 ? "neg" : ""}>{money(r.saldo)}</strong>
+        <small>Receitas menos despesas de {nomeMes(mes)}</small>
       </section>
 
       <div className="grid2">
-        <section className="mini-card positive"><span>Entradas</span><strong>{money(entradas)}</strong></section>
-        <section className="mini-card negative"><span>Gastos</span><strong>{money(gastos)}</strong></section>
+        <section className="mini-card positive">
+          <span>Receita</span>
+          <strong>{money(r.receitas)}</strong>
+        </section>
+        <section className="mini-card negative">
+          <span>Despesas</span>
+          <strong>{money(r.despesas)}</strong>
+        </section>
       </div>
 
+      <p className="origin-line">
+        Despesas = lançamentos {money(r.origem.lancamentos)} + faturas {money(r.origem.cartoes)} + contas fixas{" "}
+        {money(r.origem.fixas)}
+      </p>
+
       <section className="section-card">
-        <div className="section-title"><h2>Gastos por categoria</h2></div>
-        {Object.entries(categorias).length === 0 ? <p className="muted">Nenhum gasto ainda.</p> :
-          Object.entries(categorias).map(([nome, valor]) => (
+        <div className="section-title">
+          <h2 className="no-margin">Despesas por categoria</h2>
+        </div>
+        {r.categorias.length === 0 ? (
+          <p className="muted">Nenhuma despesa neste mês.</p>
+        ) : (
+          r.categorias.map(([nome, valor]) => (
             <div className="cat-row" key={nome}>
-              <div className="cat-head"><span>{nome}</span><b>{money(valor)}</b></div>
-              <div className="bar"><i style={{width:`${Math.max(8, valor/max*100)}%`}} /></div>
+              <div className="cat-head">
+                <span>{nome}</span>
+                <b>
+                  {money(valor)} · {Math.round((valor / (r.despesas || 1)) * 100)}%
+                </b>
+              </div>
+              <div className="bar">
+                <i style={{ width: `${Math.max(4, (valor / maior) * 100)}%` }} />
+              </div>
             </div>
           ))
-        }
+        )}
       </section>
 
       <section className="section-card">
-        <div className="section-title"><h2>Últimos lançamentos</h2></div>
-        {[...data.lancamentos].sort((a,b)=>b.id-a.id).slice(0,5).map(item => (
-          <div className="transaction" key={item.id}>
-            <div><b>{item.descricao}</b><span>{item.categoria} · {item.pagamento}</span></div>
-            <strong className={item.tipo==="entrada"?"in":"out"}>{item.tipo==="entrada"?"+":"-"}{money(item.valor)}</strong>
-          </div>
-        ))}
+        <div className="section-title">
+          <h2 className="no-margin">Vencimentos do mês</h2>
+        </div>
+        {r.vencimentos.length === 0 ? (
+          <p className="muted">Nada vencendo neste mês.</p>
+        ) : (
+          r.vencimentos.map((v) => {
+            const { m, d } = lerData(v.data);
+            const clicavel = v.tipo === "fatura";
+            return (
+              <div
+                className={`due-row${clicavel ? " clickable" : ""}`}
+                key={v.id}
+                onClick={clicavel ? () => onOpenCard(v.cartaoId) : undefined}
+              >
+                <div className="due-day">
+                  <b>{String(d).padStart(2, "0")}</b>
+                  <span>{MESES[m - 1].slice(0, 3)}</span>
+                </div>
+                <div className="due-info">
+                  <b>{v.descricao}</b>
+                  <span>{v.tipo === "fatura" ? "Fatura do cartão" : "Conta fixa"}</span>
+                </div>
+                <strong>{money(v.valor)}</strong>
+              </div>
+            );
+          })
+        )}
+        <button className="ghost wide" onClick={onOpenBills}>
+          🔁 Contas fixas
+        </button>
       </section>
 
-      <button className="primary wide" onClick={onNew}>+ Adicionar lançamento</button>
+      <section className="section-card">
+        <div className="section-title">
+          <h2 className="no-margin">Lançamentos do mês</h2>
+        </div>
+        {r.lancamentos.length === 0 ? (
+          <p className="muted">Nenhum lançamento neste mês.</p>
+        ) : (
+          r.lancamentos.slice(0, 5).map((item) => (
+            <div className="transaction" key={item.id}>
+              <div>
+                <b>{item.descricao}</b>
+                <span>
+                  {item.categoria} · {item.pagamento}
+                </span>
+              </div>
+              <strong className={item.tipo === "entrada" ? "in" : "out"}>
+                {item.tipo === "entrada" ? "+" : "-"}
+                {money(item.valor)}
+              </strong>
+            </div>
+          ))
+        )}
+      </section>
+
+      <button className="primary wide" onClick={onNew}>
+        + Adicionar lançamento
+      </button>
     </div>
   );
 }
