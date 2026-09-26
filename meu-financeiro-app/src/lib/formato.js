@@ -60,14 +60,22 @@ export function dataDeTimestamp(ms) {
   return hojeISO(new Date(Number(ms)));
 }
 
+// "2026-09-30" + 2 dias = "2026-10-02" (sem passar por UTC)
+export function somarDias(iso, dias) {
+  const [y, m, d] = String(iso).split("-").map(Number);
+  return hojeISO(new Date(y, m - 1, d + dias));
+}
+
 export function lerData(iso) {
   const [y, m, d] = String(iso || "").split("-").map(Number);
   return { y, m, d };
 }
 
+// Só aceita o formato exato "AAAA-MM-DD" (é o que o resto do app espera)
 export function dataValida(iso) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(iso ?? ""))) return false;
   const { y, m, d } = lerData(iso);
-  return Boolean(y && m >= 1 && m <= 12 && d >= 1 && d <= diasNoMes(y, m));
+  return m >= 1 && m <= 12 && d >= 1 && d <= diasNoMes(y, m);
 }
 
 export function montarData(y, m, d) {

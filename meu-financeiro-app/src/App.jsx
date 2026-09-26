@@ -13,6 +13,9 @@ import CardDetails from "./pages/CardDetails";
 import FutureEntries from "./pages/FutureEntries";
 import InvoiceCalendar from "./pages/InvoiceCalendar";
 import Bills from "./pages/Bills";
+import Investments from "./pages/Investments";
+import Patrimony from "./pages/Patrimony";
+import Assistant from "./pages/Assistant";
 
 import {
   loadData,
@@ -22,7 +25,7 @@ import {
   liberarFotosDoBackupAntigo
 } from "./storage/storage";
 import { apagarCupom, comprimirImagem, dataURLParaBlob, limparCupons, salvarCupom } from "./storage/cupons";
-import { hojeISO, mesDaData } from "./lib/formato";
+import { arredondar, hojeISO, mesDaData } from "./lib/formato";
 import { alternarConta } from "./lib/mes";
 
 // Aba do menu que fica acesa em cada tela
@@ -30,7 +33,10 @@ const ABA_DA_TELA = {
   "card-details": "cards",
   future: "cards",
   calendar: "cards",
-  bills: "home"
+  bills: "home",
+  assistant: "home",
+  investments: "home",
+  patrimony: "home"
 };
 
 export default function App(){
@@ -241,8 +247,9 @@ export default function App(){
 
       const lista = d.contasFixas || [];
 
-      if(conta.id && lista.some(c=>c.id===conta.id)){
+      if(conta.id){
 
+        // edição: se a conta foi excluída enquanto o formulário estava aberto, não recria
         return { ...d, contasFixas: lista.map(c=> c.id===conta.id ? { ...c, ...conta } : c) };
 
       }
@@ -283,9 +290,80 @@ export default function App(){
 
   // ---------- metas ----------
 
-  function addGoal(goal){
+  // meta = { id?, nome, objetivo, atual }
+  function saveGoal(meta){
 
-    setData(d=>({ ...d, metas:[ ...d.metas, goal ] }));
+    setData(d=>{
+
+      const lista = d.metas || [];
+
+      if(meta.id){
+
+        return { ...d, metas: lista.map(m=> m.id===meta.id ? { ...m, ...meta } : m) };
+
+      }
+
+      return { ...d, metas: [ ...lista, { ...meta, id: Date.now(), historico: [] } ] };
+
+    });
+
+  }
+
+
+  // valor > 0 guarda; valor < 0 retira
+  function moveGoal(id, valor){
+
+    setData(d=>({
+
+      ...d,
+
+      metas: (d.metas || []).map(m=> m.id===id
+        ? {
+            ...m,
+            atual: arredondar(Number(m.atual || 0) + valor),
+            historico: [ ...(m.historico || []), { id: Date.now(), data: hojeISO(), valor } ]
+          }
+        : m
+      )
+
+    }));
+
+  }
+
+
+  function deleteGoal(id){
+
+    setData(d=>({ ...d, metas: (d.metas || []).filter(m=>m.id!==id) }));
+
+  }
+
+
+
+  // ---------- investimentos e patrimônio ----------
+
+  function salvarNaLista(chave, item){
+
+    setData(d=>{
+
+      const lista = d[chave] || [];
+
+      if(item.id){
+
+        // edição: item excluído no meio do caminho não volta
+        return { ...d, [chave]: lista.map(x=> x.id===item.id ? { ...x, ...item } : x) };
+
+      }
+
+      return { ...d, [chave]: [ ...lista, { ...item, id: Date.now() } ] };
+
+    });
+
+  }
+
+
+  function apagarDaLista(chave, id){
+
+    setData(d=>({ ...d, [chave]: (d[chave] || []).filter(x=>x.id!==id) }));
 
   }
 
@@ -297,7 +375,7 @@ export default function App(){
 
     const confirmar = window.confirm(
       "Restaurar os dados de demonstração?\n\n" +
-      "Isso APAGA todos os seus lançamentos, cartões, compras, contas fixas e metas deste aparelho."
+      "Isso APAGA todos os seus lançamentos, cartões, compras, contas fixas, metas, investimentos e bens deste aparelho."
     );
 
     if(!confirmar) return;
@@ -333,8 +411,11 @@ export default function App(){
     case "new":
       content =
       <NewEntry
+        cartoes={data.cartoes}
         onSave={addEntry}
+        onSavePurchase={(cardId, compra)=>{ savePurchase(cardId, compra); ir("home"); }}
         onCancel={()=>ir("home")}
+        onConfigurarIA={()=>ir("assistant")}
       />;
       break;
 
@@ -350,6 +431,7 @@ export default function App(){
       content =
       <Reports
         data={data}
+        hoje={hoje}
       />;
       break;
 
@@ -370,6 +452,7 @@ export default function App(){
             onSaveCard={saveCard}
             onFuture={()=>ir("future", { cardId:cartaoAtual.id })}
             onCalendar={()=>ir("calendar", { cardId:cartaoAtual.id })}
+            onConfigurarIA={()=>ir("assistant")}
           />
         : paginaCartoes;
       break;
@@ -410,7 +493,39 @@ export default function App(){
       content =
       <Goals
         data={data}
-        onAdd={addGoal}
+        onSave={saveGoal}
+        onDelete={deleteGoal}
+        onMove={moveGoal}
+      />;
+      break;
+
+    case "investments":
+      content =
+      <Investments
+        data={data}
+        onBack={()=>ir(tela.voltar || "home")}
+        onSave={(item)=>salvarNaLista("investimentos", item)}
+        onDelete={(id)=>apagarDaLista("investimentos", id)}
+      />;
+      break;
+
+    case "patrimony":
+      content =
+      <Patrimony
+        data={data}
+        onBack={()=>ir("home")}
+        onSave={(item)=>salvarNaLista("bens", item)}
+        onDelete={(id)=>apagarDaLista("bens", id)}
+        onOpenInvestments={()=>ir("investments", { voltar:"patrimony" })}
+      />;
+      break;
+
+    case "assistant":
+      content =
+      <Assistant
+        data={data}
+        hoje={hoje}
+        onBack={()=>ir("home")}
       />;
       break;
 
@@ -422,6 +537,7 @@ export default function App(){
         onNew={()=>ir("new")}
         onOpenBills={()=>ir("bills")}
         onOpenCard={(id)=>ir("card-details", { cardId:id })}
+        onOpenPage={(p)=>ir(p)}
       />;
 
   }

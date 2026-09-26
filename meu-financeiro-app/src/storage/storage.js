@@ -53,7 +53,19 @@ export function criarSeed(hoje = hojeISO()) {
     contasFixas: [
       { id: 201, nome: "Internet", valor: 126, dia: 10, categoria: "Casa", ativa: true, periodos: [{ inicio, fim: null }] }
     ],
-    metas: [{ id: 1, nome: "Reserva de emergência", objetivo: 10000, atual: 2500 }]
+    metas: [
+      { id: 1, nome: "Reserva de emergência", objetivo: 10000, atual: 2500, historico: [] },
+      { id: 2, nome: "Comprar carro", objetivo: 50000, atual: 12500, historico: [] }
+    ],
+    investimentos: [
+      { id: 301, nome: "CDB Banco Inter", tipo: "CDB", investido: 12000, atual: 12280 },
+      { id: 302, nome: "Tesouro Selic", tipo: "Tesouro", investido: 8000, atual: 8170 }
+    ],
+    bens: [
+      { id: 401, nome: "Carro", tipo: "Veículo", valor: 50000 },
+      { id: 402, nome: "Moto", tipo: "Veículo", valor: 15000 },
+      { id: 403, nome: "Casa", tipo: "Imóvel", valor: 300000 }
+    ]
   };
 }
 
@@ -236,7 +248,9 @@ export function migrarV1(antigo) {
       ),
       cartoes,
       contasFixas: [],
-      metas: Array.isArray(antigo?.metas) ? antigo.metas : []
+      metas: Array.isArray(antigo?.metas) ? antigo.metas : [],
+      investimentos: [],
+      bens: []
     },
     fotos
   };
@@ -252,7 +266,9 @@ function normalizar(dados) {
       compras: Array.isArray(c.compras) ? c.compras : []
     })),
     contasFixas: Array.isArray(dados.contasFixas) ? dados.contasFixas : [],
-    metas: Array.isArray(dados.metas) ? dados.metas : []
+    metas: Array.isArray(dados.metas) ? dados.metas : [],
+    investimentos: Array.isArray(dados.investimentos) ? dados.investimentos : [],
+    bens: Array.isArray(dados.bens) ? dados.bens : []
   };
 }
 

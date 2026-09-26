@@ -1,15 +1,25 @@
 import React, { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { lerData, mesDaData, money, nomeMes, somarMeses, tituloMes, MESES } from "../lib/formato.js";
+import MonthPicker from "../components/MonthPicker.jsx";
+import { ICONE_FRASE } from "./Assistant.jsx";
+import { lerData, mesDaData, money, nomeMes, MESES } from "../lib/formato.js";
 import { resumoDoMes } from "../lib/mes.js";
+import { alertas, analiseDoMes } from "../lib/analise.js";
 
-export default function Home({ data, hoje, onNew, onOpenBills, onOpenCard }) {
+const ICONE_ALERTA = { aviso: "⚠️", ok: "✅", info: "📅" };
+
+export default function Home({ data, hoje, onNew, onOpenBills, onOpenCard, onOpenPage }) {
   const mesHoje = mesDaData(hoje);
   const [mes, setMes] = useState(mesHoje);
   const r = useMemo(() => resumoDoMes(data, mes, hoje), [data, mes, hoje]);
+  const avisos = useMemo(() => alertas(data, hoje), [data, hoje]);
+  const frases = useMemo(() => analiseDoMes(data, mes, hoje), [data, mes, hoje]);
 
   const maior = Math.max(1, ...r.categorias.map(([, v]) => v));
-  const futuro = mes > mesHoje;
+
+  function abrirAlerta(a) {
+    if (a.cartaoId != null) onOpenCard(a.cartaoId);
+    else if (a.pagina) onOpenPage(a.pagina);
+  }
 
   return (
     <div className="page">
@@ -20,23 +30,24 @@ export default function Home({ data, hoje, onNew, onOpenBills, onOpenCard }) {
         </div>
       </header>
 
-      <div className="month-picker">
-        <button aria-label="Mês anterior" onClick={() => setMes(somarMeses(mes, -1))}>
-          <ChevronLeft size={20} />
-        </button>
-        <div className="month-picker-label">
-          <strong>{tituloMes(mes)}</strong>
-          {futuro && <span className="tag">Previsão</span>}
-          {mes !== mesHoje && (
-            <button className="link" onClick={() => setMes(mesHoje)}>
-              voltar para o mês atual
+      {avisos.length > 0 && (
+        <section className="alerts" aria-label="Alertas">
+          {avisos.map((a) => (
+            <button
+              type="button"
+              key={a.id}
+              className={`alert ${a.tipo}`}
+              onClick={() => abrirAlerta(a)}
+              disabled={a.cartaoId == null && !a.pagina}
+            >
+              <span aria-hidden="true">{ICONE_ALERTA[a.tipo]}</span>
+              <p>{a.texto}</p>
             </button>
-          )}
-        </div>
-        <button aria-label="Próximo mês" onClick={() => setMes(somarMeses(mes, 1))}>
-          <ChevronRight size={20} />
-        </button>
-      </div>
+          ))}
+        </section>
+      )}
+
+      <MonthPicker mes={mes} mesHoje={mesHoje} onChange={setMes} />
 
       <section className="balance-card">
         <span>Saldo do mês</span>
@@ -59,6 +70,38 @@ export default function Home({ data, hoje, onNew, onOpenBills, onOpenCard }) {
         Despesas = lançamentos {money(r.origem.lancamentos)} + faturas {money(r.origem.cartoes)} + contas fixas{" "}
         {money(r.origem.fixas)}
       </p>
+
+      <nav className="shortcuts" aria-label="Atalhos">
+        <button type="button" onClick={onOpenBills}>
+          <span aria-hidden="true">🔁</span>Contas fixas
+        </button>
+        <button type="button" onClick={() => onOpenPage("investments")}>
+          <span aria-hidden="true">📈</span>Investimentos
+        </button>
+        <button type="button" onClick={() => onOpenPage("patrimony")}>
+          <span aria-hidden="true">🏦</span>Patrimônio
+        </button>
+        <button type="button" onClick={() => onOpenPage("assistant")}>
+          <span aria-hidden="true">✨</span>Assistente
+        </button>
+      </nav>
+
+      <section className="section-card">
+        <div className="section-title">
+          <h2 className="no-margin">Análise do mês</h2>
+          <button className="link" onClick={() => onOpenPage("assistant")}>
+            ver mais
+          </button>
+        </div>
+        <ul className="insights">
+          {frases.slice(0, 3).map((f, i) => (
+            <li key={i} className={`insight ${f.tipo}`}>
+              <span aria-hidden="true">{ICONE_FRASE[f.tipo]}</span>
+              <p>{f.texto}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="section-card">
         <div className="section-title">

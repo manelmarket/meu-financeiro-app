@@ -99,7 +99,9 @@ export default function Bills({ data, onBack, onSave, onDelete, onToggle }) {
   const totalAtivas = contas.filter((c) => c.ativa !== false).reduce((t, c) => t + Number(c.valor || 0), 0);
 
   function excluir(conta) {
-    if (window.confirm(`Excluir a conta fixa "${conta.nome}"? Ela sai de todos os meses.`)) onDelete(conta.id);
+    if (!window.confirm(`Excluir a conta fixa "${conta.nome}"? Ela sai de todos os meses.`)) return;
+    if (editando?.id === conta.id) setEditando(null);
+    onDelete(conta.id);
   }
 
   return (

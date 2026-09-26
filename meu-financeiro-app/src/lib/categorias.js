@@ -29,3 +29,8 @@ export const SUGESTOES_CONTAS = [
   { nome: "Academia", categoria: "Saúde" },
   { nome: "Escola", categoria: "Filhos" }
 ];
+
+export const TIPOS_INVESTIMENTO = ["CDB", "Tesouro", "Ações", "Fundos", "Cripto"];
+
+// "Dívida" entra subtraindo no patrimônio líquido
+export const TIPOS_BEM = ["Imóvel", "Veículo", "Outros bens", "Dívida"];

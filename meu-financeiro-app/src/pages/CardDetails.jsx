@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import CardSummary from "../components/CardSummary.jsx";
 import CardForm from "../components/CardForm.jsx";
 import CupomModal from "../components/CupomModal.jsx";
+import ScanButton from "../components/ScanButton.jsx";
 import { CATEGORIAS } from "../lib/categorias.js";
 import { dataBR, dataValida, diaMesBR, hojeISO, money, parseValor, rotuloMes } from "../lib/formato.js";
 import {
@@ -15,7 +16,7 @@ import { apagarCupom, comprimirImagem, salvarCupom } from "../storage/cupons.js"
 
 const OPCOES_PARCELAS = Array.from({ length: 12 }, (_, i) => i + 1);
 
-function PurchaseForm({ cartao, inicial, onSave, onCancel, onVerCupom }) {
+function PurchaseForm({ cartao, inicial, onSave, onCancel, onVerCupom, onConfigurarIA }) {
   const [descricao, setDescricao] = useState(inicial?.descricao || "");
   const [valor, setValor] = useState(inicial ? String(inicial.valorTotal).replace(".", ",") : "");
   const [categoria, setCategoria] = useState(inicial?.categoria || "Alimentação");
@@ -65,6 +66,17 @@ function PurchaseForm({ cartao, inicial, onSave, onCancel, onVerCupom }) {
     }
   }
 
+  function preencherPeloCupom(lido, blob) {
+    if (lido.valor) setValor(lido.valor.toFixed(2).replace(".", ","));
+    if (lido.descricao) setDescricao(lido.descricao);
+    if (lido.data) setData(lido.data);
+    if (lido.categoria) setCategoria(lido.categoria);
+    setFoto(blob);
+    setPreview(URL.createObjectURL(blob));
+    setRemoverFoto(false);
+    setErro("");
+  }
+
   async function salvar() {
     if (!descricao.trim()) return setErro("Informe a descrição da compra.");
     if (!(valorNumero > 0)) return setErro("Informe o valor total da compra (ex.: 1.250,50).");
@@ -83,6 +95,8 @@ function PurchaseForm({ cartao, inicial, onSave, onCancel, onVerCupom }) {
   return (
     <section className="section-card form">
       <h2>{inicial ? "Editar compra" : "Nova compra"}</h2>
+
+      {!inicial && <ScanButton onResult={preencherPeloCupom} onConfigurar={onConfigurarIA} />}
 
       <label>
         Descrição
@@ -210,7 +224,8 @@ export default function CardDetails({
   onDeletePurchase,
   onSaveCard,
   onFuture,
-  onCalendar
+  onCalendar,
+  onConfigurarIA
 }) {
   const [formAberto, setFormAberto] = useState(Boolean(abrirForm));
   const [editando, setEditando] = useState(null);
@@ -345,6 +360,7 @@ export default function CardDetails({
             onSave={salvarCompra}
             onCancel={fecharForm}
             onVerCupom={setCupom}
+            onConfigurarIA={onConfigurarIA}
           />
         </div>
       )}
