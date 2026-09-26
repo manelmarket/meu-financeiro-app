@@ -17,30 +17,34 @@
 //   apagarFotos(ids, versaoEsperada) -> true/false
 
 import { iguais, mesclarDados } from "./mesclar.js";
-import { juntarDados } from "./juntar.js";
+import { juntarDados, juntarPerfil } from "./juntar.js";
 import { idsDasFotos } from "./backup.js";
 
 const TENTATIVAS = 3;
 
-async function umaVez({ nuvem, local, base, versao, ehDemonstracao }) {
+// semDadosProprios(dados): true se não há nada da pessoa (só demonstração intacta ou nenhum registro)
+// novaConta(local): dados com que uma conta nova começa (se não vier, usa os deste aparelho)
+async function umaVez({ nuvem, local, base, versao, semDadosProprios, novaConta }) {
   const info = await nuvem.lerInfo();
 
   // nuvem vazia: a primeira cópia sai deste aparelho
   if (!info) {
-    const nova = await nuvem.enviarDados(local, 0);
-    return { acao: "enviou", dados: local, base: local, versao: nova, fotos: [] };
+    const inicio = novaConta ? novaConta(local) : local;
+    const nova = await nuvem.enviarDados(inicio, 0);
+    return { acao: "enviou", dados: inicio, base: inicio, versao: nova, fotos: [] };
   }
 
   // primeira sincronização deste aparelho, com a nuvem já tendo dados
   if (base == null || versao == null) {
     const remoto = await nuvem.baixarDados(info);
-    if (iguais(local, remoto.dados) || ehDemonstracao(local)) {
+    if (iguais(local, remoto.dados) || semDadosProprios(local)) {
       return { acao: "recebeu", dados: remoto.dados, base: remoto.dados, versao: remoto.versao, fotos: info.fotos };
     }
-    if (ehDemonstracao(remoto.dados)) {
-      // na nuvem só havia os dados de demonstração: ficam os deste aparelho
-      const nova = await nuvem.enviarDados(local, remoto.versao);
-      return { acao: "enviou", dados: local, base: local, versao: nova, fotos: info.fotos };
+    if (semDadosProprios(remoto.dados)) {
+      // na nuvem não havia registros da pessoa: ficam os deste aparelho (o perfil da nuvem é mantido)
+      const dados = { ...local, usuario: juntarPerfil(local.usuario, remoto.dados.usuario) };
+      const nova = await nuvem.enviarDados(dados, remoto.versao);
+      return { acao: "enviou", dados, base: dados, versao: nova, fotos: info.fotos };
     }
     // os dois lados têm dados próprios: a pessoa escolhe o que fazer
     return { acao: "escolher", remoto: remoto.dados, versao: remoto.versao, fotos: info.fotos };

@@ -215,3 +215,61 @@ button:disabled{opacity:.6;cursor:default}
 .choice{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
 .choice p{margin:0;font-size:13.5px;line-height:1.45}
 .choice small{font-size:12px;color:#64748b;margin:-2px 2px 6px}
+
+/* menu lateral (⋮) */
+.conteudo{position:relative}
+.menu-btn{position:absolute;left:12px;top:31px;z-index:5;border:0;width:36px;height:36px;border-radius:50%;background:#fff;color:#334155;box-shadow:0 4px 14px rgba(15,23,42,.12);display:flex;align-items:center;justify-content:center;padding:0}
+.app-shell .topbar{padding-left:46px}
+.drawer-root{position:fixed;inset:0;z-index:1000;visibility:hidden;pointer-events:none;transition:visibility 0s linear .25s}
+.drawer-root.aberto{visibility:visible;pointer-events:auto;transition-delay:0s}
+.drawer-fundo{position:absolute;inset:0;background:rgba(15,23,42,.45);opacity:0;transition:opacity .22s ease}
+.drawer-root.aberto .drawer-fundo{opacity:1}
+.drawer{position:absolute;top:0;bottom:0;left:max(0px,calc((100vw - 520px)/2));width:min(300px,84vw);background:#fff;box-shadow:8px 0 30px rgba(15,23,42,.18);transform:translateX(-105%);transition:transform .25s ease;display:flex;flex-direction:column;overflow-y:auto;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.drawer-root.aberto .drawer{transform:none}
+.drawer-topo{display:flex;align-items:center;gap:8px;padding:18px 14px 14px;border-bottom:1px solid #edf2f7}
+.drawer-perfil{flex:1;display:flex;align-items:center;gap:10px;border:0;background:transparent;text-align:left;padding:4px;border-radius:12px;min-width:0;color:#0f172a}
+.drawer-perfil span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.drawer-perfil b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drawer-perfil small{font-size:12px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drawer-fechar{border:0;background:#eef2f7;color:#334155;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+.drawer-lista{padding:6px 10px}
+.drawer-grupo{padding:6px 0;border-bottom:1px solid #edf2f7}
+.drawer-grupo:last-child{border-bottom:0}
+.drawer-titulo{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;padding:8px 10px 4px}
+.drawer-item{width:100%;display:flex;align-items:center;gap:12px;border:0;background:transparent;border-radius:12px;padding:11px 10px;font-size:15px;font-weight:700;color:#334155;text-align:left}
+.drawer-item:hover{background:#f1f5f9}
+.drawer-item.ativo{background:#eff6ff;color:#2563eb}
+@media (prefers-reduced-motion:reduce){.drawer,.drawer-fundo,.drawer-root{transition:none}}
+
+/* foto da conta */
+.avatar{border-radius:50%;object-fit:cover;flex-shrink:0;background:#e2e8f0}
+.avatar-letras{display:inline-flex;align-items:center;justify-content:center;background:#dbeafe;color:#1e3a8a;font-weight:800}
+
+/* tela de entrada (login) */
+.entrada-shell{padding-bottom:0;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.entrada{width:100%;padding:32px 20px}
+.entrada-card{background:#fff;border:1px solid #e8edf3;border-radius:24px;padding:28px 22px;display:flex;flex-direction:column;gap:12px;text-align:center;box-shadow:0 12px 30px rgba(15,23,42,.08)}
+.entrada-logo{width:72px;height:72px;border-radius:22px;background:linear-gradient(145deg,#0f172a,#1e293b);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 4px}
+.entrada h1{margin:0;font-size:26px}
+.entrada-sub{margin:0 0 8px;color:#64748b;font-size:14px;line-height:1.5}
+.entrada-btn{margin-top:4px;padding:15px 18px;font-size:16px}
+.entrada-nota{margin:4px 0 0;line-height:1.5}
+.entrada-escolha{text-align:left;display:flex;flex-direction:column;gap:10px}
+.entrada .hint,.entrada .form-error{text-align:left}
+
+/* configurações e perfil */
+.settings-item{width:100%;display:flex;align-items:center;gap:12px;border:0;background:#f8fafc;border-radius:14px;padding:12px;text-align:left;color:#0f172a;margin-top:8px}
+.settings-item:first-of-type{margin-top:0}
+.settings-text{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.settings-text b{font-size:15px}
+.settings-text small{font-size:12.5px;color:#64748b;line-height:1.4;overflow-wrap:anywhere}
+.settings-text small.settings-link{color:#2563eb;font-weight:700}
+.settings-icone{color:#2563eb;flex-shrink:0}
+.settings-seta{color:#94a3b8;flex-shrink:0}
+.settings-item.perigo .settings-icone,.settings-item.perigo b{color:#b91c1c}
+.sair-conta{display:flex;align-items:center;justify-content:center;gap:8px}
+.perfil-topo{display:flex;align-items:center;gap:14px}
+.perfil-topo div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.perfil-topo b{font-size:18px}
+.perfil-topo small{font-size:13px;color:#475569;overflow-wrap:anywhere}
+.form input:disabled{background:#f1f5f9;color:#64748b}

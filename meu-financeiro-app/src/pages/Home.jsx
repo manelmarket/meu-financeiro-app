@@ -6,6 +6,7 @@ import { resumoDoMes } from "../lib/mes.js";
 import { alertas, analiseDoMes } from "../lib/analise.js";
 import { diasDesde, lerUltimoBackup, quandoFoi } from "../lib/backup.js";
 import { ehSoDemonstracao } from "../storage/storage.js";
+import { nomeParaMostrar } from "../lib/perfil.js";
 
 const ICONE_ALERTA = { aviso: "⚠️", ok: "✅", info: "📅" };
 
@@ -88,7 +89,7 @@ export default function Home({ data, hoje, nuvem, onNew, onOpenBills, onOpenCard
       <header className="topbar">
         <div>
           <div className="eyebrow">Meu mês</div>
-          <h1>Olá, {data.usuario?.nome || "você"} 👋</h1>
+          <h1>Olá, {nomeParaMostrar(data.usuario, nuvem?.usuario) || "você"} 👋</h1>
         </div>
       </header>
 

@@ -289,6 +289,34 @@ export function ehSoDemonstracao(dados) {
   return iguais(semDatas(normalizar(dados)), semDatas(criarSeed()));
 }
 
+// Conta nova começa sem nada (só o perfil é preenchido depois, com o nome da conta Google)
+export function criarVazio() {
+  return {
+    versao: 2,
+    usuario: { nome: "" },
+    lancamentos: [],
+    cartoes: [],
+    contasFixas: [],
+    metas: [],
+    investimentos: [],
+    bens: []
+  };
+}
+
+// Nenhum registro (o perfil não conta)
+export function ehVazio(dados) {
+  if (!dados || typeof dados !== "object") return false;
+  const d = normalizar(dados);
+  return ["lancamentos", "cartoes", "contasFixas", "metas", "investimentos", "bens"].every((k) => d[k].length === 0);
+}
+
+// Aparelho/conta sem dados próprios: só a demonstração intacta, ou nenhum registro
+export function semDadosProprios(dados) {
+  return ehSoDemonstracao(dados) || ehVazio(dados);
+}
+
+export const NOME_DA_DEMONSTRACAO = "João";
+
 // ---------- API usada pelo App ----------
 
 // Fotos que ainda estão só na cópia antiga (a cópia para o IndexedDB não terminou

@@ -14,6 +14,7 @@ import {
   quandoFoi
 } from "../lib/backup.js";
 import { lerCupom } from "../storage/cupons.js";
+import EscolhaNuvem, { sairComConfirmacao } from "../components/EscolhaNuvem.jsx";
 
 function baixarArquivo(arquivo) {
   const url = URL.createObjectURL(arquivo);
@@ -44,7 +45,6 @@ function podeCompartilharArquivo() {
 }
 
 function SecaoNuvem({ nuvem, data }) {
-  const [enviando, setEnviando] = useState(false);
   const precisaEntrar = !nuvem.usuario || nuvem.status === "desligada" || nuvem.status === "sessao";
 
   // deixa o login do Google carregado antes do toque (no celular a janela só abre se for imediata)
@@ -63,29 +63,7 @@ function SecaoNuvem({ nuvem, data }) {
 
   const { status, usuario, mensagem } = nuvem;
   const conectado = Boolean(usuario) && status !== "desligada";
-
-  function sair() {
-    const ok = window.confirm(
-      "Sair da conta neste aparelho?\n\nSeus dados continuam neste aparelho e na nuvem, mas este aparelho para de sincronizar."
-    );
-    if (ok) nuvem.sair();
-  }
-
-  async function escolher(opcao) {
-    const perguntas = {
-      nuvem:
-        "Usar só os dados da nuvem?\n\nOs dados deste aparelho serão trocados pelos da nuvem. Uma cópia de segurança dos dados deste aparelho fica guardada aqui.",
-      aparelho:
-        "Usar só os dados deste aparelho?\n\nOs dados da nuvem serão trocados pelos deste aparelho. Uma cópia de segurança dos dados da nuvem fica guardada aqui."
-    };
-    if (perguntas[opcao] && !window.confirm(perguntas[opcao])) return;
-    setEnviando(true);
-    try {
-      await nuvem.escolher(opcao);
-    } finally {
-      setEnviando(false);
-    }
-  }
+  const sair = () => sairComConfirmacao(nuvem);
 
   if (!conectado) {
     const entrando = status === "entrando";
@@ -117,38 +95,11 @@ function SecaoNuvem({ nuvem, data }) {
   );
 
   if (status === "escolher" && nuvem.escolha) {
-    const naNuvem = descreverContagem(contarDados(nuvem.escolha.remoto));
-    const aqui = descreverContagem(contarDados(data));
     return (
       <section className="section-card">
         <h2>☁️ Nuvem</h2>
         {quem}
-        <div className="choice">
-          <p>
-            <b>Sua conta já tem dados na nuvem</b>, e este aparelho também tem dados diferentes. O que você quer fazer?
-          </p>
-          <p className="muted small">
-            Na nuvem: {naNuvem}.
-            <br />
-            Neste aparelho: {aqui}.
-          </p>
-          {mensagem && <p className="form-error">{mensagem}</p>}
-          <button type="button" className="primary wide-btn" disabled={enviando} onClick={() => escolher("juntar")}>
-            Juntar os dois (recomendado)
-          </button>
-          <small>Fica tudo: os registros da nuvem e os deste aparelho.</small>
-          <button type="button" className="secondary wide-btn" disabled={enviando} onClick={() => escolher("nuvem")}>
-            Usar só os da nuvem
-          </button>
-          <small>Os dados deste aparelho são trocados pelos da nuvem.</small>
-          <button type="button" className="ghost wide-btn" disabled={enviando} onClick={() => escolher("aparelho")}>
-            Usar só os deste aparelho
-          </button>
-          <small>Os dados da nuvem são trocados pelos deste aparelho.</small>
-        </div>
-        <button type="button" className="link small" onClick={sair}>
-          Cancelar e sair da conta
-        </button>
+        <EscolhaNuvem nuvem={nuvem} data={data} />
       </section>
     );
   }

@@ -1,7 +1,10 @@
 import React from "react";
 import { useEffect, useLayoutEffect, useState } from "react";
 
+import { MoreVertical } from "lucide-react";
+
 import BottomNav from "./components/BottomNav";
+import MenuLateral from "./components/MenuLateral";
 
 import Home from "./pages/Home";
 import Reports from "./pages/Reports";
@@ -17,16 +20,21 @@ import Investments from "./pages/Investments";
 import Patrimony from "./pages/Patrimony";
 import Assistant from "./pages/Assistant";
 import Backup from "./pages/Backup";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
+import Entrada from "./pages/Entrada";
 
 import useNuvem from "./lib/useNuvem";
 import { guardarCopia } from "./lib/backup";
+import { primeiroNome } from "./lib/perfil";
 
 import {
   loadData,
   saveData,
   resetData,
   pegarFotosPendentes,
-  liberarFotosDoBackupAntigo
+  liberarFotosDoBackupAntigo,
+  NOME_DA_DEMONSTRACAO
 } from "./storage/storage";
 import { apagarCupom, comprimirImagem, dataURLParaBlob, limparCupons, salvarCupom } from "./storage/cupons";
 import { arredondar, hojeISO, mesDaData } from "./lib/formato";
@@ -44,6 +52,14 @@ const ABA_DA_TELA = {
   backup: "home"
 };
 
+// Item do menu lateral que fica aceso em cada tela
+const ITEM_DO_MENU = {
+  "card-details": "cards",
+  future: "cards",
+  calendar: "cards",
+  profile: "settings"
+};
+
 export default function App(){
 
   const [data,setData] = useState(()=>loadData());
@@ -51,6 +67,8 @@ export default function App(){
   const [tela,setTela] = useState({ page:"home" });
 
   const [erroSalvar,setErroSalvar] = useState(false);
+
+  const [menuAberto,setMenuAberto] = useState(false);
 
   // login com Google + sincronização dos dados com a nuvem
   const nuvem = useNuvem(data, setData);
@@ -136,7 +154,57 @@ export default function App(){
 
   function ir(page, extra = {}){
 
+    setMenuAberto(false);
+
     setTela({ page, ...extra });
+
+  }
+
+
+
+  // O app só abre depois do login com a conta Google
+  const precisaEntrar =
+    nuvem.configurada &&
+    (!nuvem.usuario || nuvem.status==="sessao" || nuvem.status==="entrando" || Boolean(nuvem.escolha));
+
+  // voltou para a tela de entrada (saiu da conta, sessão terminou): depois do login, começa pelo Início
+  useEffect(()=>{
+
+    if(!precisaEntrar) return;
+
+    setMenuAberto(false);
+
+    setTela(t=> t.page==="home" ? t : { page:"home" });
+
+  },[precisaEntrar]);
+
+
+
+  // Perfil: depois de entrar, se o perfil ainda não tem nome (ou tem o "João" da demonstração),
+  // usa o nome da conta Google
+  useEffect(()=>{
+
+    const nomeGoogle = nuvem.usuario?.nome;
+
+    if(nuvem.status!=="ok" || !nomeGoogle) return;
+
+    setData(d=>{
+
+      const u = d.usuario || {};
+
+      if(u.nome && u.nome!==NOME_DA_DEMONSTRACAO) return d;
+
+      return { ...d, usuario:{ ...u, nome:nomeGoogle, apelido:u.apelido || primeiroNome(nomeGoogle) } };
+
+    });
+
+  },[nuvem.status, nuvem.usuario?.uid]);
+
+
+
+  function salvarPerfil(perfil){
+
+    setData(d=>({ ...d, usuario:{ ...(d.usuario || {}), ...perfil } }));
 
   }
 
@@ -598,6 +666,29 @@ export default function App(){
       />;
       break;
 
+    case "settings":
+      content =
+      <Settings
+        data={data}
+        nuvem={nuvem}
+        onBack={()=>ir("home")}
+        onIr={(p)=>ir(p)}
+        onResetar={resetar}
+      />;
+      break;
+
+    case "profile":
+      content =
+      <Profile
+        key={nuvem.usuario?.uid || "sem-conta"}
+        data={data}
+        hoje={hoje}
+        nuvem={nuvem}
+        onBack={()=>ir("settings")}
+        onSave={salvarPerfil}
+      />;
+      break;
+
     default:
       content =
       <Home
@@ -614,6 +705,22 @@ export default function App(){
 
 
 
+  if(precisaEntrar){
+
+    return (
+
+      <div className="app-shell entrada-shell">
+
+        <Entrada nuvem={nuvem} data={data} />
+
+      </div>
+
+    );
+
+  }
+
+
+
   return (
 
     <div className="app-shell">
@@ -624,7 +731,27 @@ export default function App(){
         </div>
       }
 
-      {content}
+      <div className="conteudo">
+
+        <button
+
+          className="menu-btn"
+
+          aria-label="Abrir menu"
+
+          title="Menu"
+
+          onClick={()=>setMenuAberto(true)}
+
+        >
+
+          <MoreVertical size={20} strokeWidth={2.4} />
+
+        </button>
+
+        {content}
+
+      </div>
 
       {
       tela.page!=="new" &&
@@ -637,19 +764,21 @@ export default function App(){
       />
       }
 
-      <button
+      <MenuLateral
 
-        className="reset"
+        aberto={menuAberto}
 
-        title="Restaurar dados de demonstração"
+        ativo={ITEM_DO_MENU[tela.page] || tela.page}
 
-        onClick={resetar}
+        perfil={data.usuario}
 
-      >
+        conta={nuvem.usuario}
 
-        ↺
+        onIr={(p)=>ir(p)}
 
-      </button>
+        onFechar={()=>setMenuAberto(false)}
+
+      />
 
     </div>
 

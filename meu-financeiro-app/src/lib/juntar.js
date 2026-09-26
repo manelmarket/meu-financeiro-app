@@ -101,6 +101,19 @@ function juntarLista(chave, L, R, S, usados) {
   return resultado;
 }
 
+// Perfil: fica o que foi preenchido de verdade (o nome "João" da demonstração não conta)
+export function juntarPerfil(local, remoto) {
+  const padrao = criarSeed().usuario.nome;
+  const l = local && typeof local === "object" ? local : {};
+  const r = remoto && typeof remoto === "object" ? remoto : {};
+  const resultado = { ...r, ...l };
+  if ((!l.nome || l.nome === padrao) && r.nome) resultado.nome = r.nome;
+  for (const campo of ["apelido", "telefone", "nascimento"]) {
+    if (!l[campo] && r[campo]) resultado[campo] = r[campo];
+  }
+  return resultado;
+}
+
 export function juntarDados(local, remoto) {
   const semente = criarSeed();
   const usados = new Set();
@@ -111,6 +124,6 @@ export function juntarDados(local, remoto) {
   for (const chave of LISTAS) {
     resultado[chave] = juntarLista(chave, lista(local?.[chave]), lista(remoto?.[chave]), lista(semente[chave]), usados);
   }
-  if (iguais(local?.usuario, semente.usuario) && remoto?.usuario) resultado.usuario = remoto.usuario;
+  resultado.usuario = juntarPerfil(local?.usuario, remoto?.usuario);
   return resultado;
 }

@@ -20,7 +20,12 @@ const EMULADOR = import.meta.env.VITE_NUVEM_EMULADOR || "";
 
 export const NUVEM_EMULADOR = EMULADOR;
 
-export const FIREBASE_CONFIG = EMULADOR
+// Só nos testes automáticos das telas antigas: app sem nuvem (sem tela de login)
+const SEM_NUVEM = Boolean(import.meta.env.VITE_NUVEM_DESLIGADA);
+
+export const FIREBASE_CONFIG = SEM_NUVEM
+  ? null
+  : EMULADOR
   ? {
       apiKey: "chave-de-teste",
       authDomain: "demo-meu-financeiro.firebaseapp.com",

@@ -54,7 +54,7 @@ function iniciar() {
 // ---------- login ----------
 
 function usuarioDe(u) {
-  return { uid: u.uid, email: u.email || "", nome: u.displayName || "" };
+  return { uid: u.uid, email: u.email || "", nome: u.displayName || "", foto: u.photoURL || "" };
 }
 
 // Carrega o login antes do toque no botão: no celular/Safari a janela do Google

@@ -6,7 +6,7 @@ import { NUVEM_CONFIGURADA } from "../config/firebase.js";
 import { guardarCopia, idsDasFotos } from "./backup.js";
 import { iguais, mesclarDados } from "./mesclar.js";
 import { resolverPrimeiraVez, sincronizar, sincronizarFotos } from "./sincronia.js";
-import { criarSeed, ehSoDemonstracao } from "../storage/storage.js";
+import { criarVazio, semDadosProprios } from "../storage/storage.js";
 import { lerCupom, listarCupons, salvarCupom } from "../storage/cupons.js";
 import {
   apagarBase,
@@ -59,7 +59,7 @@ export default function useNuvem(data, setData) {
     const meta = metaRef.current;
     return {
       status: !NUVEM_CONFIGURADA ? "sem-config" : meta ? "iniciando" : "desligada",
-      usuario: meta ? { uid: meta.uid, email: meta.email || "", nome: meta.nome || "" } : null,
+      usuario: meta ? { uid: meta.uid, email: meta.email || "", nome: meta.nome || "", foto: meta.foto || "" } : null,
       sincronizadoEm: meta?.sincronizadoEm || null,
       mensagem: "",
       escolha: null
@@ -204,7 +204,9 @@ export default function useNuvem(data, setData) {
         local: antes,
         base: baseRef.current,
         versao: metaRef.current.versao ?? null,
-        ehDemonstracao: ehSoDemonstracao
+        semDadosProprios,
+        // conta nova começa vazia (a demonstração deste aparelho não vai para a nuvem)
+        novaConta: (local) => (semDadosProprios(local) ? criarVazio() : local)
       });
       if (!continuaIgual()) return;
 
@@ -242,8 +244,9 @@ export default function useNuvem(data, setData) {
 
     if (contaNova) {
       // dados de outra conta que usou este aparelho: pergunta antes de misturar
-      const ultima = lerUltimaConta();
-      if (ultima && ultima.uid !== usuario.uid && !ehSoDemonstracao(dadosRef.current)) {
+      // (inclusive quando a sessão da outra conta só terminou, sem "Sair da conta")
+      const ultima = anterior || lerUltimaConta();
+      if (ultima && ultima.uid !== usuario.uid && !semDadosProprios(dadosRef.current)) {
         const usar = window.confirm(
           `Os dados deste aparelho eram usados com a conta ${ultima.email || "anterior"}.\n\n` +
             `Usar esses dados também na conta ${usuario.email}?\n\n` +
@@ -253,17 +256,24 @@ export default function useNuvem(data, setData) {
         );
         if (!usar) {
           guardarCopia(dadosRef.current, `da conta ${ultima.email || "anterior"}`);
-          const demonstracao = criarSeed();
-          dadosRef.current = demonstracao;
-          setData(demonstracao);
+          const vazio = criarVazio();
+          dadosRef.current = vazio;
+          setData(vazio);
         }
       }
-      metaRef.current = { uid: usuario.uid, email: usuario.email, nome: usuario.nome, versao: null, sincronizadoEm: null };
+      metaRef.current = {
+        uid: usuario.uid,
+        email: usuario.email,
+        nome: usuario.nome,
+        foto: usuario.foto || "",
+        versao: null,
+        sincronizadoEm: null
+      };
       baseRef.current = null;
       pendenteRef.current = null;
       await apagarBase();
     } else {
-      metaRef.current = { ...anterior, email: usuario.email, nome: usuario.nome };
+      metaRef.current = { ...anterior, email: usuario.email, nome: usuario.nome, foto: usuario.foto || "" };
     }
     salvarEstadoNuvem(metaRef.current);
     escolhaRef.current = null;
