@@ -401,10 +401,25 @@ card.limite - limiteComprometido;
         </small>
 
 
-      </section>
+            </section>
 
 
+      <button
 
+        className="primary"
+
+        style={{
+          marginTop:"15px",
+          marginBottom:"15px"
+        }}
+
+        onClick={()=>alert("Abrir lançamentos futuros")}
+
+      >
+
+        📅 Lançamentos futuros
+
+      </button>
 
 
       <section className="section-card">
