@@ -7,6 +7,7 @@ import { guardarCopia, idsDasFotos } from "./backup.js";
 import { iguais, mesclarDados } from "./mesclar.js";
 import { resolverPrimeiraVez, sincronizar, sincronizarFotos } from "./sincronia.js";
 import { criarVazio, semDadosProprios } from "../storage/storage.js";
+import { ehAppAndroid, marcarIdaAoLogin, voltouDoLogin } from "./modoApp.js";
 import { lerCupom, listarCupons, salvarCupom } from "../storage/cupons.js";
 import {
   apagarBase,
@@ -82,6 +83,11 @@ export default function useNuvem(data, setData) {
   // (se o armazenamento estiver cheio, a próxima abertura recomeça da última base segura).
   const salvoOkRef = useRef(true);
   const pendenteRef = useRef(null); // { uid, base, versao, sincronizadoEm }
+  // de quem são os dados deste aparelho (uid da conta); null = de antes do login ou demonstração
+  const donoRef = useRef(undefined);
+  if (donoRef.current === undefined) {
+    donoRef.current = metaRef.current?.uid || (NUVEM_CONFIGURADA ? lerUltimaConta()?.uid : null) || null;
+  }
 
   function atualizar(parcial) {
     setEstado((e) => ({ ...e, ...parcial }));
@@ -141,6 +147,7 @@ export default function useNuvem(data, setData) {
   async function confirmarBase(uid, base, versao, aplicou) {
     const sincronizadoEm = new Date().toISOString();
     baseRef.current = base;
+    donoRef.current = uid; // os dados deste aparelho agora são desta conta
     metaRef.current = { ...metaRef.current, versao, sincronizadoEm };
     pendenteRef.current = { uid, base, versao, sincronizadoEm };
     if (!aplicou && salvoOkRef.current) await gravarPendente();
@@ -205,10 +212,20 @@ export default function useNuvem(data, setData) {
         base: baseRef.current,
         versao: metaRef.current.versao ?? null,
         semDadosProprios,
-        // conta nova começa vazia (a demonstração deste aparelho não vai para a nuvem)
-        novaConta: (local) => (semDadosProprios(local) ? criarVazio() : local)
+        // conta nova sempre começa vazia (nada deste aparelho vai para ela)
+        novaConta: () => criarVazio()
       });
       if (!continuaIgual()) return;
+
+      // os dados que estavam neste aparelho não entraram na conta: ficam numa cópia de segurança
+      if (r.descartouLocal) {
+        guardarCopia(
+          antes,
+          `que estavam neste aparelho antes de entrar na conta ${metaRef.current.email || ""}`.trim(),
+          new Date(),
+          donoRef.current
+        );
+      }
 
       if (r.acao === "escolher") {
         clearTimeout(avisoDeDemora);
@@ -243,23 +260,27 @@ export default function useNuvem(data, setData) {
     const contaNova = !anterior || anterior.uid !== usuario.uid;
 
     if (contaNova) {
-      // dados de outra conta que usou este aparelho: pergunta antes de misturar
-      // (inclusive quando a sessão da outra conta só terminou, sem "Sair da conta")
-      const ultima = anterior || lerUltimaConta();
-      if (ultima && ultima.uid !== usuario.uid && !semDadosProprios(dadosRef.current)) {
-        const usar = window.confirm(
-          `Os dados deste aparelho eram usados com a conta ${ultima.email || "anterior"}.\n\n` +
-            `Usar esses dados também na conta ${usuario.email}?\n\n` +
-            "OK: usa os dados deste aparelho.\n" +
-            `Cancelar: este aparelho fica só com os dados da conta ${usuario.email} ` +
-            "(os dados atuais ficam guardados numa cópia de segurança)."
-        );
-        if (!usar) {
-          guardarCopia(dadosRef.current, `da conta ${ultima.email || "anterior"}`);
-          const vazio = criarVazio();
-          dadosRef.current = vazio;
-          setData(vazio);
+      // De quem são os dados deste aparelho? (conta conectada antes, ou a última que saiu)
+      const dono = anterior || lerUltimaConta();
+      if (dono && dono.uid !== usuario.uid) {
+        // Dados de OUTRA conta: nunca passam para esta. Se ainda havia algo que não tinha ido
+        // para a nuvem, fica numa cópia de segurança que só a conta dona vê.
+        const atuais = dadosRef.current;
+        if (!semDadosProprios(atuais)) {
+          let tudoEnviado = Boolean(dono.tudoEnviado);
+          if (anterior) {
+            const base = baseRef.current !== undefined ? baseRef.current : await lerBase(anterior.uid).catch(() => null);
+            tudoEnviado = Boolean(base && iguais(atuais, base));
+          }
+          if (!tudoEnviado) guardarCopia(atuais, `da conta ${dono.email || "anterior"}`, new Date(), dono.uid);
         }
+        const vazio = criarVazio();
+        dadosRef.current = vazio;
+        setData(vazio);
+        donoRef.current = null;
+      } else {
+        // dados desta mesma conta (entrou de novo) ou de antes do login neste aparelho
+        donoRef.current = dono ? dono.uid : null;
       }
       metaRef.current = {
         uid: usuario.uid,
@@ -306,6 +327,7 @@ export default function useNuvem(data, setData) {
       // sem esperas antes de abrir a janela do Google (o navegador pode bloquear)
       const modulo = moduloRef.current || (await carregarNuvem());
       moduloRef.current = modulo;
+      if (ehAppAndroid()) marcarIdaAoLogin(); // app Android: vai para a página do Google e volta
       const usuario = await modulo.entrarComGoogle();
       await comecarCom(usuario);
     } catch (erro) {
@@ -321,7 +343,12 @@ export default function useNuvem(data, setData) {
     logadoRef.current = false;
     escolhaRef.current = null;
     const meta = metaRef.current;
-    if (meta) salvarUltimaConta(meta);
+    if (meta) {
+      // os dados continuam neste aparelho (são desta conta); anota se tudo já estava na nuvem
+      const base = baseRef.current;
+      salvarUltimaConta({ ...meta, tudoEnviado: Boolean(base && iguais(dadosRef.current, base)) });
+      donoRef.current = meta.uid;
+    }
     try {
       const modulo = await carregarNuvem();
       await modulo.sairDaConta();
@@ -346,8 +373,8 @@ export default function useNuvem(data, setData) {
 
     const antes = dadosRef.current;
     const copias = {
-      nuvem: [antes, "antes de usar os dados da nuvem"],
-      aparelho: [pendente.remoto, "que estavam na nuvem antes de usar os deste aparelho"]
+      nuvem: [antes, "antes de usar os dados da nuvem", new Date(), donoRef.current],
+      aparelho: [pendente.remoto, "que estavam na nuvem antes de usar os deste aparelho", new Date(), meta.uid]
     };
     if (copias[opcao] && !guardarCopia(...copias[opcao])) {
       const seguir = window.confirm(
@@ -406,6 +433,26 @@ export default function useNuvem(data, setData) {
   function sincronizarAgora() {
     if (logadoRef.current) rodar();
   }
+
+  // Voltou da página de login do Google (app Android): termina de entrar
+  useEffect(() => {
+    const voltou = NUVEM_CONFIGURADA && voltouDoLogin();
+    if (metaRef.current || !voltou) return; // com conta anterior, a abertura normal (abaixo) termina o login
+    iniciouRef.current = true;
+    (async () => {
+      atualizar({ status: "entrando", mensagem: "" });
+      try {
+        const modulo = await carregarNuvem();
+        moduloRef.current = modulo;
+        const usuario = await modulo.concluirRedirect();
+        if (usuario) await comecarCom(usuario);
+        else atualizar({ status: "desligada", mensagem: "" });
+      } catch (erro) {
+        const m = mensagemDeErro(moduloRef.current, erro);
+        atualizar({ status: "desligada", mensagem: m.tipo === "cancelado" ? "" : m.texto });
+      }
+    })();
+  }, []);
 
   // Ao abrir o app: se este aparelho já estava conectado, confere a conta e sincroniza
   useEffect(() => {

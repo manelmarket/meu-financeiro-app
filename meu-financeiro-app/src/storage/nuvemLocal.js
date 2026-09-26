@@ -34,7 +34,8 @@ export function apagarEstadoNuvem() {
   }
 }
 
-// Última conta que saiu deste aparelho (para perguntar antes de usar os dados dela em outra conta)
+// Última conta que saiu deste aparelho: os dados que ficaram aqui são dela
+// (outra conta que entrar começa sem eles). tudoEnviado = nada ficou só neste aparelho.
 const CHAVE_ULTIMA_CONTA = "meu_financeiro_ultima_conta";
 
 export function lerUltimaConta() {
@@ -48,7 +49,10 @@ export function lerUltimaConta() {
 
 export function salvarUltimaConta(conta) {
   try {
-    localStorage.setItem(CHAVE_ULTIMA_CONTA, JSON.stringify({ uid: conta.uid, email: conta.email || "" }));
+    localStorage.setItem(
+      CHAVE_ULTIMA_CONTA,
+      JSON.stringify({ uid: conta.uid, email: conta.email || "", tudoEnviado: Boolean(conta.tudoEnviado) })
+    );
   } catch {
     // nada a fazer
   }

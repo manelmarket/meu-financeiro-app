@@ -23,20 +23,35 @@ import { idsDasFotos } from "./backup.js";
 const TENTATIVAS = 3;
 
 // semDadosProprios(dados): true se não há nada da pessoa (só demonstração intacta ou nenhum registro)
-// novaConta(local): dados com que uma conta nova começa (se não vier, usa os deste aparelho)
+// novaConta(local): dados com que uma conta nova começa (vazia). Os dados deste aparelho NÃO entram
+//   numa conta nova: o resultado vem com descartouLocal = true para o app guardar uma cópia de segurança.
+//   (sem novaConta: comportamento antigo, a conta nova recebe os dados deste aparelho)
 async function umaVez({ nuvem, local, base, versao, semDadosProprios, novaConta }) {
   const info = await nuvem.lerInfo();
 
-  // nuvem vazia: a primeira cópia sai deste aparelho
+  // nuvem vazia: conta nova
   if (!info) {
     const inicio = novaConta ? novaConta(local) : local;
     const nova = await nuvem.enviarDados(inicio, 0);
-    return { acao: "enviou", dados: inicio, base: inicio, versao: nova, fotos: [] };
+    const descartouLocal = inicio !== local && !semDadosProprios(local);
+    return { acao: "enviou", dados: inicio, base: inicio, versao: nova, fotos: [], descartouLocal };
   }
 
   // primeira sincronização deste aparelho, com a nuvem já tendo dados
   if (base == null || versao == null) {
     const remoto = await nuvem.baixarDados(info);
+    if (novaConta && semDadosProprios(remoto.dados)) {
+      // conta sem registros da pessoa (nova, ou só com a demonstração de versões antigas):
+      // fica vazia, só com o perfil
+      const vazio = novaConta(local);
+      const inicio = { ...vazio, usuario: juntarPerfil(vazio.usuario, remoto.dados.usuario) };
+      const descartouLocal = vazio !== local && !semDadosProprios(local);
+      if (iguais(inicio, remoto.dados)) {
+        return { acao: "recebeu", dados: remoto.dados, base: remoto.dados, versao: remoto.versao, fotos: info.fotos, descartouLocal };
+      }
+      const nova = await nuvem.enviarDados(inicio, remoto.versao);
+      return { acao: "enviou", dados: inicio, base: inicio, versao: nova, fotos: info.fotos, descartouLocal };
+    }
     if (iguais(local, remoto.dados) || semDadosProprios(local)) {
       return { acao: "recebeu", dados: remoto.dados, base: remoto.dados, versao: remoto.versao, fotos: info.fotos };
     }

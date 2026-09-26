@@ -166,7 +166,8 @@ function SecaoNuvem({ nuvem, data }) {
 
 export default function Backup({ data, hoje, nuvem, onBack, onRestaurar }) {
   const [ultimo, setUltimo] = useState(() => lerUltimoBackup());
-  const [copia, setCopia] = useState(() => lerCopia());
+  const dono = nuvem.usuario?.uid || null;
+  const [copia, setCopia] = useState(() => lerCopia(dono));
   const [aviso, setAviso] = useState(null); // { tipo: "ok" | "erro", texto }
   const [ocupado, setOcupado] = useState(false);
   const [pronto, setPronto] = useState(null); // { dados, arquivo }: arquivo já montado (compartilhar precisa ser imediato)
@@ -180,8 +181,8 @@ export default function Backup({ data, hoje, nuvem, onBack, onRestaurar }) {
 
   // a nuvem pode ter guardado uma cópia de segurança agora (ex.: "Usar só os da nuvem")
   useEffect(() => {
-    setCopia(lerCopia());
-  }, [nuvem.status, data]);
+    setCopia(lerCopia(dono));
+  }, [nuvem.status, data, dono]);
 
   // No celular, "Enviar backup" precisa abrir a tela de compartilhar na hora do toque:
   // o arquivo já fica montado antes.
@@ -259,7 +260,7 @@ export default function Backup({ data, hoje, nuvem, onBack, onRestaurar }) {
     try {
       const r = await onRestaurar(backup);
       if (!r) return;
-      setCopia(lerCopia());
+      setCopia(lerCopia(dono));
       setAviso({
         tipo: "ok",
         texto:
@@ -284,8 +285,8 @@ export default function Backup({ data, hoje, nuvem, onBack, onRestaurar }) {
 
   function descartarCopia() {
     if (!window.confirm("Apagar a cópia de segurança deste aparelho?")) return;
-    apagarCopia();
-    setCopia(null);
+    apagarCopia(copia);
+    setCopia(lerCopia(dono));
   }
 
   return (

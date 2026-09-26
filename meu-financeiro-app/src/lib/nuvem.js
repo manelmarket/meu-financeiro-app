@@ -11,9 +11,11 @@ import {
   GoogleAuthProvider,
   connectAuthEmulator,
   getAuth,
+  getRedirectResult,
   onAuthStateChanged,
   signInWithCredential,
   signInWithPopup,
+  signInWithRedirect,
   signOut
 } from "firebase/auth";
 import {
@@ -30,6 +32,7 @@ import {
 } from "firebase/firestore/lite";
 import { FIREBASE_CONFIG, NUVEM_EMULADOR } from "../config/firebase.js";
 import { normalizar } from "../storage/storage.js";
+import { ehAppAndroid } from "./modoApp.js";
 
 const FORMATO = 1;
 const TAMANHO_PARTE = 700 * 1024;
@@ -40,9 +43,19 @@ let app = null;
 let auth = null;
 let db = null;
 
+// No app Android o login vai para a página do Google e volta. Para isso funcionar, o "authDomain"
+// é o próprio endereço do app: os arquivos de login do Firebase ficam em public/__/auth/
+// (e o endereço .../__/auth/handler precisa estar autorizado no Google Cloud).
+function configuracao() {
+  if (!NUVEM_EMULADOR && ehAppAndroid() && typeof window !== "undefined") {
+    return { ...FIREBASE_CONFIG, authDomain: window.location.host };
+  }
+  return FIREBASE_CONFIG;
+}
+
 function iniciar() {
   if (app) return;
-  app = initializeApp(FIREBASE_CONFIG);
+  app = initializeApp(configuracao());
   auth = getAuth(app);
   db = getFirestore(app);
   if (NUVEM_EMULADOR) {
@@ -77,7 +90,7 @@ export function observarUsuario(callback) {
 export async function entrarComGoogle() {
   iniciar();
   // Só nos testes automáticos com o emulador (nunca no app publicado): entra sem abrir janela
-  if (NUVEM_EMULADOR && typeof window !== "undefined" && window.__contaDeTeste) {
+  if (NUVEM_EMULADOR && typeof window !== "undefined" && window.__contaDeTeste && !window.__testarRedirect) {
     const c = window.__contaDeTeste;
     const token = JSON.stringify({ sub: c.sub, email: c.email, email_verified: true, name: c.nome });
     const r = await signInWithCredential(auth, GoogleAuthProvider.credential(token));
@@ -85,8 +98,22 @@ export async function entrarComGoogle() {
   }
   const provedor = new GoogleAuthProvider();
   provedor.setCustomParameters({ prompt: "select_account" });
+  if (ehAppAndroid()) {
+    // app Android: vai para a página do Google e volta para o app (ver concluirRedirect)
+    await signInWithRedirect(auth, provedor);
+    return new Promise(() => {});
+  }
   const resultado = await signInWithPopup(auth, provedor);
   return usuarioDe(resultado.user);
+}
+
+// Volta da página do Google (app Android): a conta que entrou, ou null se não entrou
+export async function concluirRedirect() {
+  iniciar();
+  const resultado = await getRedirectResult(auth);
+  await auth.authStateReady();
+  const u = resultado?.user || auth.currentUser;
+  return u ? usuarioDe(u) : null;
 }
 
 export async function sairDaConta() {
@@ -120,7 +147,12 @@ const SESSAO = new Set([
   "auth/requires-recent-login",
   "auth/user-not-found"
 ]);
-const CANCELADO = new Set(["auth/popup-closed-by-user", "auth/cancelled-popup-request", "auth/user-cancelled"]);
+const CANCELADO = new Set([
+  "auth/popup-closed-by-user",
+  "auth/cancelled-popup-request",
+  "auth/user-cancelled",
+  "auth/redirect-cancelled-by-user"
+]);
 
 export function mensagemDaNuvem(erro) {
   const codigo = String(erro?.code || "");

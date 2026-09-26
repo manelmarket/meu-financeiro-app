@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { MESES, lerMes, money, rotuloMes } from "../lib/formato.js";
 
-// Evolução mês a mês: colunas de Receitas (azul) e Despesas (laranja), um eixo só.
-const COR = { receitas: "#2a78d6", despesas: "#eb6834" };
+// Evolução mês a mês: colunas de Receitas e Despesas, um eixo só (cores do tema: ver index.css).
+const COR = { receitas: "var(--graf-receitas)", despesas: "var(--graf-despesas)" };
 
 const L = 300; // largura
 const A = 170; // altura
@@ -96,8 +96,8 @@ export default function ColumnsChart({ meses, mesSelecionado }) {
           const selecionado = i === indiceAtivo;
           return (
             <g key={m.mes} opacity={ativo === null || selecionado ? 1 : 0.45}>
-              <path d={coluna(x0, y(m.receitas), barra, y(0) - y(m.receitas))} fill={COR.receitas} />
-              <path d={coluna(x0 + barra + 2, y(m.despesas), barra, y(0) - y(m.despesas))} fill={COR.despesas} />
+              <path d={coluna(x0, y(m.receitas), barra, y(0) - y(m.receitas))} style={{ fill: COR.receitas }} />
+              <path d={coluna(x0 + barra + 2, y(m.despesas), barra, y(0) - y(m.despesas))} style={{ fill: COR.despesas }} />
               <text
                 x={M.esq + i * grupo + grupo / 2}
                 y={A - 6}

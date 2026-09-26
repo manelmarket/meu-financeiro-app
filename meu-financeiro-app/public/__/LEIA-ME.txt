@@ -1,0 +1,10 @@
+Arquivos do login do Google (Firebase Authentication) servidos pelo próprio endereço do app.
+São usados só no app Android (APK): lá o login vai para a página do Google e volta para
+https://meu-financeiro-app-kxb.pages.dev/__/auth/handler
+
+Origem: https://meu-financeiro-4c51a.firebaseapp.com/__/auth/ (handler, handler.js, experiments.js, iframe, iframe.js)
+init.json: a mesma configuração de src/config/firebase.js, com o authDomain deste endereço.
+
+Para funcionar, o endereço https://meu-financeiro-app-kxb.pages.dev/__/auth/handler precisa estar em
+Google Cloud Console -> APIs e serviços -> Credenciais -> "Web client (auto created by Google Service)"
+-> URIs de redirecionamento autorizados.

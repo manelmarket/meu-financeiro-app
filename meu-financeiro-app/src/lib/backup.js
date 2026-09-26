@@ -164,28 +164,41 @@ export function diasDesde(iso, hoje) {
 }
 
 // ---------- cópia de segurança antes de substituir os dados ----------
+// Cada conta tem a sua cópia (dono = uid): uma conta nunca vê a cópia dos dados de outra.
+// Sem dono = dados deste aparelho de antes do login (qualquer conta que entrar pode ver).
 
-export function guardarCopia(dados, motivo, agora = new Date()) {
+function chaveDaCopia(dono) {
+  return dono ? `${CHAVE_COPIA}_${dono}` : CHAVE_COPIA;
+}
+
+export function guardarCopia(dados, motivo, agora = new Date(), dono = null) {
   try {
-    localStorage.setItem(CHAVE_COPIA, JSON.stringify({ em: agora.toISOString(), motivo, dados }));
+    localStorage.setItem(
+      chaveDaCopia(dono),
+      JSON.stringify({ em: agora.toISOString(), motivo, dados, dono: dono || null })
+    );
     return true;
   } catch {
     return false;
   }
 }
 
-export function lerCopia() {
-  try {
-    const copia = JSON.parse(localStorage.getItem(CHAVE_COPIA) || "null");
-    return copia && copia.dados && typeof copia.em === "string" ? copia : null;
-  } catch {
-    return null;
+// a cópia da conta conectada (ou, se ela não tiver, a cópia sem dono)
+export function lerCopia(dono = null) {
+  for (const chave of dono ? [chaveDaCopia(dono), CHAVE_COPIA] : [CHAVE_COPIA]) {
+    try {
+      const copia = JSON.parse(localStorage.getItem(chave) || "null");
+      if (copia && copia.dados && typeof copia.em === "string") return { ...copia, chave };
+    } catch {
+      // cópia ilegível: tenta a próxima
+    }
   }
+  return null;
 }
 
-export function apagarCopia() {
+export function apagarCopia(copia = null) {
   try {
-    localStorage.removeItem(CHAVE_COPIA);
+    localStorage.removeItem(copia?.chave || CHAVE_COPIA);
   } catch {
     // nada a fazer
   }

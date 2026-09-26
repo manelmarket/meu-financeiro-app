@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { money } from "../lib/formato.js";
 
-// Pizza (rosca) das despesas: 1º, 2º e 3º maiores em tons de azul (do escuro ao claro)
+// Pizza (rosca) das despesas: 1º, 2º e 3º maiores em tons da cor do tema (do escuro ao claro)
 // e "Outros" em cinza. As cores indicam a posição no ranking; o nome vem sempre na legenda.
-const COR_POSICAO = { 1: "#184f95", 2: "#2a78d6", 3: "#6da7ec", 0: "#c3c2b7" };
+const COR_POSICAO = { 1: "var(--graf-1)", 2: "var(--graf-2)", 3: "var(--graf-3)", 0: "var(--graf-outros)" };
 
 const CX = 100;
 const CY = 100;
@@ -50,7 +50,7 @@ export default function Donut({ fatias, total, titulo }) {
             <path
               key={p.nome}
               d={p.d}
-              fill={COR_POSICAO[p.posicao]}
+              style={{ fill: COR_POSICAO[p.posicao] }}
               opacity={ativo === null || ativo === i ? 1 : 0.35}
               tabIndex={0}
               aria-label={`${p.nome}: ${money(p.valor)} (${p.percentual}%)`}
@@ -66,7 +66,7 @@ export default function Donut({ fatias, total, titulo }) {
               cy={CY}
               r={(R_FORA + R_DENTRO) / 2}
               fill="none"
-              stroke={COR_POSICAO[p.posicao]}
+              style={{ stroke: COR_POSICAO[p.posicao] }}
               strokeWidth={R_FORA - R_DENTRO}
             />
           )

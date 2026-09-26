@@ -5,6 +5,7 @@ import { MoreVertical } from "lucide-react";
 
 import BottomNav from "./components/BottomNav";
 import MenuLateral from "./components/MenuLateral";
+import AvisoAtualizacao from "./components/AvisoAtualizacao";
 
 import Home from "./pages/Home";
 import Reports from "./pages/Reports";
@@ -23,6 +24,7 @@ import Backup from "./pages/Backup";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Entrada from "./pages/Entrada";
+import Temas from "./pages/Temas";
 
 import useNuvem from "./lib/useNuvem";
 import { guardarCopia } from "./lib/backup";
@@ -481,7 +483,7 @@ export default function App(){
 
   async function restaurarBackup(backup){
 
-    if(!guardarCopia(data, "antes de restaurar um backup")){
+    if(!guardarCopia(data, "antes de restaurar um backup", new Date(), nuvem.usuario?.uid || null)){
 
       const seguir = window.confirm(
         "Não consegui guardar uma cópia de segurança dos dados atuais (pouco espaço neste aparelho).\n\n" +
@@ -677,6 +679,13 @@ export default function App(){
       />;
       break;
 
+    case "temas":
+      content =
+      <Temas
+        onBack={()=>ir("home")}
+      />;
+      break;
+
     case "profile":
       content =
       <Profile
@@ -711,6 +720,8 @@ export default function App(){
 
       <div className="app-shell entrada-shell">
 
+        <AvisoAtualizacao />
+
         <Entrada nuvem={nuvem} data={data} />
 
       </div>
@@ -724,6 +735,8 @@ export default function App(){
   return (
 
     <div className="app-shell">
+
+      <AvisoAtualizacao />
 
       {erroSalvar &&
         <div className="save-error">

@@ -1,0 +1,21 @@
+# Cloudflare Pages: arquivos que o app precisa sempre na versão mais nova
+/sw.js
+  Cache-Control: no-cache
+/version.json
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+
+# verificação do app Android (TWA)
+/.well-known/assetlinks.json
+  Content-Type: application/json
+  Access-Control-Allow-Origin: *
+
+# login do Google dentro do app Android
+/__/firebase/init.json
+  Content-Type: application/json
+
+# instalador do app Android
+/apk/*
+  Content-Type: application/vnd.android.package-archive
+  Cache-Control: no-cache

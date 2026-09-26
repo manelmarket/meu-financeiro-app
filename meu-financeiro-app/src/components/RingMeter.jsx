@@ -1,6 +1,6 @@
 import React from "react";
 
-// Medidor circular de progresso da meta (trilha azul-clara, preenchimento azul;
+// Medidor circular de progresso da meta (trilha clara e preenchimento na cor do tema;
 // verde quando a meta foi atingida).
 export default function RingMeter({ percentual, tamanho = 72 }) {
   const pct = Math.max(0, Math.min(100, percentual));
@@ -19,14 +19,14 @@ export default function RingMeter({ percentual, tamanho = 72 }) {
       aria-label={`${exibido}% da meta`}
       className="ring-meter"
     >
-      <circle cx={tamanho / 2} cy={tamanho / 2} r={r} fill="none" stroke="#cde2fb" strokeWidth={traco} />
+      <circle cx={tamanho / 2} cy={tamanho / 2} r={r} fill="none" style={{ stroke: "var(--graf-trilha)" }} strokeWidth={traco} />
       {pct > 0 && (
         <circle
           cx={tamanho / 2}
           cy={tamanho / 2}
           r={r}
           fill="none"
-          stroke={atingida ? "#0ca30c" : "#2a78d6"}
+          style={{ stroke: atingida ? "var(--graf-ok)" : "var(--graf-2)" }}
           strokeWidth={traco}
           strokeLinecap="round"
           strokeDasharray={`${(pct / 100) * volta} ${volta}`}
