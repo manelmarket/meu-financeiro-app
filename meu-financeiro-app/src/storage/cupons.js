@@ -48,6 +48,11 @@ export function limparCupons() {
   return usar("readwrite", (tabela) => tabela.clear());
 }
 
+// ids de todas as fotos guardadas neste aparelho
+export function listarCupons() {
+  return usar("readonly", (tabela) => tabela.getAllKeys());
+}
+
 export async function comprimirImagem(arquivo, ladoMaximo = 1280, qualidade = 0.72) {
   const url = URL.createObjectURL(arquivo);
   try {

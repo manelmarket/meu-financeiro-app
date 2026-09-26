@@ -17,6 +17,7 @@ import {
   montarData,
   somarMeses
 } from "../lib/formato.js";
+import { iguais } from "../lib/mesclar.js";
 
 const CHAVE_V1 = "meu_financeiro_v1";
 const CHAVE = "meu_financeiro_v2";
@@ -256,7 +257,7 @@ export function migrarV1(antigo) {
   };
 }
 
-function normalizar(dados) {
+export function normalizar(dados) {
   return {
     versao: 2,
     usuario: dados.usuario || { nome: "João" },
@@ -270,6 +271,22 @@ function normalizar(dados) {
     investimentos: Array.isArray(dados.investimentos) ? dados.investimentos : [],
     bens: Array.isArray(dados.bens) ? dados.bens : []
   };
+}
+
+// Dados de demonstração que ninguém mexeu ainda (as datas mudam conforme o dia em que foram criados).
+function semDatas(v) {
+  if (Array.isArray(v)) return v.map(semDatas);
+  if (v && typeof v === "object") {
+    const r = {};
+    for (const [k, x] of Object.entries(v)) if (k !== "data" && k !== "periodos") r[k] = semDatas(x);
+    return r;
+  }
+  return v;
+}
+
+export function ehSoDemonstracao(dados) {
+  if (!dados || typeof dados !== "object") return false;
+  return iguais(semDatas(normalizar(dados)), semDatas(criarSeed()));
 }
 
 // ---------- API usada pelo App ----------

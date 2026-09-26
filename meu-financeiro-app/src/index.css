@@ -195,3 +195,23 @@ button:disabled{opacity:.6;cursor:default}
 @media (max-width:380px){.shortcuts button{font-size:10px}.legend-row{font-size:12px}}
 .data-table caption{caption-side:bottom;text-align:left;font-size:11px;color:#64748b;padding-top:6px}
 .chart-readout small{font-weight:500;color:#64748b;font-size:12px}
+
+/* backup e nuvem */
+.cloud-row{width:100%;display:flex;align-items:center;gap:12px;margin-top:12px;border:1px solid #e8edf3;background:#fff;border-radius:16px;padding:12px 14px;text-align:left;color:#0f172a;font-size:inherit}
+.cloud-row .cloud-icon{font-size:22px;line-height:1;flex-shrink:0}
+.cloud-row .cloud-text{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.cloud-row b{font-size:14px}
+.cloud-row small{font-size:12px;color:#64748b}
+.cloud-row .chevron{color:#94a3b8;font-size:22px;line-height:1;flex-shrink:0}
+.cloud-row.warn{border-color:#fed7aa;background:#fff7ed}
+.cloud-row.warn small{color:#9a3412}
+.cloud-user{display:flex;flex-direction:column;gap:2px;background:#f8fafc;border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.cloud-user b{font-size:14px;overflow-wrap:anywhere}
+.cloud-status{margin:0 0 12px;font-size:13.5px;font-weight:700;color:#334155;line-height:1.45}
+.cloud-status.ok{color:#047857}
+.cloud-status.warn{color:#9a3412}
+.intro-text{margin:0 0 12px;line-height:1.5}
+.stack{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.choice{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.choice p{margin:0;font-size:13.5px;line-height:1.45}
+.choice small{font-size:12px;color:#64748b;margin:-2px 2px 6px}

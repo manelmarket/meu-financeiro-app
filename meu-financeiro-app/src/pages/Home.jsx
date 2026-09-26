@@ -4,14 +4,76 @@ import { ICONE_FRASE } from "./Assistant.jsx";
 import { lerData, mesDaData, money, nomeMes, MESES } from "../lib/formato.js";
 import { resumoDoMes } from "../lib/mes.js";
 import { alertas, analiseDoMes } from "../lib/analise.js";
+import { diasDesde, lerUltimoBackup, quandoFoi } from "../lib/backup.js";
+import { ehSoDemonstracao } from "../storage/storage.js";
 
 const ICONE_ALERTA = { aviso: "⚠️", ok: "✅", info: "📅" };
 
-export default function Home({ data, hoje, onNew, onOpenBills, onOpenCard, onOpenPage }) {
+// Linha "Backup e nuvem" do Início (e o aviso que vai para os alertas, quando precisa)
+function situacaoDosDados(nuvem, ultimoBackup, hoje, demonstracao) {
+  if (nuvem?.usuario && nuvem.status !== "desligada") {
+    switch (nuvem.status) {
+      case "ok":
+        return {
+          icone: "☁️",
+          titulo: "Nuvem ligada",
+          texto: `Tudo sincronizado${nuvem.sincronizadoEm ? ` · ${quandoFoi(nuvem.sincronizadoEm)}` : ""}`
+        };
+      case "offline":
+        return { icone: "📴", titulo: "Nuvem ligada", texto: "Sem internet: envio quando a conexão voltar", cor: "warn" };
+      case "erro":
+        return { icone: "⚠️", titulo: "Nuvem com problema", texto: "Toque para ver", cor: "warn", aviso: `Nuvem: ${nuvem.mensagem}` };
+      case "sessao":
+        return {
+          icone: "⚠️",
+          titulo: "Nuvem parada",
+          texto: "Entre de novo na sua conta",
+          cor: "warn",
+          aviso: "Entre de novo na sua conta da nuvem para continuar sincronizando."
+        };
+      case "escolher":
+        return {
+          icone: "⚠️",
+          titulo: "Falta um passo na nuvem",
+          texto: "Escolha como juntar os dados",
+          cor: "warn",
+          aviso: "Falta escolher como juntar os dados deste aparelho com os da nuvem."
+        };
+      default:
+        return { icone: "🔄", titulo: "Nuvem ligada", texto: "Sincronizando…" };
+    }
+  }
+
+  const dias = diasDesde(ultimoBackup, hoje);
+  if (ultimoBackup && dias !== null) {
+    const antigo = dias > 7 && !demonstracao;
+    return {
+      icone: "💾",
+      titulo: "Backup e nuvem",
+      texto: `Último backup ${dias === 0 ? "hoje" : `há ${dias} dia${dias > 1 ? "s" : ""}`}`,
+      cor: antigo ? "warn" : "",
+      aviso: antigo ? `Seu último backup foi há ${dias} dias. Faça um novo ou ligue a nuvem.` : null
+    };
+  }
+  return {
+    icone: "💾",
+    titulo: "Backup e nuvem",
+    texto: "Seus dados estão só neste aparelho",
+    cor: demonstracao ? "" : "warn",
+    aviso: demonstracao ? null : "Seus dados estão só neste aparelho. Faça um backup ou ligue a nuvem para não perder nada."
+  };
+}
+
+export default function Home({ data, hoje, nuvem, onNew, onOpenBills, onOpenCard, onOpenPage }) {
   const mesHoje = mesDaData(hoje);
   const [mes, setMes] = useState(mesHoje);
   const r = useMemo(() => resumoDoMes(data, mes, hoje), [data, mes, hoje]);
-  const avisos = useMemo(() => alertas(data, hoje), [data, hoje]);
+  const demonstracao = useMemo(() => ehSoDemonstracao(data), [data]);
+  const situacao = situacaoDosDados(nuvem, lerUltimoBackup(), hoje, demonstracao);
+  const alertasDoMes = useMemo(() => alertas(data, hoje), [data, hoje]);
+  const avisos = situacao.aviso
+    ? [...alertasDoMes, { id: "dados", tipo: "aviso", texto: situacao.aviso, pagina: "backup" }]
+    : alertasDoMes;
   const frases = useMemo(() => analiseDoMes(data, mes, hoje), [data, mes, hoje]);
 
   const maior = Math.max(1, ...r.categorias.map(([, v]) => v));
@@ -85,6 +147,23 @@ export default function Home({ data, hoje, onNew, onOpenBills, onOpenCard, onOpe
           <span aria-hidden="true">✨</span>Assistente
         </button>
       </nav>
+
+      <button
+        type="button"
+        className={`cloud-row${situacao.cor ? ` ${situacao.cor}` : ""}`}
+        onClick={() => onOpenPage("backup")}
+      >
+        <span className="cloud-icon" aria-hidden="true">
+          {situacao.icone}
+        </span>
+        <span className="cloud-text">
+          <b>{situacao.titulo}</b>
+          <small>{situacao.texto}</small>
+        </span>
+        <span className="chevron" aria-hidden="true">
+          ›
+        </span>
+      </button>
 
       <section className="section-card">
         <div className="section-title">

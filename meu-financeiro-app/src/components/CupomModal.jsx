@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { lerCupom } from "../storage/cupons.js";
+import { buscarFotoNaNuvem } from "../lib/useNuvem.js";
 
 export default function CupomModal({ cupomId, onClose }) {
   const [url, setUrl] = useState(null);
@@ -9,6 +10,8 @@ export default function CupomModal({ cupomId, onClose }) {
     let ativo = true;
     let criada = null;
     lerCupom(cupomId)
+      // foto lançada em outro aparelho que ainda não chegou aqui: busca na nuvem
+      .then((blob) => blob || buscarFotoNaNuvem(cupomId))
       .then((blob) => {
         if (!ativo) return;
         if (!blob) {

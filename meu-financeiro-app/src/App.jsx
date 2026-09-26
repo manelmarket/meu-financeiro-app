@@ -16,6 +16,10 @@ import Bills from "./pages/Bills";
 import Investments from "./pages/Investments";
 import Patrimony from "./pages/Patrimony";
 import Assistant from "./pages/Assistant";
+import Backup from "./pages/Backup";
+
+import useNuvem from "./lib/useNuvem";
+import { guardarCopia } from "./lib/backup";
 
 import {
   loadData,
@@ -36,7 +40,8 @@ const ABA_DA_TELA = {
   bills: "home",
   assistant: "home",
   investments: "home",
-  patrimony: "home"
+  patrimony: "home",
+  backup: "home"
 };
 
 export default function App(){
@@ -47,13 +52,21 @@ export default function App(){
 
   const [erroSalvar,setErroSalvar] = useState(false);
 
+  // login com Google + sincronização dos dados com a nuvem
+  const nuvem = useNuvem(data, setData);
+
   const hoje = hojeISO();
 
 
 
   useEffect(()=>{
 
-    setErroSalvar(!saveData(data));
+    const salvou = saveData(data);
+
+    setErroSalvar(!salvou);
+
+    // a nuvem só marca este aparelho como sincronizado depois que os dados foram salvos aqui
+    nuvem.aoSalvar(salvou);
 
   },[data]);
 
@@ -371,20 +384,65 @@ export default function App(){
 
   // ---------- restaurar demonstração ----------
 
-  function resetar(){
+  async function resetar(){
+
+    const naNuvem = Boolean(nuvem.usuario);
 
     const confirmar = window.confirm(
       "Restaurar os dados de demonstração?\n\n" +
-      "Isso APAGA todos os seus lançamentos, cartões, compras, contas fixas, metas, investimentos e bens deste aparelho."
+      "Isso APAGA todos os seus lançamentos, cartões, compras, contas fixas, metas, investimentos e bens deste aparelho." +
+      (naNuvem ? "\n\nEste aparelho também sai da sua conta na nuvem (os dados da nuvem continuam guardados lá)." : "")
     );
 
     if(!confirmar) return;
+
+    // sai da nuvem antes, para os dados de demonstração não substituírem os da nuvem
+    if(naNuvem) await nuvem.sair();
 
     limparCupons().catch(()=>{});
 
     setData(resetData());
 
     ir("home");
+
+  }
+
+
+
+  // ---------- backup em arquivo ----------
+
+  async function restaurarBackup(backup){
+
+    if(!guardarCopia(data, "antes de restaurar um backup")){
+
+      const seguir = window.confirm(
+        "Não consegui guardar uma cópia de segurança dos dados atuais (pouco espaço neste aparelho).\n\n" +
+        "Restaurar o backup mesmo assim?"
+      );
+
+      if(!seguir) return null;
+
+    }
+
+    let fotosComErro = 0;
+
+    for(const [id, url] of Object.entries(backup.fotos || {})){
+
+      try{
+
+        await salvarCupom(id, await dataURLParaBlob(url));
+
+      }catch{
+
+        fotosComErro += 1;
+
+      }
+
+    }
+
+    setData(backup.dados);
+
+    return { fotosComErro };
 
   }
 
@@ -529,11 +587,23 @@ export default function App(){
       />;
       break;
 
+    case "backup":
+      content =
+      <Backup
+        data={data}
+        hoje={hoje}
+        nuvem={nuvem}
+        onBack={()=>ir("home")}
+        onRestaurar={restaurarBackup}
+      />;
+      break;
+
     default:
       content =
       <Home
         data={data}
         hoje={hoje}
+        nuvem={nuvem}
         onNew={()=>ir("new")}
         onOpenBills={()=>ir("bills")}
         onOpenCard={(id)=>ir("card-details", { cardId:id })}
