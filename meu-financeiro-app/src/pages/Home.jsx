@@ -9,8 +9,15 @@ import { ehSoDemonstracao } from "../storage/storage.js";
 import { nomeParaMostrar } from "../lib/perfil.js";
 import { usarPonteAndroid } from "../lib/appAndroid.js";
 import { agendaDesatualizada, usarAjustes } from "../lib/lembretes.js";
+import { textoDoPagamento } from "../lib/cartao.js";
 
 const ICONE_ALERTA = { aviso: "⚠️", ok: "✅", info: "📅" };
+
+// "Fatura do cartão", "Fatura do cartão · paga", "Fatura do cartão · falta R$ 200,00"
+function textoDaFatura(v) {
+  const pagamento = textoDoPagamento(v);
+  return pagamento ? `Fatura do cartão · ${pagamento}` : "Fatura do cartão";
+}
 
 // Linha "Backup e nuvem" do Início (e o aviso que vai para os alertas, quando precisa)
 function situacaoDosDados(nuvem, ultimoBackup, hoje, demonstracao) {
@@ -251,7 +258,7 @@ export default function Home({ data, hoje, nuvem, onNew, onOpenBills, onOpenCard
                 </div>
                 <div className="due-info">
                   <b>{v.descricao}</b>
-                  <span>{v.tipo === "fatura" ? "Fatura do cartão" : "Conta fixa"}</span>
+                  <span>{v.tipo === "fatura" ? textoDaFatura(v) : "Conta fixa"}</span>
                 </div>
                 <strong>{money(v.valor)}</strong>
               </div>

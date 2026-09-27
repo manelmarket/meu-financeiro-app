@@ -5,8 +5,16 @@
 //   compra feita no dia do fechamento ou depois cai na fatura seguinte.
 // - Se o vencimento é depois do fechamento (ex.: fecha 3, vence 10), a fatura vence
 //   no mesmo mês em que fecha; senão (ex.: fecha 28, vence 5), vence no mês seguinte.
-// - Uma parcela conta como paga quando a data de vencimento da fatura dela já passou.
-// - O limite usado é a soma de todas as parcelas ainda não pagas.
+// - Pagamento da fatura (botão Pagar, depois que a fatura fecha): valor cheio ou parcial.
+//   No parcial, a pessoa escolhe o que fazer com o restante: deixar em aberto até o vencimento
+//   ou lançar na próxima fatura (entra nela como "Saldo da fatura anterior").
+//   Cada pagamento libera no limite o valor pago.
+// - Fatura sem pagamento marcado conta como paga quando a data de vencimento passa (como antes).
+// - O limite usado é a soma do que falta pagar nas faturas que ainda não venceram.
+//
+// Os pagamentos ficam no próprio cartão:
+//   pagamentos: [{ id, fatura: "AAAA-MM", valor, data: "AAAA-MM-DD", restante?: "aberto" | "proxima" }]
+//   ("restante" só existe no pagamento parcial)
 
 import {
   arredondar,
@@ -15,9 +23,13 @@ import {
   hojeISO,
   lerData,
   lerMes,
+  money,
   montarData,
   somarMeses
 } from "./formato.js";
+
+export const RESTANTE_EM_ABERTO = "aberto";
+export const RESTANTE_NA_PROXIMA = "proxima";
 
 function diaNoMes(dia, y, m) {
   return Math.min(Math.max(1, parseInt(dia, 10) || 1), diasNoMes(y, m));
@@ -44,8 +56,8 @@ export function datasDaFatura(cartao, mes) {
   };
 }
 
-// "paga" | "fechada" | "aberta" | "futura"
-export function statusDaFatura(cartao, mes, hoje = hojeISO()) {
+// Só pelas datas: "paga" (o vencimento já passou) | "fechada" | "aberta" | "futura"
+export function statusPelaData(cartao, mes, hoje = hojeISO()) {
   const { fechamento, vencimento } = datasDaFatura(cartao, mes);
   if (hoje > vencimento) return "paga";
   if (hoje >= fechamento) return "fechada";
@@ -53,8 +65,21 @@ export function statusDaFatura(cartao, mes, hoje = hojeISO()) {
   return "futura";
 }
 
+// Com os pagamentos marcados: "paga" (não falta nada) ou "parcial" (pagou uma parte)
+function statusComPagamentos(pelaData, conta) {
+  if (pelaData === "paga") return "paga";
+  if (!conta || (conta.pago <= 0 && conta.paraProxima <= 0)) return pelaData;
+  return conta.restante > 0 ? "parcial" : "paga";
+}
+
+// "paga" | "parcial" | "fechada" | "aberta" | "futura"
+export function statusDaFatura(cartao, mes, hoje = hojeISO()) {
+  return statusComPagamentos(statusPelaData(cartao, mes, hoje), contasDasFaturas(cartao).get(mes));
+}
+
 export const ROTULO_STATUS = {
   paga: "Paga",
+  parcial: "Pagamento parcial",
   fechada: "Fatura fechada",
   aberta: "Fatura atual",
   futura: "Prevista"
@@ -83,6 +108,8 @@ export function parcelasDaCompra(compra, cartao) {
   }));
 }
 
+// Uma parcela conta como paga quando a fatura dela está paga
+// (pelo botão Pagar ou porque o vencimento já passou).
 export function resumoDaCompra(compra, cartao, hoje = hojeISO()) {
   const parcelas = parcelasDaCompra(compra, cartao);
   let pagas = 0;
@@ -103,7 +130,7 @@ export function resumoDaCompra(compra, cartao, hoje = hojeISO()) {
   };
 }
 
-// Map "AAAA-MM" -> { mes, valor, itens }
+// Só as compras: Map "AAAA-MM" -> { mes, valor, itens }
 export function faturasDoCartao(cartao) {
   const mapa = new Map();
   for (const compra of cartao.compras || []) {
@@ -117,8 +144,150 @@ export function faturasDoCartao(cartao) {
   return mapa;
 }
 
+// ---------- pagamento da fatura ----------
+
+function ehMes(v) {
+  return /^\d{4}-\d{2}$/.test(String(v ?? ""));
+}
+
+export function pagamentosDoCartao(cartao) {
+  return (Array.isArray(cartao?.pagamentos) ? cartao.pagamentos : []).filter(
+    (p) => p && typeof p === "object" && ehMes(p.fatura) && Number(p.valor) > 0
+  );
+}
+
+function porData(a, b) {
+  return String(a.data || "").localeCompare(String(b.data || "")) || Number(a.id) - Number(b.id);
+}
+
+function calcularContas(cartao) {
+  const compras = faturasDoCartao(cartao);
+  const porFatura = new Map();
+  for (const p of pagamentosDoCartao(cartao)) {
+    if (!porFatura.has(p.fatura)) porFatura.set(p.fatura, []);
+    porFatura.get(p.fatura).push(p);
+  }
+
+  const meses = new Set([...compras.keys(), ...porFatura.keys()]);
+  const fila = [...meses].sort();
+  const mapa = new Map();
+  let saldo = 0; // o que a fatura anterior lançou na próxima
+  let anterior = null;
+
+  for (let i = 0; i < fila.length; i += 1) {
+    const mes = fila[i];
+    const saldoAnterior = anterior !== null && somarMeses(anterior, 1) === mes ? saldo : 0;
+    const base = compras.get(mes);
+    const pagamentos = (porFatura.get(mes) || []).slice().sort(porData);
+    const valorDasCompras = base ? base.valor : 0;
+    const valor = arredondar(valorDasCompras + saldoAnterior);
+    const pago = arredondar(pagamentos.reduce((t, p) => t + Number(p.valor), 0));
+    const falta = arredondar(Math.max(0, valor - pago));
+    const paraProxima = pagamentos.some((p) => p.restante === RESTANTE_NA_PROXIMA) ? falta : 0;
+
+    mapa.set(mes, {
+      mes,
+      valorDasCompras,
+      saldoAnterior,
+      valor,
+      itens: base ? base.itens : [],
+      pagamentos,
+      pago,
+      paraProxima,
+      restante: arredondar(falta - paraProxima)
+    });
+
+    // o restante lançado na próxima fatura cria a próxima fatura, se ela ainda não tinha compras
+    const proximo = somarMeses(mes, 1);
+    if (paraProxima > 0 && !meses.has(proximo)) {
+      meses.add(proximo);
+      fila.splice(i + 1, 0, proximo);
+    }
+    saldo = paraProxima;
+    anterior = mes;
+  }
+  return mapa;
+}
+
+const guardadas = new WeakMap();
+
+// Cada fatura com as compras e os pagamentos: Map "AAAA-MM" -> {
+//   mes, valorDasCompras, saldoAnterior (veio da fatura anterior), valor (compras + saldo anterior),
+//   itens (parcelas), pagamentos, pago, paraProxima (lançado na próxima fatura),
+//   restante (o que falta pagar) }
+export function contasDasFaturas(cartao) {
+  const g = guardadas.get(cartao);
+  if (
+    g &&
+    g.compras === cartao.compras &&
+    g.pagamentos === cartao.pagamentos &&
+    g.fechamento === cartao.fechamento &&
+    g.vencimento === cartao.vencimento
+  ) {
+    return g.mapa;
+  }
+  const mapa = calcularContas(cartao);
+  guardadas.set(cartao, {
+    compras: cartao.compras,
+    pagamentos: cartao.pagamentos,
+    fechamento: cartao.fechamento,
+    vencimento: cartao.vencimento,
+    mapa
+  });
+  return mapa;
+}
+
 function faturaVazia(mes) {
-  return { mes, valor: 0, itens: [] };
+  return {
+    mes,
+    valorDasCompras: 0,
+    saldoAnterior: 0,
+    valor: 0,
+    itens: [],
+    pagamentos: [],
+    pago: 0,
+    paraProxima: 0,
+    restante: 0
+  };
+}
+
+// Fatura pronta para mostrar: valores, datas, status e quanto falta pagar ("aPagar")
+export function faturaDoMes(cartao, mes, hoje = hojeISO()) {
+  const conta = contasDasFaturas(cartao).get(mes) || faturaVazia(mes);
+  const pelaData = statusPelaData(cartao, mes, hoje);
+  return {
+    ...conta,
+    ...datasDaFatura(cartao, mes),
+    status: statusComPagamentos(pelaData, conta),
+    aPagar: pelaData === "paga" ? 0 : conta.restante
+  };
+}
+
+// Dá para pagar pelo botão: a fatura já fechou, não venceu e ainda falta pagar
+export function podePagar(fatura) {
+  return (fatura.status === "fechada" || fatura.status === "parcial") && fatura.aPagar > 0;
+}
+
+// Pagamento novo da fatura. Quando paga menos do que falta, "restante" diz o que fazer com o resto:
+// "aberto" (fica nesta fatura até o vencimento) ou "proxima" (vai para a próxima fatura).
+export function novoPagamento(fatura, valor, restante, hoje = hojeISO(), id = Date.now()) {
+  const pago = arredondar(Math.min(Number(valor) || 0, fatura.aPagar));
+  const parcial = pago < fatura.aPagar;
+  return {
+    id,
+    fatura: fatura.mes,
+    valor: pago,
+    data: hoje,
+    ...(parcial ? { restante: restante === RESTANTE_NA_PROXIMA ? RESTANTE_NA_PROXIMA : RESTANTE_EM_ABERTO } : {})
+  };
+}
+
+// Texto curto sobre o pagamento ("" quando a fatura não tem pagamento marcado)
+export function textoDoPagamento(fatura) {
+  if (fatura.status === "parcial") return `falta ${money(fatura.aPagar)}`;
+  if (fatura.status === "paga" && fatura.paraProxima > 0) return `paga · ${money(fatura.paraProxima)} foi para a próxima`;
+  if (fatura.status === "paga" && fatura.pago > 0) return "paga";
+  return "";
 }
 
 // Faturas que já fecharam e ainda não venceram, da mais antiga para a mais nova.
@@ -129,31 +298,26 @@ export function mesesFechados(cartao, hoje = hojeISO()) {
   const meses = [];
   for (let i = 1; i <= 3; i += 1) {
     const mes = somarMeses(mesAtual, -i);
-    if (statusDaFatura(cartao, mes, hoje) !== "fechada") break;
+    if (statusPelaData(cartao, mes, hoje) !== "fechada") break;
     meses.unshift(mes);
   }
   return meses;
 }
 
 export function resumoDoCartao(cartao, hoje = hojeISO()) {
-  const faturas = faturasDoCartao(cartao);
+  const contas = contasDasFaturas(cartao);
   const mesAtual = mesDaFatura(cartao, hoje);
 
   let usado = 0;
-  for (const fatura of faturas.values()) {
-    if (statusDaFatura(cartao, fatura.mes, hoje) !== "paga") usado += fatura.valor;
+  for (const conta of contas.values()) {
+    if (statusPelaData(cartao, conta.mes, hoje) !== "paga") usado += conta.restante;
   }
   usado = arredondar(usado);
 
   const limite = Number(cartao.limite || 0);
-  const faturaAtual = {
-    ...(faturas.get(mesAtual) || faturaVazia(mesAtual)),
-    ...datasDaFatura(cartao, mesAtual),
-    status: "aberta"
-  };
-
+  const faturaAtual = faturaDoMes(cartao, mesAtual, hoje);
   const faturasFechadas = mesesFechados(cartao, hoje)
-    .map((mes) => ({ ...(faturas.get(mes) || faturaVazia(mes)), ...datasDaFatura(cartao, mes), status: "fechada" }))
+    .map((mes) => faturaDoMes(cartao, mes, hoje))
     .filter((f) => f.valor > 0);
 
   return {
@@ -184,23 +348,27 @@ export function calendarioDeFaturas(cartoes, hoje = hojeISO()) {
   const porMes = new Map();
 
   for (const cartao of cartoes) {
-    const faturas = faturasDoCartao(cartao);
+    const contas = contasDasFaturas(cartao);
     const mesAtual = mesDaFatura(cartao, hoje);
     const inicio = mesesFechados(cartao, hoje)[0] || mesAtual;
-    const meses = new Set([mesAtual, ...[...faturas.keys()].filter((m) => m >= inicio)]);
+    const meses = new Set([mesAtual, ...[...contas.keys()].filter((m) => m >= inicio)]);
 
     for (const mes of meses) {
-      const valor = faturas.get(mes)?.valor || 0;
-      if (valor === 0 && mes !== mesAtual) continue;
+      const fatura = faturaDoMes(cartao, mes, hoje);
+      if (fatura.valor === 0 && mes !== mesAtual) continue;
       if (!porMes.has(mes)) porMes.set(mes, { mes, total: 0, cartoes: [] });
       const linha = porMes.get(mes);
-      linha.total = arredondar(linha.total + valor);
+      linha.total = arredondar(linha.total + fatura.valor);
       linha.cartoes.push({
         cartaoId: cartao.id,
         nome: cartao.nome,
-        valor,
-        status: statusDaFatura(cartao, mes, hoje),
-        vencimento: datasDaFatura(cartao, mes).vencimento
+        valor: fatura.valor,
+        status: fatura.status,
+        vencimento: fatura.vencimento,
+        pago: fatura.pago,
+        aPagar: fatura.aPagar,
+        paraProxima: fatura.paraProxima,
+        saldoAnterior: fatura.saldoAnterior
       });
     }
   }

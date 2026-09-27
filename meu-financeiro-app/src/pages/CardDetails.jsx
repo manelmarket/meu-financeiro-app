@@ -1,13 +1,18 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Banknote } from "lucide-react";
 import CardSummary from "../components/CardSummary.jsx";
 import CardForm from "../components/CardForm.jsx";
 import CupomModal from "../components/CupomModal.jsx";
+import PagarFatura from "../components/PagarFatura.jsx";
 import ScanButton from "../components/ScanButton.jsx";
 import { CATEGORIAS } from "../lib/categorias.js";
-import { dataBR, dataValida, diaMesBR, hojeISO, money, parseValor, rotuloMes } from "../lib/formato.js";
+import { dataBR, dataValida, diaMesBR, hojeISO, money, parseValor, rotuloMes, somarMeses } from "../lib/formato.js";
 import {
+  RESTANTE_EM_ABERTO,
+  RESTANTE_NA_PROXIMA,
   datasDaFatura,
   mesDaFatura,
+  podePagar,
   resumoDaCompra,
   resumoDoCartao,
   valoresDasParcelas
@@ -181,7 +186,52 @@ function PurchaseForm({ cartao, inicial, onSave, onCancel, onVerCupom, onConfigu
   );
 }
 
-function InvoiceSection({ titulo, fatura, vazio }) {
+const TEXTO_DO_RESTANTE = {
+  [RESTANTE_EM_ABERTO]: "restante em aberto",
+  [RESTANTE_NA_PROXIMA]: "restante na próxima fatura"
+};
+
+// Pagamento da fatura fechada: situação, botão Pagar e os pagamentos feitos (com Desfazer)
+function PagamentoDaFatura({ fatura, onPagar, onDesfazer }) {
+  const pagavel = podePagar(fatura);
+  if (!pagavel && fatura.pagamentos.length === 0) return null;
+  const proxima = rotuloMes(somarMeses(fatura.mes, 1));
+
+  return (
+    <div className={`pag-caixa ${fatura.status}`}>
+      {fatura.status === "paga" && (
+        <p className="pag-situacao">
+          ✓ Fatura paga
+          {fatura.paraProxima > 0 && ` · ${money(fatura.paraProxima)} foi para a fatura de ${proxima}`}
+        </p>
+      )}
+      {fatura.status === "parcial" && (
+        <p className="pag-situacao">
+          Pago {money(fatura.pago)} · falta {money(fatura.aPagar)} até {diaMesBR(fatura.vencimento)}
+        </p>
+      )}
+      {pagavel && (
+        <button type="button" className="primary wide" onClick={() => onPagar(fatura)}>
+          <Banknote size={18} strokeWidth={2.4} />
+          {fatura.pago > 0 ? "Pagar o restante" : "Pagar fatura"}
+        </button>
+      )}
+      {fatura.pagamentos.map((p) => (
+        <div className="pag-linha" key={p.id}>
+          <span>
+            <b>{money(p.valor)}</b> pago em {dataBR(p.data)}
+            {TEXTO_DO_RESTANTE[p.restante] ? ` · ${TEXTO_DO_RESTANTE[p.restante]}` : ""}
+          </span>
+          <button type="button" className="chip-btn danger" onClick={() => onDesfazer(p)}>
+            Desfazer
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function InvoiceSection({ titulo, fatura, vazio, onPagar, onDesfazer }) {
   return (
     <section className="section-card">
       <div className="section-title">
@@ -196,8 +246,20 @@ function InvoiceSection({ titulo, fatura, vazio }) {
         <strong className="big-value">{money(fatura.valor)}</strong>
       </div>
 
+      {onPagar && <PagamentoDaFatura fatura={fatura} onPagar={onPagar} onDesfazer={onDesfazer} />}
+
+      {fatura.saldoAnterior > 0 && (
+        <div className="transaction">
+          <div>
+            <b>Saldo da fatura anterior</b>
+            <span>Restante da fatura de {rotuloMes(somarMeses(fatura.mes, -1))}</span>
+          </div>
+          <strong className="out">{money(fatura.saldoAnterior)}</strong>
+        </div>
+      )}
+
       {fatura.itens.length === 0 ? (
-        <p className="muted">{vazio}</p>
+        fatura.saldoAnterior > 0 ? null : <p className="muted">{vazio}</p>
       ) : (
         fatura.itens.map((p) => (
           <div className="transaction" key={`${p.compraId}-${p.numero}`}>
@@ -225,12 +287,16 @@ export default function CardDetails({
   onSaveCard,
   onFuture,
   onCalendar,
-  onConfigurarIA
+  onConfigurarIA,
+  onPay,
+  onUndoPay
 }) {
   const [formAberto, setFormAberto] = useState(Boolean(abrirForm));
   const [editando, setEditando] = useState(null);
   const [editandoCartao, setEditandoCartao] = useState(false);
   const [cupom, setCupom] = useState(null);
+  const [pagando, setPagando] = useState(null); // mês da fatura sendo paga
+  const [aviso, setAviso] = useState("");
   const formRef = useRef(null);
 
   useEffect(() => {
@@ -239,7 +305,37 @@ export default function CardDetails({
     }
   }, [formAberto, editando]);
 
+  useEffect(() => {
+    if (!aviso) return undefined;
+    const tempo = setTimeout(() => setAviso(""), 5000);
+    return () => clearTimeout(tempo);
+  }, [aviso]);
+
   const resumo = resumoDoCartao(cartao, hoje);
+  // a janela de pagamento usa os dados de agora (se a fatura foi paga em outro aparelho, ela fecha)
+  const faturaPagando = pagando ? resumo.faturasFechadas.find((f) => f.mes === pagando && podePagar(f)) || null : null;
+
+  // a fatura foi paga enquanto a janela estava aberta: esquece, para não reabrir sozinha
+  useEffect(() => {
+    if (pagando && !faturaPagando) setPagando(null);
+  }, [pagando, faturaPagando]);
+
+  function abrirPagamento(fatura) {
+    setPagando(fatura.mes);
+  }
+
+  function confirmarPagamento(pagamento) {
+    onPay(cartao.id, pagamento);
+    setPagando(null);
+    setAviso(`Pagamento de ${money(pagamento.valor)} registrado na fatura de ${rotuloMes(pagamento.fatura)}.`);
+  }
+
+  function desfazerPagamento(pagamento) {
+    const pergunta = `Desfazer o pagamento de ${money(pagamento.valor)} da fatura de ${rotuloMes(pagamento.fatura)}?`;
+    if (!window.confirm(pergunta)) return;
+    onUndoPay(cartao.id, pagamento.id);
+    setAviso("Pagamento desfeito.");
+  }
 
   const compras = useMemo(
     () =>
@@ -304,7 +400,13 @@ export default function CardDetails({
         </div>
       </header>
 
-      <CardSummary cartao={cartao} resumo={resumo} />
+      {aviso && (
+        <p className="pag-feito" role="status">
+          {aviso}
+        </p>
+      )}
+
+      <CardSummary cartao={cartao} resumo={resumo} onPagar={abrirPagamento} />
 
       {cartao.fechamentoEstimado && !editandoCartao && (
         <div className="notice">
@@ -366,7 +468,14 @@ export default function CardDetails({
       )}
 
       {resumo.faturasFechadas.map((fatura) => (
-        <InvoiceSection key={fatura.mes} titulo="Fatura fechada" fatura={fatura} vazio="" />
+        <InvoiceSection
+          key={fatura.mes}
+          titulo="Fatura fechada"
+          fatura={fatura}
+          vazio=""
+          onPagar={abrirPagamento}
+          onDesfazer={desfazerPagamento}
+        />
       ))}
 
       <InvoiceSection titulo="Fatura atual" fatura={resumo.faturaAtual} vazio="Nenhuma compra nesta fatura ainda." />
@@ -441,6 +550,17 @@ export default function CardDetails({
       </section>
 
       {cupom && <CupomModal cupomId={cupom} onClose={() => setCupom(null)} />}
+
+      {faturaPagando && (
+        <PagarFatura
+          cartao={cartao}
+          fatura={faturaPagando}
+          disponivel={resumo.disponivel}
+          hoje={hoje}
+          onConfirmar={confirmarPagamento}
+          onFechar={() => setPagando(null)}
+        />
+      )}
     </div>
   );
 }

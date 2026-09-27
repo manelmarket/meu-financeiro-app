@@ -320,6 +320,41 @@ export default function App(){
   }
 
 
+  // pagamento da fatura (valor cheio ou parcial) — ver lib/cartao.js
+  function payInvoice(cardId, pagamento){
+
+    setData(d=>({
+
+      ...d,
+
+      cartoes: d.cartoes.map(c=>
+        c.id===cardId
+          ? { ...c, pagamentos: [ ...(Array.isArray(c.pagamentos) ? c.pagamentos : []), pagamento ] }
+          : c
+      )
+
+    }));
+
+  }
+
+
+  function undoPayment(cardId, pagamentoId){
+
+    setData(d=>({
+
+      ...d,
+
+      cartoes: d.cartoes.map(c=>
+        c.id===cardId
+          ? { ...c, pagamentos: (Array.isArray(c.pagamentos) ? c.pagamentos : []).filter(p=>p?.id!==pagamentoId) }
+          : c
+      )
+
+    }));
+
+  }
+
+
   // apaga a compra inteira (todas as parcelas)
   function deletePurchase(cardId, compra){
 
@@ -560,6 +595,7 @@ export default function App(){
       onOpen={(id)=>ir("card-details", { cardId:id })}
       onNewPurchase={(id)=>ir("card-details", { cardId:id, abrirForm:true })}
       onCalendar={()=>ir("calendar")}
+      onPay={payInvoice}
     />;
 
   let content;
@@ -611,6 +647,8 @@ export default function App(){
             onFuture={()=>ir("future", { cardId:cartaoAtual.id })}
             onCalendar={()=>ir("calendar", { cardId:cartaoAtual.id })}
             onConfigurarIA={()=>ir("assistant")}
+            onPay={payInvoice}
+            onUndoPay={undoPayment}
           />
         : paginaCartoes;
       break;

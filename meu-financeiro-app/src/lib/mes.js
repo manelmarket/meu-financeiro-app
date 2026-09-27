@@ -1,11 +1,13 @@
 // Resumo de um mês ("Meu mês"): receitas, despesas, saldo, categorias e vencimentos.
 //
 // Despesas do mês = gastos lançados no mês
-//                 + faturas de cartão que VENCEM no mês
+//                 + faturas de cartão que VENCEM no mês (as compras de cada fatura)
 //                 + contas fixas ativas no mês.
+// O restante de uma fatura lançado na próxima fatura não conta de novo como despesa
+// (já contou no mês da fatura de origem), mas entra no valor a pagar da próxima fatura.
 
 import { arredondar, diasNoMes, hojeISO, lerData, lerMes, mesDaData, montarData, somarMeses } from "./formato.js";
-import { datasDaFatura, faturasDoCartao, statusDaFatura } from "./cartao.js";
+import { contasDasFaturas, faturaDoMes } from "./cartao.js";
 
 // Cada conta fixa guarda os períodos em que esteve ativa:
 // [{ inicio: "AAAA-MM", fim: "AAAA-MM" | null }]  (o mês "fim" já não conta)
@@ -64,18 +66,27 @@ export function resumoDoMes(dados, mes, hoje = hojeISO()) {
 
   let faturas = 0;
   for (const cartao of dados.cartoes || []) {
-    const fatura = faturasDoCartao(cartao).get(mes);
-    if (!fatura || fatura.valor <= 0) continue;
-    faturas += fatura.valor;
-    for (const parcela of fatura.itens) somar(parcela.categoria, parcela.valor);
+    if (!contasDasFaturas(cartao).has(mes)) continue;
+    const fatura = faturaDoMes(cartao, mes, hoje);
+    if (fatura.valorDasCompras > 0) {
+      faturas += fatura.valorDasCompras;
+      for (const parcela of fatura.itens) somar(parcela.categoria, parcela.valor);
+    }
+    if (fatura.valor <= 0) continue;
     vencimentos.push({
       id: `fatura-${cartao.id}`,
       tipo: "fatura",
       cartaoId: cartao.id,
       descricao: `Fatura ${cartao.nome}`,
       valor: fatura.valor,
-      data: datasDaFatura(cartao, mes).vencimento,
-      status: statusDaFatura(cartao, mes, hoje)
+      data: fatura.vencimento,
+      status: fatura.status,
+      pago: fatura.pago,
+      paraProxima: fatura.paraProxima,
+      aPagar: fatura.aPagar,
+      saldoAnterior: fatura.saldoAnterior,
+      // o que conta como despesa deste mês (só as compras; o saldo anterior já contou antes)
+      despesa: fatura.valorDasCompras
     });
   }
 

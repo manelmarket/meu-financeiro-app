@@ -131,7 +131,9 @@ export function montarAgenda(dados, ajustes, agora = new Date()) {
   for (let i = 0; i < MESES_NA_AGENDA; i += 1) {
     for (const v of resumoDoMes(dados, somarMeses(mes, i), hoje).vencimentos) {
       if (v.tipo === "fatura" ? !a.faturas : !a.contas) continue;
-      if (!(Number(v.valor) > 0) || v.data < hoje) continue;
+      // fatura: avisa o que falta pagar (fatura já paga pelo botão Pagar não avisa)
+      const valor = Number(v.tipo === "fatura" && v.aPagar !== undefined ? v.aPagar : v.valor);
+      if (!(valor > 0) || v.data < hoje) continue;
 
       let dias = a.dias;
       let quando = momento(somarDias(v.data, -dias), a.hora);
@@ -148,7 +150,7 @@ export function montarAgenda(dados, ajustes, agora = new Date()) {
         id,
         tipo: v.tipo,
         nome: String(v.descricao || "").slice(0, 60),
-        valor: Math.round(Number(v.valor) * 100) / 100,
+        valor: Math.round(valor * 100) / 100,
         vence: v.data,
         dias,
         quando
@@ -160,13 +162,20 @@ export function montarAgenda(dados, ajustes, agora = new Date()) {
   return itens.slice(0, MAXIMO_DE_LEMBRETES);
 }
 
-// Muda quando mudam os cartões, as contas fixas ou os ajustes (não muda com o passar dos dias).
+// pagamentos de fatura mudam o que o celular avisa (cartão sem pagamento fica como antes)
+function pagamentosNaAssinatura(cartao) {
+  const lista = Array.isArray(cartao.pagamentos) ? cartao.pagamentos : [];
+  return lista.length ? [lista.map((p) => [p?.id, p?.fatura, p?.valor, p?.restante || ""])] : [];
+}
+
+// Muda quando mudam os cartões, os pagamentos das faturas, as contas fixas ou os ajustes
+// (não muda com o passar dos dias).
 // Serve para avisar que os lembretes do celular precisam ser atualizados quando o app não
 // consegue entregar a agenda sozinho.
 export function assinaturaDasRegras(dados, ajustes) {
   const a = normalizar(ajustes);
   const texto = JSON.stringify([
-    (dados.cartoes || []).map((c) => [c.id, c.nome, c.vencimento, c.fechamento]),
+    (dados.cartoes || []).map((c) => [c.id, c.nome, c.vencimento, c.fechamento, ...pagamentosNaAssinatura(c)]),
     (dados.contasFixas || []).map((c) => [c.id, c.nome, c.dia, c.valor, c.ativa !== false, c.periodos || null]),
     a.dias,
     a.hora,

@@ -77,7 +77,8 @@ export function analiseDoMes(dados, mes, hoje = hojeISO()) {
       .map((l) => ({ texto: `o gasto "${l.descricao}"`, valor: Number(l.valor) || 0 })),
     ...atual.vencimentos.map((v) => ({
       texto: v.tipo === "fatura" ? `a fatura do cartão ${nomeDoCartao(v)}` : `a conta fixa ${v.descricao}`,
-      valor: v.valor
+      // fatura: só as compras do mês (o saldo que veio da fatura anterior já contou no mês dela)
+      valor: v.tipo === "fatura" && v.despesa !== undefined ? v.despesa : v.valor
     }))
   ].sort((a, b) => b.valor - a.valor);
   if (candidatas[0] && candidatas[0].valor > 0) {
@@ -183,11 +184,13 @@ export function alertas(dados, hoje = hojeISO()) {
   );
   for (const v of proximos) {
     const quando = v.data === hoje ? "vence hoje" : v.data === amanha ? "vence amanhã" : `vence em ${diaMesBR(v.data)}`;
+    // fatura com pagamento parcial: mostra só o que falta pagar
+    const valor = v.status === "parcial" ? `falta pagar ${money(v.aPagar)}` : money(v.valor);
     lista.push({
       id: `vence-${v.id}-${v.data}`,
       tipo: "info",
       cartaoId: v.cartaoId,
-      texto: `${v.descricao} ${quando} (${money(v.valor)}).`
+      texto: `${v.descricao} ${quando} (${valor}).`
     });
   }
 
@@ -215,7 +218,13 @@ export function resumoParaIA(dados, mes, hoje = hojeISO()) {
       despesas: anterior.despesas,
       despesas_por_categoria: Object.fromEntries(anterior.categorias)
     },
-    vencimentos_do_mes: atual.vencimentos.map((v) => ({ descricao: v.descricao, valor: v.valor, data: v.data })),
+    vencimentos_do_mes: atual.vencimentos.map((v) => ({
+      descricao: v.descricao,
+      valor: v.valor,
+      data: v.data,
+      ...(v.saldoAnterior > 0 ? { inclui_saldo_da_fatura_anterior: v.saldoAnterior } : {}),
+      ...(v.pago > 0 || v.paraProxima > 0 ? { ja_pago: v.pago, falta_pagar: v.aPagar } : {})
+    })),
     maiores_gastos_lancados: atual.lancamentos
       .filter((l) => l.tipo !== "entrada")
       .sort((a, b) => (Number(b.valor) || 0) - (Number(a.valor) || 0))

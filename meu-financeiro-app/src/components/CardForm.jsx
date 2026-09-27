@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { BANDEIRAS } from "../lib/categorias.js";
 import { parseValor } from "../lib/formato.js";
+import { bancoDoCartao } from "../lib/bancos.js";
 
 function dia(texto) {
   const n = parseInt(texto, 10);
@@ -15,6 +16,8 @@ export default function CardForm({ inicial, titulo, textoBotao, onSave, onCancel
   const [fechamento, setFechamento] = useState(inicial ? String(inicial.fechamento) : "");
   const [vencimento, setVencimento] = useState(inicial ? String(inicial.vencimento) : "");
   const [erro, setErro] = useState("");
+  // o app reconhece o banco pelo nome e pinta o cartão com as cores dele
+  const banco = bancoDoCartao(nome);
 
   function salvar() {
     const valorLimite = parseValor(limite);
@@ -53,6 +56,12 @@ export default function CardForm({ inicial, titulo, textoBotao, onSave, onCancel
         Nome
         <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Ex.: Nubank" />
       </label>
+      {banco && (
+        <p className="cc-tema-previa" aria-live="polite">
+          <i style={{ background: `linear-gradient(145deg,${banco.cores[0]},${banco.cores[1]})` }} aria-hidden="true" />
+          Cores do cartão: {banco.nome}
+        </p>
+      )}
 
       <label>
         Bandeira

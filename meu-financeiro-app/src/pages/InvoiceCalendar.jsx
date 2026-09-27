@@ -2,6 +2,14 @@ import React from "react";
 import { diaMesBR, lerMes, money, nomeMes } from "../lib/formato.js";
 import { ROTULO_STATUS, calendarioDeFaturas } from "../lib/cartao.js";
 
+// "Fatura fechada · vence 10/10", "Pagamento parcial · falta R$ 200,00 · vence 10/10"...
+function situacao(c) {
+  let texto = ROTULO_STATUS[c.status];
+  if (c.status === "parcial") texto += ` · falta ${money(c.aPagar)}`;
+  if (c.status === "paga" && c.paraProxima > 0) texto += ` · ${money(c.paraProxima)} foi para a próxima`;
+  return `${texto} · vence ${diaMesBR(c.vencimento)}`;
+}
+
 export default function InvoiceCalendar({ cartoes, titulo, hoje, onBack, onOpenCard }) {
   const meses = calendarioDeFaturas(cartoes, hoje);
   const varios = cartoes.length > 1;
@@ -33,9 +41,7 @@ export default function InvoiceCalendar({ cartoes, titulo, hoje, onBack, onOpenC
                 <div className="month-name">
                   {nomeMes(linha.mes).toUpperCase()} {lerMes(linha.mes).y}
                 </div>
-                <small className="muted">
-                  {unico ? `${ROTULO_STATUS[unico.status]} · vence ${diaMesBR(unico.vencimento)}` : "Previsto no mês"}
-                </small>
+                <small className="muted">{unico ? situacao(unico) : "Previsto no mês"}</small>
               </div>
               <strong className="big-value">{money(linha.total)}</strong>
             </div>
@@ -45,9 +51,7 @@ export default function InvoiceCalendar({ cartoes, titulo, hoje, onBack, onOpenC
                 <button className="calendar-card-row" key={c.cartaoId} onClick={() => onOpenCard(c.cartaoId)}>
                   <span>
                     <b>{c.nome}</b>
-                    <small>
-                      {ROTULO_STATUS[c.status]} · vence {diaMesBR(c.vencimento)}
-                    </small>
+                    <small>{situacao(c)}</small>
                   </span>
                   <strong>{money(c.valor)}</strong>
                 </button>

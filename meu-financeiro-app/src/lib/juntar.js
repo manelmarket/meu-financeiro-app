@@ -5,8 +5,8 @@
 // - registro que só existe de um lado: entra;
 // - mesmo id dos dois lados e igual: fica um;
 // - dado de demonstração que um lado não mexeu: fica a versão do lado que mexeu;
-// - mesmo cartão/meta/conta/investimento/bem (mesmo nome): vira um só (compras e
-//   movimentações das metas são somadas);
+// - mesmo cartão/meta/conta/investimento/bem (mesmo nome): vira um só (compras, pagamentos
+//   das faturas e movimentações das metas são somados);
 // - coisas diferentes que por acaso têm o mesmo id: ficam as duas (uma ganha id novo).
 
 import { iguais } from "./mesclar.js";
@@ -90,7 +90,12 @@ function juntarLista(chave, L, R, S, usados) {
     if (l && r && campos && campos.every((c) => l[c] === r[c])) {
       if (chave === "metas") resultado[i] = juntarMeta(l, r);
       else if (chave === "cartoes") {
-        resultado[i] = { ...l, compras: juntarLista("compras", lista(l.compras), lista(r.compras), lista(s?.compras), usados) };
+        const junto = { ...l, compras: juntarLista("compras", lista(l.compras), lista(r.compras), lista(s?.compras), usados) };
+        // pagamentos das faturas: ficam os dos dois aparelhos
+        if (Array.isArray(l.pagamentos) || Array.isArray(r.pagamentos)) {
+          junto.pagamentos = juntarLista("pagamentos", lista(l.pagamentos), lista(r.pagamentos), [], usados);
+        }
+        resultado[i] = junto;
       }
       // outros (mesmo nome): fica a versão deste aparelho
       continue;
