@@ -1,0 +1,58 @@
+diff --git a/src/pages/CardDetails.jsx b/src/pages/CardDetails.jsx
+--- a/src/pages/CardDetails.jsx
++++ b/src/pages/CardDetails.jsx
+@@ -43,7 +43,9 @@ export default function CardDetails({
+
+
+
+   const [showCupom,setShowCupom] = useState(null);
+
++  const [showFuturos,setShowFuturos] = useState(false);
++
+
+
+   const [descricao,setDescricao] = useState("");
+@@ -827,7 +829,7 @@ export default function CardDetails({
+         }}
+
+-        onClick={()=>alert("Abrir lançamentos futuros")}
++        onClick={()=>setShowFuturos(!showFuturos)}
+
+       >
+
+@@ -841,6 +843,34 @@ export default function CardDetails({
+
+       </button>
+
++      {
++      showFuturos &&
++
++      <section className="section-card">
++
++        <h2>
++          📅 Lançamentos futuros
++        </h2>
++
++        {
++        compras
++        .filter(item=>item.parcelaAtual && item.totalParcelas && item.parcelaAtual > 1)
++        .map(item=>(
++
++          <div
++            key={"futuro-"+item.id}
++          >
++            {item.descricao}
++            {" • "}
++            Parcela {item.parcelaAtual}/{item.totalParcelas}
++            {" "}
++            {money(item.valor)}
++          </div>
++
++        ))
++        }
++
++      </section>
++      }
++
+
+       <section className="section-card">

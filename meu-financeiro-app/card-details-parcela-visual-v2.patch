@@ -1,0 +1,24 @@
+--- a/src/pages/CardDetails.jsx
++++ b/src/pages/CardDetails.jsx
+@@ -432,15 +432,13 @@
+               {" • "}
+               {item.data}
+               {" • "}
+-              Parcelas: {
++              {
+                 item.totalParcelas
+-                ||
+-                item.parcelas?.length
+-                ||
+-                item.parcelas
+-                ||
+-                1
+-              }x
++                ?
++                `💳 Parcela ${item.parcelaAtual}/${item.totalParcelas}`
++                :
++                `Parcelas: ${item.parcelas || 1}x`
++              }
+ 
+             </small>
+ 

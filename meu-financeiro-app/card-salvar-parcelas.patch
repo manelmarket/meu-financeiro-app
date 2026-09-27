@@ -1,0 +1,15 @@
+diff --git a/src/pages/CardDetails.jsx b/src/pages/CardDetails.jsx
+--- a/src/pages/CardDetails.jsx
++++ b/src/pages/CardDetails.jsx
+@@
+-            onChange={
+-              e=>setParcelas(e.target.value)
+-            }
++            onChange={
++              e=>
++              setParcelas(
++                Number(
++                  e.target.value.replace("x","")
++                )
++              )
++            }
