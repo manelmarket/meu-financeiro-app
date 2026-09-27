@@ -111,6 +111,9 @@ export function juntarPerfil(local, remoto) {
   for (const campo of ["apelido", "telefone", "nascimento"]) {
     if (!l[campo] && r[campo]) resultado[campo] = r[campo];
   }
+  // orçamentos por categoria: ficam os dos dois lados (na mesma categoria, vale o deste aparelho)
+  const limites = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : null);
+  if (limites(l.orcamentos) && limites(r.orcamentos)) resultado.orcamentos = { ...r.orcamentos, ...l.orcamentos };
   return resultado;
 }
 

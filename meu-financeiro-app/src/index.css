@@ -122,6 +122,8 @@ button:disabled{opacity:.6;cursor:default}
 .hint{margin:0;font-size:13px;color:var(--primaria-tinta);background:var(--primaria-suave);border-radius:12px;padding:10px 12px}
 .form-error{margin:0;font-size:13px;color:var(--erro-forte);font-weight:700}
 .grid2.tight{margin-top:0}
+/* formulários com 2 campos lado a lado: cada campo cabe na sua metade (antes o 2º passava da borda) */
+.grid2.tight>*{min-width:0}.grid2.tight input,.grid2.tight select{width:100%;min-width:0}
 .scroll-anchor{scroll-margin-top:12px}
 .big-value{font-size:18px;white-space:nowrap}
 
@@ -465,3 +467,47 @@ button:disabled{opacity:.6;cursor:default}
 .aviso-atualizacao span{flex:1}
 .aviso-atualizacao button{border:0;background:#fff;color:#0f172a;border-radius:10px;padding:7px 12px;font-weight:800;font-size:13px;flex-shrink:0}
 .entrada-shell .aviso-atualizacao{position:fixed;left:0;right:0}
+
+/* ================= v7: orçamentos por categoria e lembretes de vencimento ================= */
+:root{--atencao:#ea580c}
+[data-modo="escuro"]{--atencao:#fb923c}
+.orc-linha{padding:13px 0;border-bottom:1px solid var(--borda-2)}
+.orc-linha:last-child{border-bottom:0;padding-bottom:2px}
+.orc-topo{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:14px}
+.orc-topo b{min-width:0;overflow-wrap:anywhere}
+.orc-topo span{color:var(--texto-3);font-weight:700;font-size:13px;white-space:nowrap}
+.orc-barra{margin-top:9px}
+.orc-linha.perto .bar i{background:var(--atencao)}
+.orc-linha.estourado .bar i{background:var(--erro)}
+.orc-rodape{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:7px}
+.orc-rodape small{color:var(--apagado);font-size:12px;min-width:0}
+.orc-rodape .link{font-size:13px;white-space:nowrap}
+.orc-linha.perto .orc-rodape small{color:var(--atencao);font-weight:700}
+.orc-linha.estourado .orc-rodape small{color:var(--erro);font-weight:700}
+.orc-form{margin-top:12px;padding:14px;border-radius:16px;background:var(--superficie-2);border:1px solid var(--borda)}
+.orc-remover{align-self:flex-start;color:var(--erro);font-size:13px}
+.orc-nota{margin:14px 4px 0;line-height:1.5}
+.lemb-status{display:flex;flex-direction:column;gap:14px}
+.lemb-status-topo{display:flex;align-items:flex-start;gap:12px}
+.lemb-icone{width:44px;height:44px;border-radius:14px;background:var(--superficie-3);color:var(--apagado);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.lemb-icone.ligado{background:var(--ok-fundo);color:var(--ok-forte)}
+.lemb-icone.aviso{background:var(--aviso-fundo);color:var(--aviso-texto)}
+.lemb-icone.pequeno{width:36px;height:36px;border-radius:11px;background:var(--primaria-suave);color:var(--primaria-texto)}
+.lemb-status .settings-text b{font-size:16px}
+.lemb-botoes{display:flex;flex-direction:column;gap:10px}
+.lemb-botoes .wide{margin-top:0;display:flex;align-items:center;justify-content:center;gap:8px}
+.lemb-botoes-linha{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lemb-baixar{display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:0;box-sizing:border-box}
+.lemb-passos{margin:0;padding-left:20px;font-size:13.5px;color:var(--texto-2);line-height:1.6}
+.lemb-alerta{margin:0;background:var(--aviso-fundo);color:var(--aviso-texto);border:1px solid var(--aviso-borda);border-radius:14px;padding:11px 13px;font-size:13px;font-weight:700}
+.lemb-mensagem{margin:0;border-radius:14px;padding:11px 13px;font-size:13px;font-weight:700;display:flex;flex-direction:column;gap:10px}
+.lemb-mensagem p{margin:0}
+.lemb-mensagem.ok{background:var(--ok-fundo);color:var(--ok-texto)}
+.lemb-mensagem.info{background:var(--info-fundo);color:var(--info-texto)}
+.lemb-mensagem.erro{background:var(--erro-fundo);color:var(--erro-texto)}
+.lemb-campo{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.lemb-rotulo{font-size:13px;color:var(--texto-3);font-weight:700}
+.lemb-hora select{border:1px solid var(--borda-campo);background:var(--superficie);border-radius:13px;padding:12px 14px;max-width:160px}
+.lemb-linha{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--borda-2)}
+.lemb-nota{margin:12px 0 0}
+.lemb-dia{color:var(--primaria-texto)}

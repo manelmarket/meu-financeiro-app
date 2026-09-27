@@ -3,6 +3,7 @@
 import { arredondar, diaMesBR, hojeISO, mesDaData, money, nomeMes, rotuloMes, somarDias, somarMeses } from "./formato.js";
 import { resumoDoMes } from "./mes.js";
 import { resumoDoCartao } from "./cartao.js";
+import { lerOrcamentos, nivelDoOrcamento, porcentagem } from "./orcamento.js";
 
 // categorias essenciais: a sugestão de economia prefere as outras
 const ESSENCIAIS = ["Casa", "Saúde", "Filhos", "Trabalho"];
@@ -149,14 +150,32 @@ export function alertas(dados, hoje = hojeISO()) {
     });
   }
 
-  // 3. metas atingidas
+  // 3. orçamento por categoria: aviso com 80% do limite e quando passa de 100%
+  const gastosDoMes = Object.fromEntries(atual.categorias);
+  const limites = Object.entries(lerOrcamentos(dados))
+    .map(([categoria, limite]) => ({ categoria, limite, gasto: arredondar(gastosDoMes[categoria] || 0) }))
+    .filter((o) => nivelDoOrcamento(o.gasto, o.limite) !== "ok")
+    .sort((a, b) => b.gasto / b.limite - a.gasto / a.limite);
+  for (const { categoria, limite, gasto } of limites) {
+    let texto;
+    if (gasto > limite) {
+      texto = `Orçamento de ${categoria} estourado: ${money(gasto)} de ${money(limite)} (${money(gasto - limite)} acima do limite).`;
+    } else if (gasto === limite) {
+      texto = `Você chegou ao limite do orçamento de ${categoria} (${money(limite)}).`;
+    } else {
+      texto = `Você já usou ${porcentagem(gasto, limite)}% do orçamento de ${categoria}: ${money(gasto)} de ${money(limite)} (faltam ${money(limite - gasto)}).`;
+    }
+    lista.push({ id: `orcamento-${categoria}`, tipo: "aviso", pagina: "orcamentos", texto });
+  }
+
+  // 4. metas atingidas
   for (const meta of dados.metas || []) {
     if (Number(meta.objetivo) > 0 && Number(meta.atual) >= Number(meta.objetivo)) {
       lista.push({ id: `meta-${meta.id}`, tipo: "ok", pagina: "goals", texto: `Meta atingida: ${meta.nome}!` });
     }
   }
 
-  // 4. faturas e contas fixas que vencem nos próximos 3 dias
+  // 5. faturas e contas fixas que vencem nos próximos 3 dias
   const amanha = somarDias(hoje, 1);
   const limite = somarDias(hoje, 3);
   const proximos = [...atual.vencimentos, ...resumoDoMes(dados, somarMeses(mes, 1), hoje).vencimentos].filter(

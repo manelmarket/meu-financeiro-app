@@ -4,6 +4,7 @@ import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { aplicarAparencia } from "./lib/aparencia";
 import { marcarModoApp } from "./lib/modoApp";
+import { iniciarPonteAndroid } from "./lib/appAndroid";
 import { registrarServiceWorker } from "./lib/atualizacao";
 import "./index.css";
 
@@ -12,6 +13,9 @@ aplicarAparencia();
 
 // aberto pelo app Android (APK): o login usa o jeito que funciona dentro do app
 marcarModoApp();
+
+// app Android novo: canal de mensagens para os lembretes de vencimento
+iniciarPonteAndroid();
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

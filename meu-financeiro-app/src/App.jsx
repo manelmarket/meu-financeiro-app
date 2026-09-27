@@ -25,8 +25,12 @@ import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Entrada from "./pages/Entrada";
 import Temas from "./pages/Temas";
+import Orcamentos from "./pages/Orcamentos";
+import Lembretes from "./pages/Lembretes";
 
 import useNuvem from "./lib/useNuvem";
+import useLembretesNoCelular from "./lib/useLembretes";
+import useVoltarParaOInicio from "./lib/useVoltar";
 import { guardarCopia } from "./lib/backup";
 import { primeiroNome } from "./lib/perfil";
 
@@ -41,6 +45,7 @@ import {
 import { apagarCupom, comprimirImagem, dataURLParaBlob, limparCupons, salvarCupom } from "./storage/cupons";
 import { arredondar, hojeISO, mesDaData } from "./lib/formato";
 import { alternarConta } from "./lib/mes";
+import { comOrcamento } from "./lib/orcamento";
 
 // Aba do menu que fica acesa em cada tela
 const ABA_DA_TELA = {
@@ -48,6 +53,8 @@ const ABA_DA_TELA = {
   future: "cards",
   calendar: "cards",
   bills: "home",
+  orcamentos: "home",
+  lembretes: "home",
   assistant: "home",
   investments: "home",
   patrimony: "home",
@@ -168,6 +175,18 @@ export default function App(){
   const precisaEntrar =
     nuvem.configurada &&
     (!nuvem.usuario || nuvem.status==="sessao" || nuvem.status==="entrando" || Boolean(nuvem.escolha));
+
+  // lembretes de vencimento no celular (app Android): a agenda acompanha os dados
+  useLembretesNoCelular(data, !precisaEntrar);
+
+  // botão voltar do celular: em outra tela (ou com o menu aberto), volta para o Início em vez de sair do app
+  useVoltarParaOInicio(!precisaEntrar && (tela.page!=="home" || menuAberto), ()=>{
+
+    setMenuAberto(false);
+
+    setTela(t=> t.page==="home" ? t : { page:"home" });
+
+  });
 
   // voltou para a tela de entrada (saiu da conta, sessão terminou): depois do login, começa pelo Início
   useEffect(()=>{
@@ -366,6 +385,17 @@ export default function App(){
       contasFixas: (d.contasFixas || []).map(c=> c.id===id ? alternarConta(c, hojeISO()) : c)
 
     }));
+
+  }
+
+
+
+  // ---------- orçamento por categoria ----------
+
+  // limite > 0 define; vazio remove
+  function salvarOrcamento(categoria, limite){
+
+    setData(d=>comOrcamento(d, categoria, limite));
 
   }
 
@@ -614,6 +644,24 @@ export default function App(){
         onSave={saveBill}
         onDelete={deleteBill}
         onToggle={toggleBill}
+      />;
+      break;
+
+    case "orcamentos":
+      content =
+      <Orcamentos
+        data={data}
+        hoje={hoje}
+        onBack={()=>ir("home")}
+        onSave={salvarOrcamento}
+      />;
+      break;
+
+    case "lembretes":
+      content =
+      <Lembretes
+        data={data}
+        onBack={()=>ir("home")}
       />;
       break;
 

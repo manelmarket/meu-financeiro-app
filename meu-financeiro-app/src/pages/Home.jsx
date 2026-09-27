@@ -7,6 +7,8 @@ import { alertas, analiseDoMes } from "../lib/analise.js";
 import { diasDesde, lerUltimoBackup, quandoFoi } from "../lib/backup.js";
 import { ehSoDemonstracao } from "../storage/storage.js";
 import { nomeParaMostrar } from "../lib/perfil.js";
+import { usarPonteAndroid } from "../lib/appAndroid.js";
+import { agendaDesatualizada, usarAjustes } from "../lib/lembretes.js";
 
 const ICONE_ALERTA = { aviso: "⚠️", ok: "✅", info: "📅" };
 
@@ -72,9 +74,27 @@ export default function Home({ data, hoje, nuvem, onNew, onOpenBills, onOpenCard
   const demonstracao = useMemo(() => ehSoDemonstracao(data), [data]);
   const situacao = situacaoDosDados(nuvem, lerUltimoBackup(), hoje, demonstracao);
   const alertasDoMes = useMemo(() => alertas(data, hoje), [data, hoje]);
-  const avisos = situacao.aviso
-    ? [...alertasDoMes, { id: "dados", tipo: "aviso", texto: situacao.aviso, pagina: "backup" }]
-    : alertasDoMes;
+  // lembretes no celular sem o canal automático: avisa quando precisam ser atualizados
+  const ponte = usarPonteAndroid();
+  const ajustesDosLembretes = usarAjustes();
+  const lembretesVelhos = useMemo(
+    () => ponte.situacao === "sem-canal" && agendaDesatualizada(data, ajustesDosLembretes),
+    [ponte.situacao, data, ajustesDosLembretes]
+  );
+  const avisos = [
+    ...alertasDoMes,
+    ...(lembretesVelhos
+      ? [
+          {
+            id: "lembretes",
+            tipo: "info",
+            pagina: "lembretes",
+            texto: "Seus lembretes no celular precisam ser atualizados. Toque aqui e depois em Atualizar lembretes."
+          }
+        ]
+      : []),
+    ...(situacao.aviso ? [{ id: "dados", tipo: "aviso", texto: situacao.aviso, pagina: "backup" }] : [])
+  ];
   const frases = useMemo(() => analiseDoMes(data, mes, hoje), [data, mes, hoje]);
 
   const maior = Math.max(1, ...r.categorias.map(([, v]) => v));
@@ -186,6 +206,9 @@ export default function Home({ data, hoje, nuvem, onNew, onOpenBills, onOpenCard
       <section className="section-card">
         <div className="section-title">
           <h2 className="no-margin">Despesas por categoria</h2>
+          <button className="link" onClick={() => onOpenPage("orcamentos")}>
+            orçamentos
+          </button>
         </div>
         {r.categorias.length === 0 ? (
           <p className="muted">Nenhuma despesa neste mês.</p>

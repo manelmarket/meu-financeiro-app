@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   BarChart3,
+  BellRing,
   Cloud,
   CreditCard,
   History,
@@ -9,6 +10,7 @@ import {
   LoaderCircle,
   Moon,
   Palette,
+  PiggyBank,
   PlusCircle,
   RefreshCw,
   Repeat,
@@ -42,6 +44,8 @@ const GRUPOS = [
     titulo: "Mais",
     itens: [
       ["bills", Repeat, "Contas fixas"],
+      ["orcamentos", PiggyBank, "Orçamentos"],
+      ["lembretes", BellRing, "Lembretes"],
       ["investments", TrendingUp, "Investimentos"],
       ["patrimony", Landmark, "Patrimônio"],
       ["assistant", Sparkles, "Assistente"],
