@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import Avatar from "../components/Avatar.jsx";
 import { nomeParaMostrar, primeiroNome, validarPerfil } from "../lib/perfil.js";
 
-// Perfil da conta que está conectada (vale em todos os aparelhos dessa conta)
-export default function Profile({ data, hoje, nuvem, onBack, onSave }) {
-  const perfil = data.usuario || {};
+// Perfil da conta que está conectada (vale em todos os aparelhos dessa conta;
+// no modo família, cada pessoa tem o seu)
+export default function Profile({ data, perfil: perfilDaPessoa, hoje, nuvem, onBack, onSave }) {
+  const perfil = perfilDaPessoa || data.usuario || {};
   const conta = nuvem.usuario;
 
   const [nome, setNome] = useState(perfil.nome || conta?.nome || "");

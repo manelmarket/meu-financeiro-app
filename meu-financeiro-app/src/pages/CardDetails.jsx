@@ -11,12 +11,14 @@ import {
   RESTANTE_EM_ABERTO,
   RESTANTE_NA_PROXIMA,
   datasDaFatura,
+  faturasParaPagar,
   mesDaFatura,
   podePagar,
   resumoDaCompra,
   resumoDoCartao,
   valoresDasParcelas
 } from "../lib/cartao.js";
+import { acharBanco, resumoDosBancos } from "../lib/saldos.js";
 import { apagarCupom, comprimirImagem, salvarCupom } from "../storage/cupons.js";
 
 const OPCOES_PARCELAS = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -191,35 +193,38 @@ const TEXTO_DO_RESTANTE = {
   [RESTANTE_NA_PROXIMA]: "restante na próxima fatura"
 };
 
-// Pagamento da fatura fechada: situação, botão Pagar e os pagamentos feitos (com Desfazer)
-function PagamentoDaFatura({ fatura, onPagar, onDesfazer }) {
+// Pagamento da fatura (fechada ou a atual): situação, botão Pagar e os pagamentos feitos (com Desfazer)
+function PagamentoDaFatura({ fatura, onPagar, onDesfazer, nomeDoBanco }) {
   const pagavel = podePagar(fatura);
   if (!pagavel && fatura.pagamentos.length === 0) return null;
   const proxima = rotuloMes(somarMeses(fatura.mes, 1));
+  const atual = fatura.fase === "aberta";
 
   return (
     <div className={`pag-caixa ${fatura.status}`}>
       {fatura.status === "paga" && (
         <p className="pag-situacao">
-          ✓ Fatura paga
+          {atual ? "✓ Paga até agora (antes de fechar)" : "✓ Fatura paga"}
           {fatura.paraProxima > 0 && ` · ${money(fatura.paraProxima)} foi para a fatura de ${proxima}`}
         </p>
       )}
       {fatura.status === "parcial" && (
         <p className="pag-situacao">
-          Pago {money(fatura.pago)} · falta {money(fatura.aPagar)} até {diaMesBR(fatura.vencimento)}
+          Pago {money(fatura.pago)} · falta {money(fatura.aPagar)}
+          {atual ? "" : ` até ${diaMesBR(fatura.vencimento)}`}
         </p>
       )}
       {pagavel && (
         <button type="button" className="primary wide" onClick={() => onPagar(fatura)}>
           <Banknote size={18} strokeWidth={2.4} />
-          {fatura.pago > 0 ? "Pagar o restante" : "Pagar fatura"}
+          {fatura.pago > 0 ? "Pagar o restante" : atual ? "Adiantar pagamento" : "Pagar fatura"}
         </button>
       )}
       {fatura.pagamentos.map((p) => (
         <div className="pag-linha" key={p.id}>
           <span>
             <b>{money(p.valor)}</b> pago em {dataBR(p.data)}
+            {nomeDoBanco(p.bancoId) ? ` · ${nomeDoBanco(p.bancoId)}` : ""}
             {TEXTO_DO_RESTANTE[p.restante] ? ` · ${TEXTO_DO_RESTANTE[p.restante]}` : ""}
           </span>
           <button type="button" className="chip-btn danger" onClick={() => onDesfazer(p)}>
@@ -231,7 +236,7 @@ function PagamentoDaFatura({ fatura, onPagar, onDesfazer }) {
   );
 }
 
-function InvoiceSection({ titulo, fatura, vazio, onPagar, onDesfazer }) {
+function InvoiceSection({ titulo, fatura, vazio, onPagar, onDesfazer, nomeDoBanco }) {
   return (
     <section className="section-card">
       <div className="section-title">
@@ -246,7 +251,7 @@ function InvoiceSection({ titulo, fatura, vazio, onPagar, onDesfazer }) {
         <strong className="big-value">{money(fatura.valor)}</strong>
       </div>
 
-      {onPagar && <PagamentoDaFatura fatura={fatura} onPagar={onPagar} onDesfazer={onDesfazer} />}
+      {onPagar && <PagamentoDaFatura fatura={fatura} onPagar={onPagar} onDesfazer={onDesfazer} nomeDoBanco={nomeDoBanco} />}
 
       {fatura.saldoAnterior > 0 && (
         <div className="transaction">
@@ -279,6 +284,7 @@ function InvoiceSection({ titulo, fatura, vazio, onPagar, onDesfazer }) {
 
 export default function CardDetails({
   cartao,
+  data,
   hoje,
   abrirForm,
   onBack,
@@ -313,15 +319,18 @@ export default function CardDetails({
 
   const resumo = resumoDoCartao(cartao, hoje);
   // a janela de pagamento usa os dados de agora (se a fatura foi paga em outro aparelho, ela fecha)
-  const faturaPagando = pagando ? resumo.faturasFechadas.find((f) => f.mes === pagando && podePagar(f)) || null : null;
+  const paraPagar = faturasParaPagar(resumo);
+  const faturaPagando = pagando ? paraPagar.find((f) => f.mes === pagando) || null : null;
 
   // a fatura foi paga enquanto a janela estava aberta: esquece, para não reabrir sozinha
   useEffect(() => {
     if (pagando && !faturaPagando) setPagando(null);
   }, [pagando, faturaPagando]);
 
+  const nomeDoBanco = (id) => acharBanco(data, id)?.nome || "";
+
   function abrirPagamento(fatura) {
-    setPagando(fatura.mes);
+    if (fatura) setPagando(fatura.mes);
   }
 
   function confirmarPagamento(pagamento) {
@@ -406,7 +415,7 @@ export default function CardDetails({
         </p>
       )}
 
-      <CardSummary cartao={cartao} resumo={resumo} onPagar={abrirPagamento} />
+      <CardSummary cartao={cartao} resumo={resumo} hoje={hoje} onPagar={abrirPagamento} />
 
       {cartao.fechamentoEstimado && !editandoCartao && (
         <div className="notice">
@@ -475,10 +484,18 @@ export default function CardDetails({
           vazio=""
           onPagar={abrirPagamento}
           onDesfazer={desfazerPagamento}
+          nomeDoBanco={nomeDoBanco}
         />
       ))}
 
-      <InvoiceSection titulo="Fatura atual" fatura={resumo.faturaAtual} vazio="Nenhuma compra nesta fatura ainda." />
+      <InvoiceSection
+        titulo="Fatura atual"
+        fatura={resumo.faturaAtual}
+        vazio="Nenhuma compra nesta fatura ainda."
+        onPagar={abrirPagamento}
+        onDesfazer={desfazerPagamento}
+        nomeDoBanco={nomeDoBanco}
+      />
 
       <section className="section-card">
         <div className="section-title">
@@ -553,9 +570,12 @@ export default function CardDetails({
 
       {faturaPagando && (
         <PagarFatura
+          key={pagando}
           cartao={cartao}
-          fatura={faturaPagando}
+          faturas={paraPagar}
+          inicial={pagando}
           disponivel={resumo.disponivel}
+          bancos={resumoDosBancos(data).bancos}
           hoje={hoje}
           onConfirmar={confirmarPagamento}
           onFechar={() => setPagando(null)}

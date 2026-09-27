@@ -3,8 +3,9 @@ import { CalendarDays } from "lucide-react";
 import CardSummary from "../components/CardSummary.jsx";
 import CardForm from "../components/CardForm.jsx";
 import PagarFatura from "../components/PagarFatura.jsx";
-import { podePagar, resumoDoCartao } from "../lib/cartao.js";
+import { faturasParaPagar, resumoDoCartao } from "../lib/cartao.js";
 import { money, rotuloMes } from "../lib/formato.js";
+import { resumoDosBancos } from "../lib/saldos.js";
 
 export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewPurchase, onCalendar, onPay }) {
   // fatura sendo paga: { cartaoId, mes }
@@ -28,12 +29,12 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
   // a janela sempre usa os dados de agora (se a fatura foi paga em outro aparelho, ela fecha)
   const cartaoPagando = pagando ? data.cartoes.find((c) => c.id === pagando.cartaoId) : null;
   const resumoPagando = cartaoPagando ? resumoDoCartao(cartaoPagando, hoje) : null;
-  const faturaPagando = resumoPagando?.faturasFechadas.find((f) => f.mes === pagando.mes && podePagar(f)) || null;
+  const faturasPagando = resumoPagando ? faturasParaPagar(resumoPagando) : [];
 
   // a fatura foi paga (ou o cartão saiu) enquanto a janela estava aberta: esquece, para não reabrir sozinha
   useEffect(() => {
-    if (pagando && !faturaPagando) setPagando(null);
-  }, [pagando, faturaPagando]);
+    if (pagando && faturasPagando.length === 0) setPagando(null);
+  }, [pagando, faturasPagando.length]);
 
   function confirmarPagamento(pagamento) {
     onPay(cartaoPagando.id, pagamento);
@@ -73,40 +74,42 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
           key={cartao.id}
           cartao={cartao}
           resumo={resumoDoCartao(cartao, hoje)}
+          hoje={hoje}
           onClick={() => onOpen(cartao.id)}
-          onPagar={(fatura) => setPagando({ cartaoId: cartao.id, mes: fatura.mes })}
+          onPagar={(fatura) => fatura && setPagando({ cartaoId: cartao.id, mes: fatura.mes })}
         >
-          <div className="cc-actions">
-            <button
-              className="cc-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                onNewPurchase(cartao.id);
-              }}
-            >
-              + Compra
-            </button>
-            <button
-              className="cc-btn"
-              title="Excluir cartão"
-              onClick={(e) => {
-                e.stopPropagation();
-                excluirCartao(cartao);
-              }}
-            >
-              🗑
-            </button>
-          </div>
+          <button
+            className="cc-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              onNewPurchase(cartao.id);
+            }}
+          >
+            + Compra
+          </button>
+          <button
+            className="cc-btn"
+            title="Excluir cartão"
+            onClick={(e) => {
+              e.stopPropagation();
+              excluirCartao(cartao);
+            }}
+          >
+            🗑
+          </button>
         </CardSummary>
       ))}
 
       <CardForm titulo="Adicionar cartão" textoBotao="Adicionar" onSave={onSaveCard} />
 
-      {faturaPagando && (
+      {faturasPagando.length > 0 && (
         <PagarFatura
+          key={`${pagando.cartaoId}-${pagando.mes}`}
           cartao={cartaoPagando}
-          fatura={faturaPagando}
+          faturas={faturasPagando}
+          inicial={pagando.mes}
           disponivel={resumoPagando.disponivel}
+          bancos={resumoDosBancos(data).bancos}
           hoje={hoje}
           onConfirmar={confirmarPagamento}
           onFechar={() => setPagando(null)}

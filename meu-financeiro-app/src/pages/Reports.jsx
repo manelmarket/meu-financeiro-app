@@ -17,7 +17,7 @@ function numero(v) {
   return money(v).replace(/R\$\s?/u, "");
 }
 
-export default function Reports({ data, hoje }) {
+export default function Reports({ data, hoje, onBack }) {
   const mesHoje = mesDaData(hoje);
   const [mes, setMes] = useState(mesHoje);
 
@@ -29,7 +29,12 @@ export default function Reports({ data, hoje }) {
 
   return (
     <div className="page">
-      <header className="topbar">
+      <header className={`topbar${onBack ? " with-back" : ""}`}>
+        {onBack && (
+          <button className="back" onClick={onBack} aria-label="Voltar">
+            ←
+          </button>
+        )}
         <div>
           <div className="eyebrow">Análise financeira</div>
           <h1>📊 Relatórios</h1>

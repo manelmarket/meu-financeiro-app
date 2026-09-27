@@ -18,6 +18,9 @@ import {
   Sparkles,
   Target,
   TrendingUp,
+  Trophy,
+  Users,
+  Wallet,
   X
 } from "lucide-react";
 import Avatar from "./Avatar.jsx";
@@ -33,7 +36,7 @@ const GRUPOS = [
     titulo: "",
     itens: [
       ["home", Home, "Início"],
-      ["reports", BarChart3, "Relatórios"],
+      ["bancos", Wallet, "Bancos"],
       ["new", PlusCircle, "Novo lançamento"],
       ["history", History, "Histórico"],
       ["cards", CreditCard, "Cartões"],
@@ -43,12 +46,15 @@ const GRUPOS = [
   {
     titulo: "Mais",
     itens: [
+      ["reports", BarChart3, "Relatórios"],
       ["bills", Repeat, "Contas fixas"],
       ["orcamentos", PiggyBank, "Orçamentos"],
       ["lembretes", BellRing, "Lembretes"],
+      ["conquistas", Trophy, "Conquistas"],
       ["investments", TrendingUp, "Investimentos"],
       ["patrimony", Landmark, "Patrimônio"],
       ["assistant", Sparkles, "Assistente"],
+      ["familia", Users, "Família"],
       ["backup", Cloud, "Backup e nuvem"]
     ]
   },

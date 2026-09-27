@@ -149,8 +149,9 @@ function SecaoNuvem({ nuvem, data }) {
       {quem}
       {linha}
       <p className="muted small intro-text">
-        Tudo o que você lançar aqui vai sozinho para a nuvem e aparece nos outros aparelhos em que você entrar com a
-        mesma conta.
+        {nuvem.familia
+          ? "Modo família ligado: os dados são da família. Tudo o que qualquer pessoa lançar aparece para todos (Menu ⋮ → Família)."
+          : "Tudo o que você lançar aqui vai sozinho para a nuvem e aparece nos outros aparelhos em que você entrar com a mesma conta."}
       </p>
       <div className="btn-grid">
         <button type="button" className="secondary" onClick={nuvem.sincronizarAgora}>
@@ -251,7 +252,7 @@ export default function Backup({ data, hoje, nuvem, onBack, onRestaurar }) {
     const ok = window.confirm(
       `Restaurar o backup${quando}?\n\n` +
         `Ele tem ${descreverContagem(contarDados(backup.dados))}.\n\n` +
-        `Os dados atuais deste aparelho${nuvemLigada ? " e da nuvem" : ""} serão trocados pelos do backup. ` +
+        `Os dados atuais deste aparelho${nuvemLigada ? (nuvem.familia ? " e da família inteira (todas as pessoas)" : " e da nuvem") : ""} serão trocados pelos do backup. ` +
         "Uma cópia de segurança dos dados atuais fica guardada aqui."
     );
     if (!ok) return;

@@ -119,6 +119,11 @@ export function juntarPerfil(local, remoto) {
   // orçamentos por categoria: ficam os dos dois lados (na mesma categoria, vale o deste aparelho)
   const limites = (v) => (v && typeof v === "object" && !Array.isArray(v) ? v : null);
   if (limites(l.orcamentos) && limites(r.orcamentos)) resultado.orcamentos = { ...r.orcamentos, ...l.orcamentos };
+  // bancos: ficam os dos dois lados (o mesmo banco, pelo id, fica o deste aparelho)
+  if (Array.isArray(l.bancos) && Array.isArray(r.bancos)) {
+    const ids = new Set(l.bancos.map((b) => String(b?.id)));
+    resultado.bancos = [...l.bancos, ...r.bancos.filter((b) => !ids.has(String(b?.id)))];
+  }
   return resultado;
 }
 

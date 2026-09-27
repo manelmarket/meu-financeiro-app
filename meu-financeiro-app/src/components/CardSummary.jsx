@@ -1,10 +1,10 @@
 import React from "react";
-import { diaMesBR, money, rotuloMes } from "../lib/formato.js";
-import { podePagar } from "../lib/cartao.js";
+import { diaMesBR, hojeISO, money, rotuloMes } from "../lib/formato.js";
+import { faturasParaPagar, melhorDiaDeCompra } from "../lib/cartao.js";
 import { bancoDoCartao, estiloDoBanco } from "../lib/bancos.js";
 
 // Linha de cada fatura fechada: valor, vencimento e como está o pagamento
-function FaturaFechada({ fatura, onPagar }) {
+function FaturaFechada({ fatura }) {
   let texto;
   if (fatura.status === "paga") {
     texto = (
@@ -38,28 +38,20 @@ function FaturaFechada({ fatura, onPagar }) {
   return (
     <div className={`cc-closed ${fatura.status}`}>
       <span>{texto}</span>
-      {onPagar && podePagar(fatura) && (
-        <button
-          type="button"
-          className="cc-btn cc-pagar"
-          onClick={(e) => {
-            e.stopPropagation();
-            onPagar(fatura);
-          }}
-        >
-          Pagar
-        </button>
-      )}
     </div>
   );
 }
 
-// Painel do cartão: nome, bandeira, limite total, usado, disponível,
-// barra de uso, fatura atual, faturas fechadas (com o botão Pagar), fechamento e vencimento.
+// Painel do cartão: nome, bandeira, limite total, usado, disponível, barra de uso, fatura atual,
+// faturas fechadas, fechamento, vencimento e o melhor dia de compra.
+// O botão Pagar fica sempre no mesmo lugar (paga a fatura fechada ou adianta a fatura atual).
 // As cores seguem o banco quando o app reconhece o nome do cartão (ex.: Nubank roxo).
-export default function CardSummary({ cartao, resumo, onClick, onPagar, children }) {
+export default function CardSummary({ cartao, resumo, hoje = hojeISO(), onClick, onPagar, children }) {
   const banco = bancoDoCartao(cartao.nome);
   const atual = resumo.faturaAtual;
+  const paraPagar = faturasParaPagar(resumo);
+  const melhor = melhorDiaDeCompra(cartao, hoje);
+
   return (
     <section
       className={`credit-card${banco ? ` banco-${banco.id}` : ""}${onClick ? " clickable" : ""}`}
@@ -71,7 +63,25 @@ export default function CardSummary({ cartao, resumo, onClick, onPagar, children
           <b>{cartao.nome}</b>
           {cartao.bandeira && <span className="cc-brand">{cartao.bandeira}</span>}
         </div>
-        {children}
+        {(onPagar || children) && (
+          <div className="cc-actions">
+            {onPagar && (
+              <button
+                type="button"
+                className="cc-btn cc-pagar"
+                disabled={paraPagar.length === 0}
+                title={paraPagar.length ? "Pagar a fatura (valor cheio ou parcial)" : "Nada em aberto para pagar agora"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPagar(paraPagar[0]);
+                }}
+              >
+                Pagar
+              </button>
+            )}
+            {children}
+          </div>
+        )}
       </div>
 
       <div className="cc-limits">
@@ -102,16 +112,24 @@ export default function CardSummary({ cartao, resumo, onClick, onPagar, children
         {atual.saldoAnterior > 0 && (
           <small className="cc-saldo">Inclui {money(atual.saldoAnterior)} da fatura anterior</small>
         )}
+        {atual.pago > 0 && (
+          <small className="cc-saldo">
+            {atual.aPagar > 0 ? `Já pago ${money(atual.pago)} · falta ${money(atual.aPagar)}` : `✓ Paga antes de fechar (${money(atual.pago)})`}
+          </small>
+        )}
       </div>
 
       {resumo.faturasFechadas.map((fatura) => (
-        <FaturaFechada key={fatura.mes} fatura={fatura} onPagar={onPagar} />
+        <FaturaFechada key={fatura.mes} fatura={fatura} />
       ))}
 
       <div className="cc-dates">
         <span>Fecha dia {cartao.fechamento}</span>
         <span>Vence dia {cartao.vencimento}</span>
       </div>
+      <small className="cc-melhor">
+        🛒 Melhor dia de compra: dia {melhor.dia} · comprando em {diaMesBR(melhor.data)}, paga só em {diaMesBR(melhor.vence)}
+      </small>
     </section>
   );
 }

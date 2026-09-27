@@ -27,6 +27,9 @@ import Entrada from "./pages/Entrada";
 import Temas from "./pages/Temas";
 import Orcamentos from "./pages/Orcamentos";
 import Lembretes from "./pages/Lembretes";
+import Bancos from "./pages/Bancos";
+import Conquistas from "./pages/Conquistas";
+import Familia from "./pages/Familia";
 
 import useNuvem from "./lib/useNuvem";
 import useLembretesNoCelular from "./lib/useLembretes";
@@ -46,12 +49,18 @@ import { apagarCupom, comprimirImagem, dataURLParaBlob, limparCupons, salvarCupo
 import { arredondar, hojeISO, mesDaData } from "./lib/formato";
 import { alternarConta } from "./lib/mes";
 import { comOrcamento } from "./lib/orcamento";
+import { excluirBanco, guardarPagamentosDoCartao, resumoDosBancos, salvarBanco } from "./lib/saldos";
+import { comPerfilDaPessoa, perfilDaPessoa } from "./lib/familia";
+import { lerConvitePendente } from "./lib/convite";
 
 // Aba do menu que fica acesa em cada tela
 const ABA_DA_TELA = {
   "card-details": "cards",
   future: "cards",
   calendar: "cards",
+  reports: "home",
+  conquistas: "home",
+  familia: "home",
   bills: "home",
   orcamentos: "home",
   lembretes: "home",
@@ -209,23 +218,37 @@ export default function App(){
 
     if(nuvem.status!=="ok" || !nomeGoogle) return;
 
+    const naFamilia = Boolean(nuvem.familia);
+
     setData(d=>{
 
-      const u = d.usuario || {};
+      const u = perfilDaPessoa(d, nuvem.usuario, naFamilia);
 
       if(u.nome && u.nome!==NOME_DA_DEMONSTRACAO) return d;
 
-      return { ...d, usuario:{ ...u, nome:nomeGoogle, apelido:u.apelido || primeiroNome(nomeGoogle) } };
+      return comPerfilDaPessoa(d, { nome:nomeGoogle, apelido:u.apelido || primeiroNome(nomeGoogle) }, nuvem.usuario, naFamilia);
 
     });
 
-  },[nuvem.status, nuvem.usuario?.uid]);
+  },[nuvem.status, nuvem.usuario?.uid, nuvem.familia?.id]);
 
 
 
+  // abriu o app pelo link de convite da família: depois de entrar, vai direto para a tela Família
+  useEffect(()=>{
+
+    if(precisaEntrar || nuvem.status!=="ok" || nuvem.familia || !lerConvitePendente()) return;
+
+    setTela(t=> t.page==="familia" ? t : { page:"familia" });
+
+  },[precisaEntrar, nuvem.status, nuvem.familia?.id]);
+
+
+
+  // na família, cada pessoa tem o próprio perfil (nome, apelido...)
   function salvarPerfil(perfil){
 
-    setData(d=>({ ...d, usuario:{ ...(d.usuario || {}), ...perfil } }));
+    setData(d=>comPerfilDaPessoa(d, perfil, nuvem.usuario, Boolean(nuvem.familia)));
 
   }
 
@@ -233,11 +256,43 @@ export default function App(){
 
   // ---------- lançamentos ----------
 
-  function addEntry(item){
+  // lançamento novo: o gasto/receita e, se parte foi no cartão, as compras nos cartões (tudo de uma vez)
+  function salvarMovimento({ lancamento, compras }){
 
-    setData(d=>({ ...d, lancamentos:[ ...d.lancamentos, item ] }));
+    setData(d=>({
+
+      ...d,
+
+      lancamentos: lancamento ? [ ...d.lancamentos, lancamento ] : d.lancamentos,
+
+      cartoes: d.cartoes.map(c=>{
+
+        const novas = (compras || []).filter(x=>x.cartaoId===c.id).map(x=>x.compra);
+
+        return novas.length ? { ...c, compras:[ ...(c.compras || []), ...novas ] } : c;
+
+      })
+
+    }));
 
     ir("home");
+
+  }
+
+
+
+  // ---------- bancos ----------
+
+  function salvarDadosDoBanco(banco){
+
+    setData(d=>salvarBanco(d, banco));
+
+  }
+
+
+  function apagarBanco(id){
+
+    setData(d=>excluirBanco(d, id));
 
   }
 
@@ -285,7 +340,8 @@ export default function App(){
 
     }
 
-    setData(d=>({ ...d, cartoes: d.cartoes.filter(c=>c.id!==id) }));
+    // os pagamentos de fatura feitos com os bancos continuam descontados deles
+    setData(d=>{ const g = guardarPagamentosDoCartao(d, id); return { ...g, cartoes: g.cartoes.filter(c=>c.id!==id) }; });
 
   }
 
@@ -606,10 +662,38 @@ export default function App(){
       content =
       <NewEntry
         cartoes={data.cartoes}
-        onSave={addEntry}
-        onSavePurchase={(cardId, compra)=>{ savePurchase(cardId, compra); ir("home"); }}
+        bancos={resumoDosBancos(data).bancos}
+        onSave={salvarMovimento}
         onCancel={()=>ir("home")}
         onConfigurarIA={()=>ir("assistant")}
+      />;
+      break;
+
+    case "bancos":
+      content =
+      <Bancos
+        data={data}
+        onSalvar={salvarDadosDoBanco}
+        onExcluir={apagarBanco}
+      />;
+      break;
+
+    case "conquistas":
+      content =
+      <Conquistas
+        data={data}
+        hoje={hoje}
+        familia={nuvem.familia}
+        onBack={()=>ir("home")}
+      />;
+      break;
+
+    case "familia":
+      content =
+      <Familia
+        nuvem={nuvem}
+        onBack={()=>ir("home")}
+        onIr={(p)=>ir(p)}
       />;
       break;
 
@@ -626,6 +710,7 @@ export default function App(){
       <Reports
         data={data}
         hoje={hoje}
+        onBack={()=>ir("home")}
       />;
       break;
 
@@ -638,6 +723,7 @@ export default function App(){
         ? <CardDetails
             key={cartaoAtual.id}
             cartao={cartaoAtual}
+            data={data}
             hoje={hoje}
             abrirForm={tela.abrirForm}
             onBack={()=>ir("cards")}
@@ -775,8 +861,9 @@ export default function App(){
     case "profile":
       content =
       <Profile
-        key={nuvem.usuario?.uid || "sem-conta"}
+        key={`${nuvem.usuario?.uid || "sem-conta"}-${nuvem.familia?.id || ""}`}
         data={data}
+        perfil={perfilDaPessoa(data, nuvem.usuario, Boolean(nuvem.familia))}
         hoje={hoje}
         nuvem={nuvem}
         onBack={()=>ir("settings")}
@@ -790,6 +877,7 @@ export default function App(){
         data={data}
         hoje={hoje}
         nuvem={nuvem}
+        perfil={perfilDaPessoa(data, nuvem.usuario, Boolean(nuvem.familia))}
         onNew={()=>ir("new")}
         onOpenBills={()=>ir("bills")}
         onOpenCard={(id)=>ir("card-details", { cardId:id })}
@@ -869,7 +957,7 @@ export default function App(){
 
         ativo={ITEM_DO_MENU[tela.page] || tela.page}
 
-        perfil={data.usuario}
+        perfil={perfilDaPessoa(data, nuvem.usuario, Boolean(nuvem.familia))}
 
         conta={nuvem.usuario}
 

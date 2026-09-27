@@ -5,16 +5,18 @@
 //   compra feita no dia do fechamento ou depois cai na fatura seguinte.
 // - Se o vencimento é depois do fechamento (ex.: fecha 3, vence 10), a fatura vence
 //   no mesmo mês em que fecha; senão (ex.: fecha 28, vence 5), vence no mês seguinte.
-// - Pagamento da fatura (botão Pagar, depois que a fatura fecha): valor cheio ou parcial.
-//   No parcial, a pessoa escolhe o que fazer com o restante: deixar em aberto até o vencimento
-//   ou lançar na próxima fatura (entra nela como "Saldo da fatura anterior").
-//   Cada pagamento libera no limite o valor pago.
+// - Pagamento da fatura (botão Pagar, sempre à mão): valor cheio ou parcial, da fatura fechada
+//   ou da fatura atual (antes de fechar). No parcial da fatura fechada, a pessoa escolhe o que fazer
+//   com o restante: deixar em aberto até o vencimento ou lançar na próxima fatura (entra nela como
+//   "Saldo da fatura anterior"). Na fatura atual o restante continua nela.
+//   Cada pagamento libera no limite o valor pago (e pode sair do saldo de um banco: bancoId).
 // - Fatura sem pagamento marcado conta como paga quando a data de vencimento passa (como antes).
 // - O limite usado é a soma do que falta pagar nas faturas que ainda não venceram.
 //
 // Os pagamentos ficam no próprio cartão:
-//   pagamentos: [{ id, fatura: "AAAA-MM", valor, data: "AAAA-MM-DD", restante?: "aberto" | "proxima" }]
-//   ("restante" só existe no pagamento parcial)
+//   pagamentos: [{ id, fatura: "AAAA-MM", valor, data: "AAAA-MM-DD", restante?: "aberto" | "proxima",
+//                  bancoId?, criadoEm? }]
+//   ("restante" só existe no pagamento parcial; "bancoId": de qual banco saiu o dinheiro)
 
 import {
   arredondar,
@@ -251,34 +253,57 @@ function faturaVazia(mes) {
   };
 }
 
-// Fatura pronta para mostrar: valores, datas, status e quanto falta pagar ("aPagar")
+// Fatura pronta para mostrar: valores, datas, status e quanto falta pagar ("aPagar").
+// "fase" é só pelas datas: "fechada" (fechou e não venceu), "aberta" (a atual), "futura" ou "paga" (venceu).
 export function faturaDoMes(cartao, mes, hoje = hojeISO()) {
   const conta = contasDasFaturas(cartao).get(mes) || faturaVazia(mes);
   const pelaData = statusPelaData(cartao, mes, hoje);
   return {
     ...conta,
     ...datasDaFatura(cartao, mes),
+    fase: pelaData,
     status: statusComPagamentos(pelaData, conta),
     aPagar: pelaData === "paga" ? 0 : conta.restante
   };
 }
 
-// Dá para pagar pelo botão: a fatura já fechou, não venceu e ainda falta pagar
+// Dá para pagar pelo botão: fatura fechada (que ainda não venceu) ou a fatura atual
+// (pagamento antecipado), com algum valor em aberto
 export function podePagar(fatura) {
-  return (fatura.status === "fechada" || fatura.status === "parcial") && fatura.aPagar > 0;
+  return (fatura.fase === "fechada" || fatura.fase === "aberta") && fatura.aPagar > 0;
+}
+
+// Faturas que o botão Pagar oferece, da mais urgente para a mais nova
+export function faturasParaPagar(resumo) {
+  return [...resumo.faturasFechadas, resumo.faturaAtual].filter(podePagar);
+}
+
+// Melhor dia de compra: no dia do fechamento a compra já cai na fatura seguinte,
+// então é o dia que dá mais prazo para pagar. Devolve { dia, data, vence } (a próxima vez).
+export function melhorDiaDeCompra(cartao, hoje = hojeISO()) {
+  const { y, m, d } = lerData(hoje);
+  let data = montarData(y, m, diaNoMes(cartao.fechamento, y, m));
+  if (d > lerData(data).d) {
+    const p = lerMes(somarMeses(chaveMes(y, m), 1));
+    data = montarData(p.y, p.m, diaNoMes(cartao.fechamento, p.y, p.m));
+  }
+  return { dia: parseInt(cartao.fechamento, 10) || 1, data, vence: datasDaFatura(cartao, mesDaFatura(cartao, data)).vencimento };
 }
 
 // Pagamento novo da fatura. Quando paga menos do que falta, "restante" diz o que fazer com o resto:
-// "aberto" (fica nesta fatura até o vencimento) ou "proxima" (vai para a próxima fatura).
-export function novoPagamento(fatura, valor, restante, hoje = hojeISO(), id = Date.now()) {
+// "aberto" (fica nesta fatura até o vencimento) ou "proxima" (vai para a próxima fatura; só na fatura
+// fechada). bancoId: o banco de onde saiu o dinheiro (o saldo dele cai).
+export function novoPagamento(fatura, valor, restante, hoje = hojeISO(), id = Date.now(), bancoId = null) {
   const pago = arredondar(Math.min(Number(valor) || 0, fatura.aPagar));
   const parcial = pago < fatura.aPagar;
+  const proxima = restante === RESTANTE_NA_PROXIMA && fatura.fase !== "aberta";
   return {
     id,
     fatura: fatura.mes,
     valor: pago,
     data: hoje,
-    ...(parcial ? { restante: restante === RESTANTE_NA_PROXIMA ? RESTANTE_NA_PROXIMA : RESTANTE_EM_ABERTO } : {})
+    ...(parcial ? { restante: proxima ? RESTANTE_NA_PROXIMA : RESTANTE_EM_ABERTO } : {}),
+    ...(bancoId != null && bancoId !== "" ? { bancoId, criadoEm: Number(id) || Date.now() } : {})
   };
 }
 

@@ -10,6 +10,7 @@ import { nomeParaMostrar } from "../lib/perfil.js";
 import { usarPonteAndroid } from "../lib/appAndroid.js";
 import { agendaDesatualizada, usarAjustes } from "../lib/lembretes.js";
 import { textoDoPagamento } from "../lib/cartao.js";
+import { conquistas, conquistasNovas } from "../lib/conquistas.js";
 
 const ICONE_ALERTA = { aviso: "⚠️", ok: "✅", info: "📅" };
 
@@ -25,8 +26,8 @@ function situacaoDosDados(nuvem, ultimoBackup, hoje, demonstracao) {
     switch (nuvem.status) {
       case "ok":
         return {
-          icone: "☁️",
-          titulo: "Nuvem ligada",
+          icone: nuvem.familia ? "👨‍👩‍👧" : "☁️",
+          titulo: nuvem.familia ? "Nuvem da família" : "Nuvem ligada",
           texto: `Tudo sincronizado${nuvem.sincronizadoEm ? ` · ${quandoFoi(nuvem.sincronizadoEm)}` : ""}`
         };
       case "offline":
@@ -74,7 +75,7 @@ function situacaoDosDados(nuvem, ultimoBackup, hoje, demonstracao) {
   };
 }
 
-export default function Home({ data, hoje, nuvem, onNew, onOpenBills, onOpenCard, onOpenPage }) {
+export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, onOpenCard, onOpenPage }) {
   const mesHoje = mesDaData(hoje);
   const [mes, setMes] = useState(mesHoje);
   const r = useMemo(() => resumoDoMes(data, mes, hoje), [data, mes, hoje]);
@@ -88,7 +89,29 @@ export default function Home({ data, hoje, nuvem, onNew, onOpenBills, onOpenCard
     () => ponte.situacao === "sem-canal" && agendaDesatualizada(data, ajustesDosLembretes),
     [ponte.situacao, data, ajustesDosLembretes]
   );
+  // gamificação: conquista nova desde a última vez (neste aparelho).
+  // Num aparelho que acabou de entrar na conta, espera os dados chegarem da nuvem (o que já existia não é "novo").
+  const dadosProntos =
+    !nuvem?.usuario || nuvem.status === "desligada" || nuvem.status === "ok" || Boolean(nuvem.sincronizadoEm);
+  const novasConquistas = useMemo(
+    () => (dadosProntos ? conquistasNovas(conquistas(data, hoje, { familia: Boolean(nuvem?.familia) })) : []),
+    [data, hoje, nuvem?.familia?.id, dadosProntos]
+  );
   const avisos = [
+    ...(nuvem?.aviso ? [{ id: "aviso-nuvem", tipo: "info", pagina: "familia", texto: nuvem.aviso }] : []),
+    ...(novasConquistas.length
+      ? [
+          {
+            id: "conquistas",
+            tipo: "ok",
+            pagina: "conquistas",
+            texto:
+              novasConquistas.length === 1
+                ? `Nova conquista: ${novasConquistas[0].icone} ${novasConquistas[0].titulo}! Toque para ver.`
+                : `Novas conquistas: ${novasConquistas.map((c) => `${c.icone} ${c.titulo}`).join(", ")}! Toque para ver.`
+          }
+        ]
+      : []),
     ...alertasDoMes,
     ...(lembretesVelhos
       ? [
@@ -116,7 +139,7 @@ export default function Home({ data, hoje, nuvem, onNew, onOpenBills, onOpenCard
       <header className="topbar">
         <div>
           <div className="eyebrow">Meu mês</div>
-          <h1>Olá, {nomeParaMostrar(data.usuario, nuvem?.usuario) || "você"} 👋</h1>
+          <h1>Olá, {nomeParaMostrar(perfil || data.usuario, nuvem?.usuario) || "você"} 👋</h1>
         </div>
       </header>
 

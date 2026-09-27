@@ -1,10 +1,11 @@
 import React from "react";
-import { Home, PlusCircle, History, CreditCard, Target, BarChart3 } from "lucide-react";
+import { Home, PlusCircle, History, CreditCard, Target, Wallet } from "lucide-react";
 
+// Relatórios fica no menu ⋮ (no lugar dele na barra entrou Bancos)
 export default function BottomNav({ page, onChange }) {
   const items=[
 ["home",Home,"Início"],
-["reports",BarChart3,"Relatórios"],
+["bancos",Wallet,"Bancos"],
 ["new",PlusCircle,"Novo"],
 ["history",History,"Histórico"],
 ["cards",CreditCard,"Cartões"],

@@ -5,6 +5,11 @@
 //   usuarios/<uid>                 -> versão atual, quantas partes, lista de fotos
 //   usuarios/<uid>/partes/<n>      -> os dados do app (JSON compactado), em partes
 //   usuarios/<uid>/cupons/<id>     -> as fotos dos cupons
+//   usuarios/<uid>/config/familia  -> { familia: <id> } quando a conta está numa família
+// Modo família (só quem está na lista "membros" acessa):
+//   familias/<id>                  -> igual a usuarios/<uid> + dono, membros, nomes, convites, nome
+//   familias/<id>/partes/<n>, familias/<id>/cupons/<id>
+//   convites/<código>              -> { familia, criadoPor, expiraEm, usadoPor? } (serve para uma pessoa)
 
 import { initializeApp } from "firebase/app";
 import {
@@ -20,15 +25,20 @@ import {
 } from "firebase/auth";
 import {
   Bytes,
+  Timestamp,
   arrayRemove,
   arrayUnion,
+  collection,
   connectFirestoreEmulator,
+  deleteDoc,
+  deleteField,
   doc,
   getDoc,
   getFirestore,
   runTransaction,
   setDoc,
-  updateDoc
+  updateDoc,
+  writeBatch
 } from "firebase/firestore/lite";
 import { FIREBASE_CONFIG, NUVEM_EMULADOR } from "../config/firebase.js";
 import { normalizar } from "../storage/storage.js";
@@ -161,6 +171,7 @@ export function mensagemDaNuvem(erro) {
     return { tipo: "offline", texto: "Sem conexão com a nuvem. Tento de novo sozinho." };
   }
   if (SESSAO.has(codigo)) return { tipo: "sessao", texto: "Entre de novo na sua conta para continuar sincronizando." };
+  if (erro?.familia) return { tipo: "erro", texto: erro.message };
   if (MENSAGENS[codigo]) return { tipo: "erro", texto: MENSAGENS[codigo] };
   if (erro?.conflito) return { tipo: "erro", texto: "A nuvem mudou várias vezes seguidas. Tento de novo daqui a pouco." };
   const detalhe = erro?.message ? ` (${String(erro.message).slice(0, 140)})` : "";
@@ -200,11 +211,18 @@ function idValido(id) {
   return typeof id === "string" && /^[A-Za-z0-9_.-]{1,200}$/.test(id) && id !== "." && id !== ".." && !/^__.*__$/.test(id);
 }
 
-export function criarAdaptador(uid) {
+// Onde ficam os dados: a pasta da conta (uid) ou a da família ({ tipo: "familia", id })
+function pastaDos(espaco) {
+  if (espaco && typeof espaco === "object" && espaco.tipo === "familia") return ["familias", espaco.id];
+  return ["usuarios", typeof espaco === "object" && espaco ? espaco.id : espaco];
+}
+
+export function criarAdaptador(espaco) {
   iniciar();
-  const refInfo = doc(db, "usuarios", uid);
-  const refParte = (i) => doc(db, "usuarios", uid, "partes", String(i));
-  const refFoto = (id) => doc(db, "usuarios", uid, "cupons", id);
+  const [colecao, id] = pastaDos(espaco);
+  const refInfo = doc(db, colecao, id);
+  const refParte = (i) => doc(db, colecao, id, "partes", String(i));
+  const refFoto = (fid) => doc(db, colecao, id, "cupons", fid);
 
   async function lerInfo() {
     const s = await getDoc(refInfo);
@@ -317,4 +335,134 @@ export function criarAdaptador(uid) {
   }
 
   return { lerInfo, baixarDados, enviarDados, enviarFoto, baixarFoto, apagarFotos };
+}
+
+// ---------- família ----------
+
+const DIAS_DO_CONVITE = 7;
+
+const refPonteiro = (uid) => doc(db, "usuarios", uid, "config", "familia");
+const refFamilia = (fid) => doc(db, "familias", fid);
+const refConvite = (codigo) => doc(db, "convites", codigo);
+
+function erroDaFamilia(codigo, texto) {
+  const erro = new Error(texto);
+  erro.code = codigo;
+  erro.familia = true;
+  return erro;
+}
+
+// Família da conta (id) ou null
+export async function lerFamiliaDaConta(uid) {
+  iniciar();
+  const s = await getDoc(refPonteiro(uid));
+  const fid = s.exists() ? s.data().familia : null;
+  return typeof fid === "string" && fid ? fid : null;
+}
+
+export async function marcarFamiliaDaConta(uid, fid) {
+  iniciar();
+  if (fid) await setDoc(refPonteiro(uid), { familia: fid, desde: new Date().toISOString() });
+  else await deleteDoc(refPonteiro(uid));
+}
+
+// { id, nome, dono, membros: [{ uid, nome, email }], convites } (só quem é da família consegue ler)
+export async function lerFamilia(fid) {
+  iniciar();
+  const s = await getDoc(refFamilia(fid));
+  if (!s.exists()) return null;
+  const d = s.data();
+  const nomes = d.nomes && typeof d.nomes === "object" ? d.nomes : {};
+  const membros = (Array.isArray(d.membros) ? d.membros : []).map((uid) => ({
+    uid,
+    nome: String(nomes[uid]?.nome || ""),
+    email: String(nomes[uid]?.email || "")
+  }));
+  return {
+    id: fid,
+    nome: String(d.nome || "Família"),
+    dono: String(d.dono || ""),
+    membros,
+    convites: Array.isArray(d.convites) ? d.convites.filter((c) => typeof c === "string") : [],
+    partes: Number(d.partes) || 0,
+    fotos: Array.isArray(d.fotos) ? d.fotos.filter((x) => typeof x === "string") : []
+  };
+}
+
+// Cria a família (a conta vira a dona e a única pessoa da lista). Os dados são enviados depois.
+export async function criarFamilia(usuario, nome) {
+  iniciar();
+  const ref = doc(collection(db, "familias"));
+  await setDoc(ref, {
+    dono: usuario.uid,
+    membros: [usuario.uid],
+    nomes: { [usuario.uid]: { nome: usuario.nome || "", email: usuario.email || "" } },
+    convites: [],
+    nome: String(nome || "Família").slice(0, 60),
+    criadaEm: new Date().toISOString(),
+    fotos: []
+  });
+  return ref.id;
+}
+
+// Código novo (vale por 7 dias); só a dona/o dono da família cria
+export async function criarConvite(fid, uid, codigo) {
+  iniciar();
+  await setDoc(refConvite(codigo), {
+    familia: fid,
+    criadoPor: uid,
+    expiraEm: Timestamp.fromMillis(Date.now() + DIAS_DO_CONVITE * 24 * 60 * 60 * 1000)
+  });
+  await updateDoc(refFamilia(fid), { convites: arrayUnion(codigo) });
+  return codigo;
+}
+
+// Entra na família do código. Devolve o id da família.
+// Cada código serve para uma pessoa: ao entrar, o código fica marcado como usado (junto, na mesma gravação).
+export async function entrarComConvite(codigo, usuario) {
+  iniciar();
+  const s = await getDoc(refConvite(codigo));
+  if (!s.exists()) throw erroDaFamilia("convite-invalido", "Código não encontrado. Confira as letras e tente de novo.");
+  const c = s.data();
+  const expira = c.expiraEm && typeof c.expiraEm.toMillis === "function" ? c.expiraEm.toMillis() : 0;
+  if (!(expira > Date.now())) throw erroDaFamilia("convite-vencido", "Este código já venceu. Peça um código novo.");
+  const fid = String(c.familia || "");
+  const usadoPor = typeof c.usadoPor === "string" ? c.usadoPor : "";
+  if (usadoPor && usadoPor !== usuario.uid) {
+    throw erroDaFamilia("convite-usado", "Este código já foi usado por outra pessoa. Peça um código novo (cada código serve para uma pessoa).");
+  }
+  // já é da família (ex.: entrou por outro aparelho)
+  try {
+    const f = await lerFamilia(fid);
+    if (f && f.membros.some((m) => m.uid === usuario.uid)) return fid;
+  } catch {
+    // ainda não é da família: não consegue ler
+  }
+  if (usadoPor) throw erroDaFamilia("convite-usado", "Este código já foi usado. Peça um código novo.");
+  const lote = writeBatch(db);
+  lote.update(refConvite(codigo), { usadoPor: usuario.uid, usadoEm: new Date().toISOString() });
+  lote.update(refFamilia(fid), {
+    membros: arrayUnion(usuario.uid),
+    [`nomes.${usuario.uid}`]: { nome: usuario.nome || "", email: usuario.email || "" },
+    ultimoConvite: codigo
+  });
+  await lote.commit();
+  return fid;
+}
+
+// Sai da família (a própria conta) ou tira alguém (só a dona/o dono)
+export async function tirarDaFamilia(fid, uid) {
+  iniciar();
+  await updateDoc(refFamilia(fid), { membros: arrayRemove(uid), [`nomes.${uid}`]: deleteField() });
+}
+
+// Apaga a família inteira (só a dona/o dono): dados, fotos, convites
+export async function apagarFamilia(fid) {
+  iniciar();
+  const f = await lerFamilia(fid);
+  if (!f) return;
+  for (let i = 0; i < f.partes; i += 1) await deleteDoc(doc(db, "familias", fid, "partes", String(i)));
+  for (const id of f.fotos) if (idValido(id)) await deleteDoc(doc(db, "familias", fid, "cupons", id));
+  for (const codigo of f.convites) await deleteDoc(refConvite(codigo)).catch(() => {});
+  await deleteDoc(refFamilia(fid));
 }

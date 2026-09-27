@@ -4,6 +4,7 @@ import App from "./App";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { aplicarAparencia } from "./lib/aparencia";
 import { marcarModoApp } from "./lib/modoApp";
+import { guardarConviteDaUrl } from "./lib/convite";
 import { iniciarPonteAndroid } from "./lib/appAndroid";
 import { registrarServiceWorker } from "./lib/atualizacao";
 import "./index.css";
@@ -13,6 +14,9 @@ aplicarAparencia();
 
 // aberto pelo app Android (APK): o login usa o jeito que funciona dentro do app
 marcarModoApp();
+
+// aberto pelo link de convite da família (?convite=...): guarda o código para a tela Família
+guardarConviteDaUrl();
 
 // app Android novo: canal de mensagens para os lembretes de vencimento
 iniciarPonteAndroid();

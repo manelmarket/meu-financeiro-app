@@ -51,7 +51,15 @@ export function salvarUltimaConta(conta) {
   try {
     localStorage.setItem(
       CHAVE_ULTIMA_CONTA,
-      JSON.stringify({ uid: conta.uid, email: conta.email || "", tudoEnviado: Boolean(conta.tudoEnviado) })
+      JSON.stringify({
+        uid: conta.uid,
+        email: conta.email || "",
+        tudoEnviado: Boolean(conta.tudoEnviado),
+        // a conta estava usando os dados de uma família (modo família): ao entrar de novo, volta para ela
+        ...(conta.espaco && conta.espaco.tipo === "familia" && typeof conta.espaco.id === "string"
+          ? { espaco: { tipo: "familia", id: conta.espaco.id } }
+          : {})
+      })
     );
   } catch {
     // nada a fazer

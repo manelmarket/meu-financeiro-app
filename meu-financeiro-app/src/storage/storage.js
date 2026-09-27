@@ -303,11 +303,12 @@ export function criarVazio() {
   };
 }
 
-// Nenhum registro (o perfil não conta)
+// Nenhum registro (o perfil não conta; bancos cadastrados contam)
 export function ehVazio(dados) {
   if (!dados || typeof dados !== "object") return false;
   const d = normalizar(dados);
-  return ["lancamentos", "cartoes", "contasFixas", "metas", "investimentos", "bens"].every((k) => d[k].length === 0);
+  const bancos = Array.isArray(d.usuario?.bancos) ? d.usuario.bancos.length : 0;
+  return bancos === 0 && ["lancamentos", "cartoes", "contasFixas", "metas", "investimentos", "bens"].every((k) => d[k].length === 0);
 }
 
 // Aparelho/conta sem dados próprios: só a demonstração intacta, ou nenhum registro
