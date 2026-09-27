@@ -655,3 +655,60 @@ button:disabled{opacity:.6;cursor:default}
 /* Histórico: o valor não quebra a linha quando a descrição das formas de pagamento é longa */
 .tx-right strong{white-space:nowrap}
 @media (max-width:380px){.forma-linha{grid-template-columns:1fr 1fr 38px;gap:8px}.medalha{padding:10px}}
+
+/* ================= versão 10: transferências, voz/texto e categorias ================= */
+/* Novo lançamento: Gasto | Receita | Transferência */
+.segmented.tres{grid-template-columns:1fr 1fr 1fr}
+.segmented.tres button{padding:11px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+
+/* Bancos: Transferir / Sacar / Depositar */
+.banco-acoes{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.banco-acoes .cc-btn{display:inline-flex;align-items:center;gap:5px}
+.banco-aviso{margin:0 0 14px}
+.mov-modal .mov-grid{margin-top:0}
+.mov-modal .pag-campo input{width:100%;min-width:0}
+
+/* "Fale ou escreva o lançamento" */
+.falar-box{background:var(--primaria-suave);border:1px solid var(--primaria-borda);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.falar-titulo{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--primaria-tinta)}
+.falar-linha{display:flex;gap:8px}
+.falar-linha input{flex:1;min-width:0;border:1px solid var(--borda-campo);background:var(--superficie);color:var(--texto);border-radius:13px;padding:12px 13px;outline:none;font-size:15px}
+.falar-linha input:focus{border-color:var(--primaria-texto)}
+.falar-mic{border:0;background:var(--primaria);color:#fff;width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0}
+.falar-mic.ouvindo{background:var(--erro);animation:pulsar 1s ease-in-out infinite}
+.falar-mic:disabled{opacity:.6}
+@keyframes pulsar{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.45)}50%{box-shadow:0 0 0 8px rgba(220,38,38,0)}}
+.falar-aviso{margin:0;font-size:13px;line-height:1.45;border-radius:12px;padding:9px 11px;font-weight:700;border:1px solid transparent}
+.falar-aviso.ok{background:var(--ok-fundo-2);color:var(--ok-texto);border-color:var(--ok-borda)}
+.falar-aviso.erro{background:var(--erro-fundo);color:var(--erro-texto)}
+.falar-aviso.info{background:var(--aviso-fundo);color:var(--aviso-texto);border-color:var(--aviso-borda)}
+.falar-nota{margin:0;font-size:12px;color:var(--apagado);line-height:1.45}
+.falar-nota .link{font-size:12px}
+
+/* Categorias: ícone e cor */
+.cat-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:var(--superficie-3);background:color-mix(in srgb,var(--cat-cor) 16%,var(--superficie));box-shadow:inset 0 0 0 2px var(--cat-cor);flex-shrink:0;font-style:normal;line-height:1}
+.cat-form{gap:12px}
+.cat-campo{display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--texto-3);font-weight:700}
+.cat-icones{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.cat-icone{border:2px solid transparent;background:var(--superficie-3);border-radius:10px;height:38px;font-size:18px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+.cat-icone.ativo{border-color:var(--primaria-texto);background:var(--primaria-suave)}
+.cat-cores{display:flex;flex-wrap:wrap;gap:9px}
+.cat-cor{width:28px;height:28px;border-radius:999px;background:var(--cat-cor);border:3px solid transparent;padding:0;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+.cat-cor.ativo{border-color:var(--superficie);box-shadow:0 0 0 2px var(--cat-cor)}
+.cat-previa{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--texto-2)}
+.form .cat-form{margin-top:-4px;background:var(--superficie-2);border:1px solid var(--borda);border-radius:14px;padding:12px}
+.cat-dica{margin:0 4px 14px;line-height:1.45}
+.cat-linha{padding:11px 0;border-bottom:1px solid var(--borda-2)}
+.cat-linha:last-child{border-bottom:0}
+.cat-linha-topo{display:flex;align-items:center;gap:10px}
+.cat-linha-texto{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cat-linha-texto b{overflow-wrap:anywhere}
+.cat-linha-texto small{font-size:12px;color:var(--apagado)}
+.cat-linha-acoes{display:flex;gap:6px;flex-shrink:0}
+.cat-linha .chip-btn{background:var(--primaria-suave-2);color:var(--primaria-tinta)}
+.cat-linha .chip-btn.perigo{background:var(--erro-fundo);color:var(--erro-forte)}
+.cat-linha .cat-form{margin-top:12px;background:var(--superficie-2);border:1px solid var(--borda);border-radius:14px;padding:12px}
+.section-card .cat-form{display:flex;flex-direction:column}
+/* Histórico: transferência (sem sinal, cor neutra) */
+.tx-right strong.neutro{color:var(--texto-2)}
+@media (max-width:380px){.cat-icones{gap:4px}.cat-icone{height:34px;font-size:16px}}

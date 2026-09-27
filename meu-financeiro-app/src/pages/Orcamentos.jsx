@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import MonthPicker from "../components/MonthPicker.jsx";
 import { mesDaData, money, nomeMes, parseValor } from "../lib/formato.js";
 import { orcamentoDoMes, porcentagem } from "../lib/orcamento.js";
+import { infoDaCategoria, mapaDeCategorias } from "../lib/categorias.js";
 
 function FormLimite({ categoria, limite, onSalvar, onRemover, onCancelar }) {
   const [valor, setValor] = useState(limite ? String(limite).replace(".", ",") : "");
@@ -59,6 +60,7 @@ export default function Orcamentos({ data, hoje, onBack, onSave }) {
   const [mes, setMes] = useState(mesHoje);
   const [editando, setEditando] = useState(null);
   const r = useMemo(() => orcamentoDoMes(data, mes, hoje), [data, mes, hoje]);
+  const mapa = useMemo(() => mapaDeCategorias(data), [data]);
 
   function salvar(categoria, limite) {
     onSave(categoria, limite);
@@ -108,7 +110,9 @@ export default function Orcamentos({ data, hoje, onBack, onSave }) {
         {r.linhas.map((l) => (
           <div className={`orc-linha${l.nivel ? ` ${l.nivel}` : ""}`} key={l.categoria}>
             <div className="orc-topo">
-              <b>{l.categoria}</b>
+              <b>
+                <span aria-hidden="true">{infoDaCategoria(data, l.categoria, mapa).icone}</span> {l.categoria}
+              </b>
               <span>{l.limite ? `${money(l.gasto)} de ${money(l.limite)}` : money(l.gasto)}</span>
             </div>
             {l.limite ? (

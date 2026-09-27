@@ -2,15 +2,19 @@ import React from "react";
 import { useState } from "react";
 import { X } from "lucide-react";
 import ScanButton from "../components/ScanButton.jsx";
-import { CATEGORIAS, FORMAS_PAGAMENTO } from "../lib/categorias.js";
+import FalarOuEscrever from "../components/FalarOuEscrever.jsx";
+import { SeletorCategoria } from "../components/Categoria.jsx";
+import { CATEGORIA_PADRAO, FORMAS_PAGAMENTO, nomesDasCategorias } from "../lib/categorias.js";
 import { arredondar, dataBR, dataValida, hojeISO, money, parseValor, rotuloMes } from "../lib/formato.js";
 import { datasDaFatura, mesDaFatura, valoresDasParcelas } from "../lib/cartao.js";
 import { MAXIMO_DE_PARCELAS, montarLancamento } from "../lib/lancar.js";
+import { CRIAR_CARTEIRA, NOME_DA_CARTEIRA, acharCarteira, montarTransferencia } from "../lib/transferencias.js";
 import { salvarCupom } from "../storage/cupons.js";
 
 const OPCOES_PARCELAS = Array.from({ length: MAXIMO_DE_PARCELAS }, (_, i) => i + 1);
 const FORMAS_DE_RECEITA = FORMAS_PAGAMENTO.filter((f) => f !== "Cartão");
 const CHAVE_BANCO = "meu_financeiro_ultimo_banco";
+const FORA = "";
 
 function bancoGuardado(bancos) {
   let id = "";
@@ -33,24 +37,49 @@ function guardarBanco(id) {
 }
 
 let proximaChave = 1;
-function novaParte(forma, bancoId, cartaoId) {
+function novaParte(forma, bancoId, cartaoId, extra = {}) {
   proximaChave += 1;
-  return { chave: proximaChave, forma, valor: "", bancoId, cartaoId, parcelas: 1, auto: true };
+  return { chave: proximaChave, forma, valor: "", bancoId, cartaoId, parcelas: 1, auto: true, ...extra };
 }
 
-// Registrar movimentação: gasto ou receita.
+function textoDoValor(v) {
+  return v > 0 ? v.toFixed(2).replace(".", ",") : "";
+}
+
+// Registrar movimentação: gasto, receita ou transferência entre bancos.
 // O gasto pode ser dividido em várias formas de pagamento (ex.: parte no Pix, parte em espécie,
 // parte em cartões com as parcelas de cada um). Escolhendo o banco, o saldo dele muda sozinho.
-export default function NewEntry({ cartoes = [], bancos = [], onSave, onCancel, onConfigurarIA }) {
+// A transferência (entre bancos, saque ou depósito) só muda o saldo dos bancos.
+// Dá para falar ou escrever a frase ("gastei 50 no mercado no pix do nubank") e o app preenche tudo.
+export default function NewEntry({
+  data: dados,
+  cartoes = [],
+  bancos = [],
+  hoje = hojeISO(),
+  onSave,
+  onCancel,
+  onConfigurarIA,
+  onCriarCategoria,
+  onTransferir
+}) {
   const bancoPadrao = bancoGuardado(bancos);
+  const carteira = acharCarteira(dados);
+  const bancoDoDinheiro = carteira ? String(carteira.id) : "";
+  const categoriasDisponiveis = nomesDasCategorias(dados);
   const [tipo, setTipo] = useState("saida");
   const [valor, setValor] = useState("");
   const [descricao, setDescricao] = useState("");
-  const [categoria, setCategoria] = useState("Alimentação");
-  const [data, setData] = useState(hojeISO());
+  const [categoria, setCategoria] = useState(categoriasDisponiveis.includes("Alimentação") ? "Alimentação" : categoriasDisponiveis[0] || CATEGORIA_PADRAO);
+  const [data, setData] = useState(hoje);
   const [formaReceita, setFormaReceita] = useState("Pix");
   const [bancoReceita, setBancoReceita] = useState(bancoPadrao);
   const [partes, setPartes] = useState(() => [novaParte("Pix", bancoPadrao, cartoes[0]?.id ?? "")]);
+  // transferência entre bancos
+  const [de, setDe] = useState(bancoPadrao);
+  const [para, setPara] = useState(() => {
+    const outro = bancos.find((b) => String(b.banco.id) !== bancoPadrao);
+    return outro ? String(outro.banco.id) : carteira ? String(carteira.id) : CRIAR_CARTEIRA;
+  });
   const [foto, setFoto] = useState(null);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
@@ -77,8 +106,9 @@ export default function NewEntry({ cartoes = [], bancos = [], onSave, onCancel, 
         const nova = { ...p, [campo]: v };
         if (campo === "valor") nova.auto = false;
         if (campo === "forma") {
-          if (v === "Dinheiro") nova.bancoId = "";
-          else if (p.forma === "Dinheiro" && !p.bancoId) nova.bancoId = bancoPadrao;
+          // em dinheiro, o gasto sai da Carteira (se ela existir)
+          if (v === "Dinheiro") nova.bancoId = bancoDoDinheiro;
+          else if (p.forma === "Dinheiro" && (!p.bancoId || p.bancoId === bancoDoDinheiro)) nova.bancoId = bancoPadrao;
           if (v === "Cartão" && !p.cartaoId) nova.cartaoId = cartoes[0]?.id ?? "";
         }
         return nova;
@@ -91,11 +121,11 @@ export default function NewEntry({ cartoes = [], bancos = [], onSave, onCancel, 
     // a parte que completava o total fica com o valor de agora (a primeira começa vazia, para digitar);
     // a nova parte passa a completar o total
     const ultima = partes.length - 1;
-    const congelado = partes.length === 1 ? "" : valores[ultima] > 0 ? valores[ultima].toFixed(2).replace(".", ",") : "";
+    const congelado = partes.length === 1 ? "" : textoDoValor(valores[ultima]);
     const antigas = partes.map((p, j) => (j === ultima && p.auto ? { ...p, auto: false, valor: congelado } : p));
     const usadas = new Set(antigas.map((p) => p.forma));
     const forma = ["Dinheiro", "Pix", "Débito", "Cartão", "Transferência"].find((f) => !usadas.has(f)) || "Pix";
-    setPartes([...antigas, novaParte(forma, forma === "Dinheiro" ? "" : bancoPadrao, cartoes[0]?.id ?? "")]);
+    setPartes([...antigas, novaParte(forma, forma === "Dinheiro" ? bancoDoDinheiro : bancoPadrao, cartoes[0]?.id ?? "")]);
   }
 
   function tirarParte(i) {
@@ -107,7 +137,7 @@ export default function NewEntry({ cartoes = [], bancos = [], onSave, onCancel, 
   }
 
   function preencherPeloCupom(lido, blob) {
-    if (lido.valor) setValor(lido.valor.toFixed(2).replace(".", ","));
+    if (lido.valor) setValor(textoDoValor(lido.valor));
     if (lido.descricao) setDescricao(lido.descricao);
     if (lido.data) setData(lido.data);
     if (lido.categoria) setCategoria(lido.categoria);
@@ -116,10 +146,64 @@ export default function NewEntry({ cartoes = [], bancos = [], onSave, onCancel, 
     setErro("");
   }
 
+  // o que a frase falada/escrita entendeu (ver lib/interpretar.js) vai para os campos
+  function preencherPelaFrase(r) {
+    setErro("");
+    setTipo(r.tipo);
+    if (r.valor) setValor(textoDoValor(r.valor));
+    if (r.descricao) setDescricao(r.descricao);
+    if (dataValida(r.data)) setData(r.data);
+    if (r.tipo === "transferencia") {
+      const bancoExiste = (id) => bancos.some((b) => String(b.banco.id) === String(id));
+      const traduzir = (id, vazio) => (id === CRIAR_CARTEIRA ? CRIAR_CARTEIRA : id !== null && bancoExiste(id) ? String(id) : vazio);
+      setDe(traduzir(r.de, FORA));
+      setPara(traduzir(r.para, FORA));
+      return;
+    }
+    if (r.tipo === "entrada") {
+      const p = r.partes[0];
+      if (p?.forma && FORMAS_DE_RECEITA.includes(p.forma)) setFormaReceita(p.forma);
+      if (p?.bancoId && bancos.some((b) => String(b.banco.id) === String(p.bancoId))) setBancoReceita(String(p.bancoId));
+      return;
+    }
+    if (r.categoria && categoriasDisponiveis.includes(r.categoria)) setCategoria(r.categoria);
+    if (!r.partes.length) return;
+    const novas = r.partes.map((p, i) => {
+      const cartaoId = p.cartaoId && cartoes.some((c) => String(c.id) === String(p.cartaoId)) ? p.cartaoId : (cartoes[0]?.id ?? "");
+      const bancoId =
+        p.forma === "Cartão"
+          ? ""
+          : p.bancoId && bancos.some((b) => String(b.banco.id) === String(p.bancoId))
+            ? String(p.bancoId)
+            : p.forma === "Dinheiro"
+              ? bancoDoDinheiro
+              : bancoPadrao;
+      const ultima = i === r.partes.length - 1;
+      return novaParte(p.forma, bancoId, cartaoId, {
+        parcelas: Math.min(MAXIMO_DE_PARCELAS, Math.max(1, p.parcelas || 1)),
+        valor: r.partes.length > 1 && p.valor ? textoDoValor(p.valor) : "",
+        auto: r.partes.length === 1 || (ultima && !p.valor)
+      });
+    });
+    setPartes(novas);
+  }
+
   const temCartao = tipo === "saida" && partes.some((p) => p.forma === "Cartão") && cartoes.length > 0;
 
   async function submit(e) {
     e.preventDefault();
+
+    if (tipo === "transferencia") {
+      const form = { subtipo: "transferencia", valor: total, descricao, data, de, para };
+      if (de === FORA && para !== FORA) form.subtipo = "deposito";
+      if (para === FORA && de !== FORA) form.subtipo = "saque";
+      const previa = montarTransferencia(form, dados);
+      if (previa.erro) return setErro(previa.erro);
+      const r = onTransferir(form);
+      if (r?.erro) return setErro(r.erro);
+      return;
+    }
+
     const form = {
       tipo,
       descricao,
@@ -167,6 +251,9 @@ export default function NewEntry({ cartoes = [], bancos = [], onSave, onCancel, 
   if (bancos.length && total > 0) {
     if (tipo === "entrada") {
       if (bancoReceita) mudancas.set(bancoReceita, total);
+    } else if (tipo === "transferencia") {
+      if (de !== FORA && de !== CRIAR_CARTEIRA) mudancas.set(String(de), -total);
+      if (para !== FORA && para !== CRIAR_CARTEIRA) mudancas.set(String(para), arredondar((mudancas.get(String(para)) || 0) + total));
     } else {
       partes.forEach((p, i) => {
         if (p.forma === "Cartão" || !p.bancoId || !(valores[i] > 0)) return;
@@ -189,6 +276,30 @@ export default function NewEntry({ cartoes = [], bancos = [], onSave, onCancel, 
     </label>
   );
 
+  // seletor da transferência: bancos + Carteira (criar) + fora do app
+  const seletorDaTransferencia = (valorAtual, aoMudar, rotulo, textoFora) => (
+    <label>
+      {rotulo}
+      <select
+        value={valorAtual}
+        onChange={(e) => {
+          aoMudar(e.target.value);
+          setErro("");
+        }}
+      >
+        {bancos.map((b) => (
+          <option key={b.banco.id} value={String(b.banco.id)}>
+            {b.banco.nome}
+          </option>
+        ))}
+        {!carteira && <option value={CRIAR_CARTEIRA}>{NOME_DA_CARTEIRA} (criar agora)</option>}
+        <option value={FORA}>{textoFora}</option>
+      </select>
+    </label>
+  );
+
+  const ehTransferencia = tipo === "transferencia";
+
   return (
     <div className="page">
       <header className="topbar">
@@ -197,18 +308,51 @@ export default function NewEntry({ cartoes = [], bancos = [], onSave, onCancel, 
           <h1>Registrar movimentação</h1>
         </div>
       </header>
+
+      <FalarOuEscrever dados={dados} hoje={hoje} onPreencher={preencherPelaFrase} onConfigurarIA={onConfigurarIA} />
+
       <form className="section-card form" onSubmit={submit}>
-        <div className="segmented">
-          <button type="button" className={tipo === "saida" ? "selected danger" : ""} onClick={() => setTipo("saida")}>
+        <div className="segmented tres" role="radiogroup" aria-label="Tipo">
+          <button
+            type="button"
+            role="radio"
+            aria-checked={tipo === "saida"}
+            className={tipo === "saida" ? "selected danger" : ""}
+            onClick={() => {
+              setTipo("saida");
+              setErro("");
+            }}
+          >
             Gasto
           </button>
-          <button type="button" className={tipo === "entrada" ? "selected success" : ""} onClick={() => setTipo("entrada")}>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={tipo === "entrada"}
+            className={tipo === "entrada" ? "selected success" : ""}
+            onClick={() => {
+              setTipo("entrada");
+              setErro("");
+            }}
+          >
             Receita
+          </button>
+          <button
+            type="button"
+            role="radio"
+            aria-checked={ehTransferencia}
+            className={ehTransferencia ? "selected info" : ""}
+            onClick={() => {
+              setTipo("transferencia");
+              setErro("");
+            }}
+          >
+            Transferência
           </button>
         </div>
 
-        {tipo === "saida" && <ScanButton onResult={preencherPeloCupom} onConfigurar={onConfigurarIA} />}
-        {foto && (
+        {tipo === "saida" && <ScanButton onResult={preencherPeloCupom} onConfigurar={onConfigurarIA} categorias={categoriasDisponiveis} />}
+        {foto && tipo === "saida" && (
           <p className="hint">
             📷 Foto do cupom lida{temCartao ? " e guardada junto com a compra" : ""}. Confira os campos antes de salvar.
           </p>
@@ -227,9 +371,9 @@ export default function NewEntry({ cartoes = [], bancos = [], onSave, onCancel, 
           />
         </label>
         <label>
-          Descrição
+          {ehTransferencia ? "Descrição (opcional)" : "Descrição"}
           <input
-            placeholder="Ex.: Mercado"
+            placeholder={ehTransferencia ? "Ex.: Saque, Pix entre contas" : "Ex.: Mercado"}
             value={descricao}
             onChange={(e) => {
               setDescricao(e.target.value);
@@ -237,18 +381,19 @@ export default function NewEntry({ cartoes = [], bancos = [], onSave, onCancel, 
             }}
           />
         </label>
-        {tipo === "saida" && (
-          <label>
-            Categoria
-            <select value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-              {CATEGORIAS.map((x) => (
-                <option key={x}>{x}</option>
-              ))}
-            </select>
-          </label>
-        )}
+        {tipo === "saida" && <SeletorCategoria dados={dados} valor={categoria} onChange={setCategoria} onCriar={onCriarCategoria} />}
 
-        {tipo === "entrada" ? (
+        {ehTransferencia ? (
+          <>
+            <div className="grid2 tight">
+              {seletorDaTransferencia(de, setDe, "Sai de", "Fora do app")}
+              {seletorDaTransferencia(para, setPara, "Vai para", "Fora do app")}
+            </div>
+            <p className="hint">
+              Transferência entre bancos, saque ou depósito não conta como gasto nem receita: só muda o saldo dos bancos.
+            </p>
+          </>
+        ) : tipo === "entrada" ? (
           <div className={bancos.length ? "grid2 tight" : ""}>
             <label>
               Recebido por
@@ -301,7 +446,7 @@ export default function NewEntry({ cartoes = [], bancos = [], onSave, onCancel, 
                         <input
                           inputMode="decimal"
                           placeholder={p.auto ? "o resto" : "0,00"}
-                          value={p.auto && i === partes.length - 1 ? (v > 0 ? v.toFixed(2).replace(".", ",") : "") : p.valor}
+                          value={p.auto && i === partes.length - 1 ? textoDoValor(v) : p.valor}
                           onChange={(e) => mudarParte(i, "valor", e.target.value)}
                         />
                       </label>

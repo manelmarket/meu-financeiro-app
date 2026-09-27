@@ -9,6 +9,8 @@
 // dos bancos que os emitem (ex.: "Magalu Itaucard" fica com as cores da Magalu, "Next Bradesco" com as do Next).
 // "exceto": nomes que parecem o banco mas não são (ex.: "Porto Alegre").
 export const BANCOS = [
+  // "Carteira": o dinheiro em espécie (recebe saques e paga em dinheiro) — visual verde de nota
+  { id: "carteira", nome: "Carteira", termos: ["carteira", "dinheiro", "especie", "em especie", "cash", "cofre"], cores: ["#15803d", "#14532d"], texto: "#ffffff", suave: "#dcfce7", destaque: "#fde68a" },
   { id: "magalu", nome: "Magalu", termos: ["magalu", "magazine luiza", "luizacard"], cores: ["#0069d9", "#0045ad"], texto: "#ffffff", suave: "#eaf3ff", destaque: "#fef3c5" },
   { id: "renner", nome: "Renner", termos: ["renner"], cores: ["#d9181e", "#9c0c10"], texto: "#ffffff", suave: "#ffecec", destaque: "#fef1bb" },
   { id: "carrefour", nome: "Carrefour", termos: ["carrefour", "atacadao"], cores: ["#1e5bc6", "#0e3a8a"], texto: "#ffffff", suave: "#dbe6ff", destaque: "#fde68a" },

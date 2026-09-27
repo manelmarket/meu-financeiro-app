@@ -3,7 +3,7 @@ import { lerConfigIA, lerCupomComIA } from "../lib/ia.js";
 import { comprimirImagem } from "../storage/cupons.js";
 
 // Botão "Ler cupom com IA": tira/escolhe a foto, manda para a IA e devolve os campos lidos.
-export default function ScanButton({ onResult, onConfigurar }) {
+export default function ScanButton({ onResult, onConfigurar, categorias }) {
   const cfg = lerConfigIA();
   const entrada = useRef(null);
   const [lendo, setLendo] = useState(false);
@@ -33,7 +33,7 @@ export default function ScanButton({ onResult, onConfigurar }) {
     setLendo(true);
     try {
       const blob = await comprimirImagem(arquivo);
-      const lido = await lerCupomComIA(cfg, blob);
+      const lido = await lerCupomComIA(cfg, blob, categorias && categorias.length ? categorias : undefined);
       onResult(lido, blob);
     } catch (falha) {
       setErro(falha?.message || "Não consegui ler o cupom.");

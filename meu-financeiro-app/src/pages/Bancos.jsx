@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine } from "lucide-react";
+import MovimentoBanco from "../components/MovimentoBanco.jsx";
 import { diaMesBR, money, parseValor } from "../lib/formato.js";
 import { bancoDoCartao, estiloDoBanco } from "../lib/bancos.js";
 import { resumoDosBancos } from "../lib/saldos.js";
+import { rotuloDoSubtipo } from "../lib/transferencias.js";
 
 function dataDoMomento(ms) {
   const d = new Date(Number(ms) || 0);
@@ -67,7 +70,7 @@ function BancoForm({ inicial, titulo, textoBotao, onSalvar, onCancelar }) {
 }
 
 // Painel de um banco (com as cores do banco, igual aos cartões)
-function PainelDoBanco({ item, onEditar, onExcluir }) {
+function PainelDoBanco({ item, onEditar, onExcluir, onMover }) {
   const [aberto, setAberto] = useState(false);
   const { banco, atual, informado, entradas, saidas, movimentos } = item;
   const tema = bancoDoCartao(banco.nome);
@@ -99,6 +102,18 @@ function PainelDoBanco({ item, onEditar, onExcluir }) {
         {saidas > 0 ? ` · saídas − ${money(saidas)}` : ""}
       </small>
 
+      <div className="banco-acoes">
+        <button type="button" className="cc-btn" onClick={() => onMover("transferir")}>
+          <ArrowLeftRight size={13} strokeWidth={2.6} aria-hidden="true" /> Transferir
+        </button>
+        <button type="button" className="cc-btn" onClick={() => onMover("sacar")}>
+          <ArrowUpFromLine size={13} strokeWidth={2.6} aria-hidden="true" /> Sacar
+        </button>
+        <button type="button" className="cc-btn" onClick={() => onMover("depositar")}>
+          <ArrowDownToLine size={13} strokeWidth={2.6} aria-hidden="true" /> Depositar
+        </button>
+      </div>
+
       {movimentos.length > 0 && (
         <button type="button" className="cc-btn banco-ver" onClick={() => setAberto((v) => !v)} aria-expanded={aberto}>
           {aberto ? "Esconder movimentações" : `Ver movimentações (${movimentos.length})`}
@@ -125,9 +140,28 @@ function PainelDoBanco({ item, onEditar, onExcluir }) {
   );
 }
 
-export default function Bancos({ data, onSalvar, onExcluir }) {
+export default function Bancos({ data, hoje, onSalvar, onExcluir, onTransferir }) {
   const [editando, setEditando] = useState(null);
+  const [movendo, setMovendo] = useState(null); // { modo, bancoId }
+  const [aviso, setAviso] = useState("");
   const { bancos, total } = resumoDosBancos(data);
+  const itemMovendo = movendo ? bancos.find((b) => String(b.banco.id) === String(movendo.bancoId)) : null;
+
+  // o banco da janela foi excluído (ex.: em outro aparelho): fecha a janela
+  useEffect(() => {
+    if (movendo && !itemMovendo) setMovendo(null);
+  }, [movendo, itemMovendo]);
+
+  function confirmarMovimento(form, { nomeDoOutro }) {
+    const r = onTransferir(form);
+    if (r?.erro) return;
+    const nomeDaqui = itemMovendo.banco.nome;
+    const de = movendo.modo === "depositar" ? nomeDoOutro : nomeDaqui;
+    const para = movendo.modo === "depositar" ? nomeDaqui : nomeDoOutro;
+    const rotulo = rotuloDoSubtipo(form.subtipo);
+    setAviso(`${rotulo} de ${money(form.valor)} registrad${rotulo === "Transferência" ? "a" : "o"}: ${de} → ${para}.`);
+    setMovendo(null);
+  }
 
   function excluir(banco) {
     const pergunta = `Excluir o banco ${banco.nome}?\n\nOs lançamentos continuam; só deixam de mexer nesse saldo.`;
@@ -155,7 +189,14 @@ export default function Bancos({ data, onSalvar, onExcluir }) {
 
       <p className="muted small banco-dica">
         Ao lançar um gasto ou receita no Novo e escolher o banco, o saldo muda sozinho. Pagamentos de fatura também.
+        Transferir, sacar e depositar só mudam o saldo (não contam como gasto nem receita).
       </p>
+
+      {aviso && (
+        <p className="pag-libera banco-aviso" role="status">
+          {aviso}
+        </p>
+      )}
 
       {bancos.map((item) =>
         editando === item.banco.id ? (
@@ -176,11 +217,27 @@ export default function Bancos({ data, onSalvar, onExcluir }) {
             item={item}
             onEditar={() => setEditando(item.banco.id)}
             onExcluir={() => excluir(item.banco)}
+            onMover={(modo) => {
+              setAviso("");
+              setMovendo({ modo, bancoId: item.banco.id });
+            }}
           />
         )
       )}
 
       <BancoForm titulo="Adicionar banco" textoBotao="Adicionar" onSalvar={(b) => onSalvar(b)} />
+
+      {movendo && itemMovendo && (
+        <MovimentoBanco
+          modo={movendo.modo}
+          banco={itemMovendo}
+          bancos={bancos}
+          data={data}
+          hoje={hoje}
+          onConfirmar={confirmarMovimento}
+          onFechar={() => setMovendo(null)}
+        />
+      )}
     </div>
   );
 }

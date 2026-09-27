@@ -1,15 +1,14 @@
 import React, { useRef, useState } from "react";
-import { CATEGORIAS, SUGESTOES_CONTAS } from "../lib/categorias.js";
+import { SeletorCategoria } from "../components/Categoria.jsx";
+import { SUGESTOES_CONTAS } from "../lib/categorias.js";
 import { money, parseValor } from "../lib/formato.js";
 
-function BillForm({ inicial, onSave, onCancel }) {
+function BillForm({ dados, inicial, onSave, onCancel, onCriarCategoria }) {
   const [nome, setNome] = useState(inicial?.nome || "");
   const [valor, setValor] = useState(inicial ? String(inicial.valor).replace(".", ",") : "");
   const [dia, setDia] = useState(inicial ? String(inicial.dia) : "");
   const [categoria, setCategoria] = useState(inicial?.categoria || "Casa");
   const [erro, setErro] = useState("");
-
-  const categorias = CATEGORIAS.includes(categoria) ? CATEGORIAS : [...CATEGORIAS, categoria];
 
   function salvar() {
     const valorNumero = parseValor(valor);
@@ -65,14 +64,7 @@ function BillForm({ inicial, onSave, onCancel }) {
         </label>
       </div>
 
-      <label>
-        Categoria
-        <select value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-          {categorias.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-      </label>
+      <SeletorCategoria dados={dados} valor={categoria} onChange={setCategoria} onCriar={onCriarCategoria} />
 
       {erro && <p className="form-error">{erro}</p>}
 
@@ -90,7 +82,7 @@ function BillForm({ inicial, onSave, onCancel }) {
   );
 }
 
-export default function Bills({ data, onBack, onSave, onDelete, onToggle }) {
+export default function Bills({ data, onBack, onSave, onDelete, onToggle, onCriarCategoria }) {
   const [editando, setEditando] = useState(null);
   const topoRef = useRef(null);
   const contas = [...(data.contasFixas || [])].sort(
@@ -127,7 +119,9 @@ export default function Bills({ data, onBack, onSave, onDelete, onToggle }) {
       {editando && (
         <BillForm
           key={editando.id}
+          dados={data}
           inicial={editando}
+          onCriarCategoria={onCriarCategoria}
           onSave={(conta) => {
             onSave(conta);
             setEditando(null);
@@ -179,7 +173,7 @@ export default function Bills({ data, onBack, onSave, onDelete, onToggle }) {
         })}
       </section>
 
-      {!editando && <BillForm onSave={onSave} />}
+      {!editando && <BillForm dados={data} onSave={onSave} onCriarCategoria={onCriarCategoria} />}
     </div>
   );
 }

@@ -7,7 +7,7 @@
 // O gasto de cada categoria é o mesmo do "Meu mês": lançamentos + faturas de cartão que vencem
 // no mês + contas fixas (ver lib/mes.js).
 
-import { CATEGORIAS } from "./categorias.js";
+import { nomesDasCategorias } from "./categorias.js";
 import { resumoDoMes } from "./mes.js";
 import { arredondar, hojeISO } from "./formato.js";
 
@@ -65,7 +65,8 @@ export function orcamentoDoMes(dados, mes, hoje = hojeISO()) {
   const limites = lerOrcamentos(dados);
   const gastos = Object.fromEntries(resumoDoMes(dados, mes, hoje).categorias);
 
-  const nomes = [...CATEGORIAS];
+  // as categorias do app e as que a pessoa criou (com ícone e cor)
+  const nomes = nomesDasCategorias(dados);
   for (const nome of [...Object.keys(gastos), ...Object.keys(limites)]) {
     if (!nomes.includes(nome)) nomes.push(nome);
   }

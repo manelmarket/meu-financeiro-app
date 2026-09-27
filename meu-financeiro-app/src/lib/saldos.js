@@ -12,6 +12,10 @@
 
 import { arredondar } from "./formato.js";
 
+// Transferência entre bancos, saque e depósito (ver lib/transferencias.js): mexem no saldo,
+// mas não são gasto nem receita.
+const ROTULO_TRANSFERENCIA = { transferencia: "Transferência", saque: "Saque", deposito: "Depósito" };
+
 export function lerBancos(dados) {
   const lista = dados?.usuario?.bancos;
   return Array.isArray(lista) ? lista.filter((b) => b && typeof b === "object" && b.id != null) : [];
@@ -33,9 +37,46 @@ export function movimentosDoBanco(dados, banco) {
   const lista = [];
 
   for (const l of Array.isArray(dados?.lancamentos) ? dados.lancamentos : []) {
-    if (!l || !Array.isArray(l.formas)) continue;
+    if (!l) continue;
     const quando = Number(l.criadoEm) || Number(l.id) || 0;
     if (quando <= desde) continue;
+
+    // transferência entre bancos, saque ou depósito: sai de um banco e/ou entra no outro
+    if (l.tipo === "transferencia") {
+      const valor = arredondar(Number(l.valor) || 0);
+      if (!(valor > 0)) continue;
+      const forma = ROTULO_TRANSFERENCIA[l.subtipo] || ROTULO_TRANSFERENCIA.transferencia;
+      const outro = (bid, vazio) => {
+        if (bid == null || bid === "") return vazio;
+        const b = lerBancos(dados).find((x) => String(x.id) === String(bid));
+        return b ? b.nome : "banco excluído";
+      };
+      if (mesmoBanco(l.de, id)) {
+        lista.push({
+          id: `t-${l.id}-de`,
+          tipo: "saida",
+          descricao: String(l.descricao || forma),
+          forma: `${forma} → ${outro(l.para, "fora do app")}`,
+          valor,
+          data: l.data,
+          quando
+        });
+      }
+      if (mesmoBanco(l.para, id)) {
+        lista.push({
+          id: `t-${l.id}-para`,
+          tipo: "entrada",
+          descricao: String(l.descricao || forma),
+          forma: `${forma} ← ${outro(l.de, "fora do app")}`,
+          valor,
+          data: l.data,
+          quando
+        });
+      }
+      continue;
+    }
+
+    if (!Array.isArray(l.formas)) continue;
     l.formas.forEach((f, i) => {
       if (!f || !mesmoBanco(f.bancoId, id)) return;
       const valor = arredondar(Number(f.valor) || 0);

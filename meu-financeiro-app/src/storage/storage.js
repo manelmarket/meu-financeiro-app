@@ -303,12 +303,17 @@ export function criarVazio() {
   };
 }
 
-// Nenhum registro (o perfil não conta; bancos cadastrados contam)
+// Nenhum registro (o perfil não conta; bancos e categorias cadastrados contam)
 export function ehVazio(dados) {
   if (!dados || typeof dados !== "object") return false;
   const d = normalizar(dados);
   const bancos = Array.isArray(d.usuario?.bancos) ? d.usuario.bancos.length : 0;
-  return bancos === 0 && ["lancamentos", "cartoes", "contasFixas", "metas", "investimentos", "bens"].every((k) => d[k].length === 0);
+  const categorias = Array.isArray(d.usuario?.categorias) ? d.usuario.categorias.length : 0;
+  return (
+    bancos === 0 &&
+    categorias === 0 &&
+    ["lancamentos", "cartoes", "contasFixas", "metas", "investimentos", "bens"].every((k) => d[k].length === 0)
+  );
 }
 
 // Aparelho/conta sem dados próprios: só a demonstração intacta, ou nenhum registro

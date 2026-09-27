@@ -229,24 +229,47 @@ export function normalizarData(texto) {
   return dataValida(iso) ? iso : null;
 }
 
-export async function lerCupomComIA(cfg, blob) {
+export async function lerCupomComIA(cfg, blob, categorias = CATEGORIAS) {
   const imagem = { mime: blob.type || "image/jpeg", base64: await blobParaBase64(blob) };
   const texto = [
     "Esta é a foto de um cupom fiscal, nota ou recibo de compra no Brasil.",
     "Extraia os dados e responda somente com JSON neste formato:",
     '{"estabelecimento": "nome da loja ou null", "data": "AAAA-MM-DD ou null", "valor_total": 123.45, "categoria": "uma das categorias"}',
-    `Categorias possíveis: ${CATEGORIAS.join(", ")}.`,
+    `Categorias possíveis: ${categorias.join(", ")}.`,
     "valor_total é o total pago (com descontos), como número com ponto decimal. Se não conseguir ler um campo, use null."
   ].join("\n");
   const json = extrairJSON(await chamarIA(cfg, { texto, imagem }));
 
   const valor = parseValor(json.valor_total);
   const data = normalizarData(json.data);
-  const categoria = CATEGORIAS.includes(json.categoria) ? json.categoria : null;
+  const categoria = categorias.includes(json.categoria) ? json.categoria : null;
   const descricao = typeof json.estabelecimento === "string" && json.estabelecimento.trim() ? json.estabelecimento.trim() : null;
 
   if (!(valor > 0) && !descricao && !data) {
     throw new ErroIA("Não consegui ler esse cupom. Tente uma foto mais nítida, com o cupom inteiro.");
   }
   return { descricao, valor: valor > 0 ? valor : null, data, categoria };
+}
+
+// Lançar por voz ou texto: a IA lê a frase ("gastei 50 no mercado no pix do nubank") e devolve os campos.
+// contexto = { categorias: [nomes], bancos: [nomes], cartoes: [nomes] } (ver lib/interpretar.js → contextoParaIA)
+export async function interpretarComIA(cfg, frase, contexto, hoje) {
+  const texto = [
+    "Você lê uma frase em português do Brasil sobre uma movimentação de dinheiro e devolve os campos para um app de finanças pessoais.",
+    `Hoje é ${hoje}.`,
+    `Categorias de gasto possíveis: ${contexto.categorias.join(", ")}.`,
+    `Bancos da pessoa: ${contexto.bancos.length ? contexto.bancos.join(", ") : "nenhum"}. "Carteira" é o dinheiro em espécie.`,
+    `Cartões de crédito da pessoa: ${contexto.cartoes.length ? contexto.cartoes.join(", ") : "nenhum"}.`,
+    "Responda somente com JSON neste formato:",
+    '{"tipo": "gasto | receita | transferencia | saque | deposito", "valor": 123.45, "descricao": "texto curto (ex.: Mercado, Salário, Luz)",',
+    ' "categoria": "uma das categorias (só para gasto) ou null", "data": "AAAA-MM-DD ou null",',
+    ' "formas": [{"forma": "Pix | Dinheiro | Débito | Cartão | Transferência", "valor": 50 ou null, "banco": "nome do banco ou null", "cartao": "nome do cartão ou null", "parcelas": 1}],',
+    ' "de": "banco de onde sai (transferência/saque) ou null", "para": "banco para onde vai (transferência/depósito) ou null"}',
+    "Regras: valor é o total, como número com ponto decimal. Em formas, ponha uma entrada por forma de pagamento citada, com o valor de cada uma (null para \"o resto\"); com uma forma só, valor null.",
+    "Use exatamente os nomes de banco, cartão e categoria das listas. Se a pessoa não disser a forma de pagamento, use \"Pix\". \"no cartão\", \"no crédito\" ou \"em 3x\" = forma Cartão. \"em dinheiro\" ou \"em espécie\" = Dinheiro.",
+    "Transferência entre bancos, saque e depósito não são gasto nem receita. Sem data na frase, use null (é hoje).",
+    "",
+    `Frase: ${frase}`
+  ].join("\n");
+  return extrairJSON(await chamarIA(cfg, { texto }));
 }

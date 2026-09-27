@@ -5,7 +5,8 @@ import CardForm from "../components/CardForm.jsx";
 import CupomModal from "../components/CupomModal.jsx";
 import PagarFatura from "../components/PagarFatura.jsx";
 import ScanButton from "../components/ScanButton.jsx";
-import { CATEGORIAS } from "../lib/categorias.js";
+import { SeletorCategoria } from "../components/Categoria.jsx";
+import { nomesDasCategorias } from "../lib/categorias.js";
 import { dataBR, dataValida, diaMesBR, hojeISO, money, parseValor, rotuloMes, somarMeses } from "../lib/formato.js";
 import {
   RESTANTE_EM_ABERTO,
@@ -23,7 +24,7 @@ import { apagarCupom, comprimirImagem, salvarCupom } from "../storage/cupons.js"
 
 const OPCOES_PARCELAS = Array.from({ length: 12 }, (_, i) => i + 1);
 
-function PurchaseForm({ cartao, inicial, onSave, onCancel, onVerCupom, onConfigurarIA }) {
+function PurchaseForm({ cartao, dados, inicial, onSave, onCancel, onVerCupom, onConfigurarIA, onCriarCategoria }) {
   const [descricao, setDescricao] = useState(inicial?.descricao || "");
   const [valor, setValor] = useState(inicial ? String(inicial.valorTotal).replace(".", ",") : "");
   const [categoria, setCategoria] = useState(inicial?.categoria || "Alimentação");
@@ -40,7 +41,6 @@ function PurchaseForm({ cartao, inicial, onSave, onCancel, onVerCupom, onConfigu
     if (preview) URL.revokeObjectURL(preview);
   }, [preview]);
 
-  const categorias = CATEGORIAS.includes(categoria) ? CATEGORIAS : [...CATEGORIAS, categoria];
   const valorNumero = parseValor(valor);
   const quantidade = Number(parcelas) || 1;
 
@@ -103,7 +103,7 @@ function PurchaseForm({ cartao, inicial, onSave, onCancel, onVerCupom, onConfigu
     <section className="section-card form">
       <h2>{inicial ? "Editar compra" : "Nova compra"}</h2>
 
-      {!inicial && <ScanButton onResult={preencherPeloCupom} onConfigurar={onConfigurarIA} />}
+      {!inicial && <ScanButton onResult={preencherPeloCupom} onConfigurar={onConfigurarIA} categorias={nomesDasCategorias(dados)} />}
 
       <label>
         Descrição
@@ -132,14 +132,7 @@ function PurchaseForm({ cartao, inicial, onSave, onCancel, onVerCupom, onConfigu
         </label>
       </div>
 
-      <label>
-        Categoria
-        <select value={categoria} onChange={(e) => setCategoria(e.target.value)}>
-          {categorias.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-      </label>
+      <SeletorCategoria dados={dados} valor={categoria} onChange={setCategoria} onCriar={onCriarCategoria} />
 
       {simulacao && (
         <p className="hint">
@@ -294,6 +287,7 @@ export default function CardDetails({
   onFuture,
   onCalendar,
   onConfigurarIA,
+  onCriarCategoria,
   onPay,
   onUndoPay
 }) {
@@ -467,11 +461,13 @@ export default function CardDetails({
           <PurchaseForm
             key={editando ? editando.id : "nova"}
             cartao={cartao}
+            dados={data}
             inicial={editando}
             onSave={salvarCompra}
             onCancel={fecharForm}
             onVerCupom={setCupom}
             onConfigurarIA={onConfigurarIA}
+            onCriarCategoria={onCriarCategoria}
           />
         </div>
       )}

@@ -46,8 +46,9 @@ export function resumoDoMes(dados, mes, hoje = hojeISO()) {
     categorias[nome] = arredondar((categorias[nome] || 0) + valor);
   };
 
+  // transferência entre bancos, saque e depósito não são receita nem despesa (ficam só no Histórico)
   const lancamentos = (dados.lancamentos || [])
-    .filter((l) => mesDaData(l.data) === mes)
+    .filter((l) => l && l.tipo !== "transferencia" && mesDaData(l.data) === mes)
     .sort((a, b) => String(b.data).localeCompare(String(a.data)) || b.id - a.id);
 
   let receitas = 0;

@@ -30,6 +30,7 @@ import Lembretes from "./pages/Lembretes";
 import Bancos from "./pages/Bancos";
 import Conquistas from "./pages/Conquistas";
 import Familia from "./pages/Familia";
+import Categorias from "./pages/Categorias";
 
 import useNuvem from "./lib/useNuvem";
 import useLembretesNoCelular from "./lib/useLembretes";
@@ -50,6 +51,8 @@ import { arredondar, hojeISO, mesDaData } from "./lib/formato";
 import { alternarConta } from "./lib/mes";
 import { comOrcamento } from "./lib/orcamento";
 import { excluirBanco, guardarPagamentosDoCartao, resumoDosBancos, salvarBanco } from "./lib/saldos";
+import { excluirCategoria, salvarCategoria } from "./lib/categorias";
+import { registrarTransferencia } from "./lib/transferencias";
 import { comPerfilDaPessoa, perfilDaPessoa } from "./lib/familia";
 import { lerConvitePendente } from "./lib/convite";
 
@@ -63,6 +66,7 @@ const ABA_DA_TELA = {
   familia: "home",
   bills: "home",
   orcamentos: "home",
+  categorias: "home",
   lembretes: "home",
   assistant: "home",
   investments: "home",
@@ -293,6 +297,41 @@ export default function App(){
   function apagarBanco(id){
 
     setData(d=>excluirBanco(d, id));
+
+  }
+
+
+  // transferência entre bancos, saque ou depósito (não é gasto nem receita) — ver lib/transferencias.js
+  // Devolve { erro } se o formulário estiver errado; senão grava e volta { ok: true }.
+  function transferirEntreBancos(form, voltarParaOInicio = false){
+
+    const previa = registrarTransferencia(data, form);
+
+    if(previa.erro) return previa;
+
+    setData(d=>{ const r = registrarTransferencia(d, form); return r.erro ? d : r.dados; });
+
+    if(voltarParaOInicio) ir("home");
+
+    return { ok:true };
+
+  }
+
+
+
+  // ---------- categorias ----------
+
+  // form = { id?, nome, icone, cor } (ver lib/categorias.js)
+  function salvarDadosDaCategoria(form){
+
+    setData(d=>salvarCategoria(d, form));
+
+  }
+
+
+  function apagarCategoria(id){
+
+    setData(d=>excluirCategoria(d, id));
 
   }
 
@@ -661,11 +700,15 @@ export default function App(){
     case "new":
       content =
       <NewEntry
+        data={data}
         cartoes={data.cartoes}
         bancos={resumoDosBancos(data).bancos}
+        hoje={hoje}
         onSave={salvarMovimento}
         onCancel={()=>ir("home")}
         onConfigurarIA={()=>ir("assistant")}
+        onCriarCategoria={salvarDadosDaCategoria}
+        onTransferir={(form)=>transferirEntreBancos(form, true)}
       />;
       break;
 
@@ -673,8 +716,20 @@ export default function App(){
       content =
       <Bancos
         data={data}
+        hoje={hoje}
         onSalvar={salvarDadosDoBanco}
         onExcluir={apagarBanco}
+        onTransferir={(form)=>transferirEntreBancos(form)}
+      />;
+      break;
+
+    case "categorias":
+      content =
+      <Categorias
+        data={data}
+        onBack={()=>ir("home")}
+        onSave={salvarDadosDaCategoria}
+        onDelete={apagarCategoria}
       />;
       break;
 
@@ -733,6 +788,7 @@ export default function App(){
             onFuture={()=>ir("future", { cardId:cartaoAtual.id })}
             onCalendar={()=>ir("calendar", { cardId:cartaoAtual.id })}
             onConfigurarIA={()=>ir("assistant")}
+            onCriarCategoria={salvarDadosDaCategoria}
             onPay={payInvoice}
             onUndoPay={undoPayment}
           />
@@ -768,6 +824,7 @@ export default function App(){
         onSave={saveBill}
         onDelete={deleteBill}
         onToggle={toggleBill}
+        onCriarCategoria={salvarDadosDaCategoria}
       />;
       break;
 

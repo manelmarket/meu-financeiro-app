@@ -150,7 +150,7 @@ export function desafiosDoMes(dados, mes, hoje = hojeISO()) {
 
   const dias = new Set();
   for (const l of lista(dados.lancamentos)) {
-    if (l?.tipo !== "entrada" && mesDaData(l?.data) === mes) dias.add(l.data);
+    if (l?.tipo === "saida" && mesDaData(l?.data) === mes) dias.add(l.data);
   }
   for (const c of lista(dados.cartoes)) {
     for (const x of lista(c?.compras)) if (mesDaData(x?.data) === mes) dias.add(x.data);

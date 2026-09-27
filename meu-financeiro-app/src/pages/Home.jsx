@@ -11,6 +11,7 @@ import { usarPonteAndroid } from "../lib/appAndroid.js";
 import { agendaDesatualizada, usarAjustes } from "../lib/lembretes.js";
 import { textoDoPagamento } from "../lib/cartao.js";
 import { conquistas, conquistasNovas } from "../lib/conquistas.js";
+import { infoDaCategoria, mapaDeCategorias } from "../lib/categorias.js";
 
 const ICONE_ALERTA = { aviso: "⚠️", ok: "✅", info: "📅" };
 
@@ -128,6 +129,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
   const frases = useMemo(() => analiseDoMes(data, mes, hoje), [data, mes, hoje]);
 
   const maior = Math.max(1, ...r.categorias.map(([, v]) => v));
+  const mapa = useMemo(() => mapaDeCategorias(data), [data]);
 
   function abrirAlerta(a) {
     if (a.cartaoId != null) onOpenCard(a.cartaoId);
@@ -243,19 +245,24 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
         {r.categorias.length === 0 ? (
           <p className="muted">Nenhuma despesa neste mês.</p>
         ) : (
-          r.categorias.map(([nome, valor]) => (
-            <div className="cat-row" key={nome}>
-              <div className="cat-head">
-                <span>{nome}</span>
-                <b>
-                  {money(valor)} · {Math.round((valor / (r.despesas || 1)) * 100)}%
-                </b>
+          r.categorias.map(([nome, valor]) => {
+            const c = infoDaCategoria(data, nome, mapa);
+            return (
+              <div className="cat-row" key={nome}>
+                <div className="cat-head">
+                  <span>
+                    <span aria-hidden="true">{c.icone}</span> {c.nome}
+                  </span>
+                  <b>
+                    {money(valor)} · {Math.round((valor / (r.despesas || 1)) * 100)}%
+                  </b>
+                </div>
+                <div className="bar">
+                  <i style={{ width: `${Math.max(4, (valor / maior) * 100)}%`, background: c.cor }} />
+                </div>
               </div>
-              <div className="bar">
-                <i style={{ width: `${Math.max(4, (valor / maior) * 100)}%` }} />
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </section>
 
@@ -305,7 +312,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
               <div>
                 <b>{item.descricao}</b>
                 <span>
-                  {item.categoria} · {item.pagamento}
+                  <span aria-hidden="true">{infoDaCategoria(data, item.categoria, mapa).icone}</span> {item.categoria} · {item.pagamento}
                 </span>
               </div>
               <strong className={item.tipo === "entrada" ? "in" : "out"}>
