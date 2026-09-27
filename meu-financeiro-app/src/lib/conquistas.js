@@ -8,6 +8,7 @@ import { resumoDoMes } from "./mes.js";
 import { contasDasFaturas, datasDaFatura } from "./cartao.js";
 import { lerOrcamentos, nivelDoOrcamento } from "./orcamento.js";
 import { lerBancos } from "./saldos.js";
+import { lerJSON } from "./json.js";
 
 const MESES_OLHADOS = 24;
 
@@ -190,7 +191,7 @@ const CHAVE_VISTAS = "meu_financeiro_conquistas_vistas";
 
 function lerVistas() {
   try {
-    const v = JSON.parse(localStorage.getItem(CHAVE_VISTAS) || "null");
+    const v = lerJSON(localStorage.getItem(CHAVE_VISTAS) || "null");
     return Array.isArray(v) ? v : null;
   } catch {
     return null;

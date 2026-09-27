@@ -3,6 +3,7 @@
 
 import { CATEGORIAS } from "./categorias.js";
 import { dataValida, montarData, parseValor } from "./formato.js";
+import { lerJSON } from "./json.js";
 
 const CHAVE_CONFIG = "meu_financeiro_ia";
 const TEMPO_LIMITE_MS = 90000;
@@ -26,7 +27,7 @@ export const PROVEDORES = {
 
 export function lerConfigIA() {
   try {
-    const cfg = JSON.parse(localStorage.getItem(CHAVE_CONFIG) || "null");
+    const cfg = lerJSON(localStorage.getItem(CHAVE_CONFIG) || "null");
     if (cfg && PROVEDORES[cfg.provedor] && cfg.chave) return cfg;
   } catch {
     // sem configuração
@@ -170,7 +171,7 @@ export function extrairJSON(texto) {
   const fim = limpo.lastIndexOf("}");
   if (inicio < 0 || fim <= inicio) throw new ErroIA("A IA respondeu num formato inesperado. Tente de novo.");
   try {
-    return JSON.parse(limpo.slice(inicio, fim + 1));
+    return lerJSON(limpo.slice(inicio, fim + 1));
   } catch {
     throw new ErroIA("A IA respondeu num formato inesperado. Tente de novo.");
   }

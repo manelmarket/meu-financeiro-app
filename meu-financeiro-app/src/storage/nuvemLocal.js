@@ -3,6 +3,8 @@
 // - a "base": como os dados estavam na última sincronização (IndexedDB), usada para
 //   juntar as mudanças feitas aqui com as feitas em outro aparelho.
 
+import { lerJSON } from "../lib/json.js";
+
 const CHAVE = "meu_financeiro_nuvem";
 const CHAVE_BASE_RESERVA = "meu_financeiro_nuvem_base";
 const BANCO = "meu_financeiro_nuvem";
@@ -10,7 +12,7 @@ const TABELA = "base";
 
 export function lerEstadoNuvem() {
   try {
-    const e = JSON.parse(localStorage.getItem(CHAVE) || "null");
+    const e = lerJSON(localStorage.getItem(CHAVE) || "null");
     return e && typeof e.uid === "string" && e.uid ? e : null;
   } catch {
     return null;
@@ -40,7 +42,7 @@ const CHAVE_ULTIMA_CONTA = "meu_financeiro_ultima_conta";
 
 export function lerUltimaConta() {
   try {
-    const c = JSON.parse(localStorage.getItem(CHAVE_ULTIMA_CONTA) || "null");
+    const c = lerJSON(localStorage.getItem(CHAVE_ULTIMA_CONTA) || "null");
     return c && typeof c.uid === "string" ? c : null;
   } catch {
     return null;
@@ -102,7 +104,7 @@ export async function lerBase(uid) {
     // sem IndexedDB: tenta a reserva no localStorage
   }
   try {
-    const reserva = JSON.parse(localStorage.getItem(CHAVE_BASE_RESERVA) || "null");
+    const reserva = lerJSON(localStorage.getItem(CHAVE_BASE_RESERVA) || "null");
     return reserva && reserva.uid === uid ? reserva.dados : null;
   } catch {
     return null;

@@ -13,6 +13,7 @@
 
 import { useSyncExternalStore } from "react";
 import { ehAppAndroid, versaoDoApk } from "./modoApp.js";
+import { lerJSON } from "./json.js";
 
 export const PACOTE_ANDROID = "com.meufinanceiro.app";
 export const ENDERECO_DO_APK = "/apk/meu-financeiro.apk";
@@ -57,7 +58,7 @@ export function lerPonteAndroid() {
 function lerMensagem(bruto) {
   if (typeof bruto !== "string" || !bruto) return null;
   try {
-    const msg = JSON.parse(bruto);
+    const msg = lerJSON(bruto);
     return msg && typeof msg === "object" ? msg : null;
   } catch {
     return null;

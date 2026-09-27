@@ -8,13 +8,13 @@
 //   mostra "Nova versão disponível" (ou a pessoa usa "Verificar atualizações" no menu);
 // - nunca guarda os dados: eles ficam no aparelho (localStorage/IndexedDB) e na nuvem.
 
-const VERSAO = "10.0.0";
-const BUILD = "677b8441dd65";
+const VERSAO = "10.1.0";
+const BUILD = "899f1563b111";
 const CACHE = `meu-financeiro-${BUILD}`;
 const ARQUIVOS = [
-  "/assets/index-BG4RA64X.js",
-  "/assets/index-DXRHClvn.css",
-  "/assets/nuvem-DvgLkaOm.js",
+  "/assets/index-D4djm9NF.js",
+  "/assets/index-gjYT6Aqm.css",
+  "/assets/nuvem-B8SZD_Ts.js",
   "/icons/apple-touch-icon.png",
   "/icons/favicon-32.png",
   "/icons/icon-192.png",

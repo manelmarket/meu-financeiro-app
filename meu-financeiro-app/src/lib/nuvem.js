@@ -43,6 +43,7 @@ import {
 import { FIREBASE_CONFIG, NUVEM_EMULADOR } from "../config/firebase.js";
 import { normalizar } from "../storage/storage.js";
 import { ehAppAndroid } from "./modoApp.js";
+import { lerJSON } from "./json.js";
 
 const FORMATO = 1;
 const TAMANHO_PARTE = 700 * 1024;
@@ -198,13 +199,29 @@ function erroDeConflito() {
 
 // Os dados vão sem compactar: assim qualquer navegador (inclusive iPhone antigo) lê.
 // (a leitura ainda entende dados compactados com gzip, se algum dia existirem)
+// Tamanho máximo dos dados depois de descompactar (os dados do app têm no máximo alguns MB;
+// um arquivo compactado feito de propósito para "explodir" ao abrir para aqui).
+const TAMANHO_MAXIMO = 64 * 1024 * 1024;
+
 async function descompactar(bytes, gzip) {
   if (!gzip) return new TextDecoder().decode(bytes);
   if (typeof DecompressionStream !== "function") {
     throw new Error("este navegador é antigo demais para ler os dados da nuvem");
   }
-  const fluxo = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
-  return new Response(fluxo).text();
+  const leitor = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip")).getReader();
+  const pedacos = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await leitor.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > TAMANHO_MAXIMO) {
+      await leitor.cancel().catch(() => {});
+      throw new Error("os dados da nuvem são grandes demais para abrir");
+    }
+    pedacos.push(value);
+  }
+  return new TextDecoder().decode(await new Blob(pedacos).arrayBuffer());
 }
 
 function idValido(id) {
@@ -258,7 +275,7 @@ export function criarAdaptador(espaco) {
           pos += p.length;
         }
         const texto = await descompactar(bytes, info.gzip);
-        return { versao: info.versao, dados: normalizar(JSON.parse(texto)) };
+        return { versao: info.versao, dados: normalizar(lerJSON(texto)) };
       }
       // outro aparelho gravou no meio da leitura: lê de novo
       info = (await lerInfo()) || info;

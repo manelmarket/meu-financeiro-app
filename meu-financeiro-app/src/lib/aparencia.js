@@ -4,6 +4,7 @@
 // (O index.html aplica a aparência guardada antes da primeira pintura, para não piscar.)
 
 import { useSyncExternalStore } from "react";
+import { lerJSON } from "./json.js";
 
 export const CHAVE_APARENCIA = "meu_financeiro_aparencia";
 
@@ -43,7 +44,7 @@ const COR_DA_BARRA_ESCURO = "#0b1220";
 
 function ler() {
   try {
-    const a = JSON.parse(localStorage.getItem(CHAVE_APARENCIA) || "null");
+    const a = lerJSON(localStorage.getItem(CHAVE_APARENCIA) || "null");
     return {
       tema: TEMAS.some((t) => t.id === a?.tema) ? a.tema : PADRAO.tema,
       escuro: a?.escuro === true

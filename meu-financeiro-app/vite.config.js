@@ -59,6 +59,17 @@ function serviceWorker() {
         .replace("__ARQUIVOS__", JSON.stringify(urls, null, 2));
       writeFileSync(path.join(pasta, "sw.js"), sw);
       writeFileSync(path.join(pasta, "version.json"), JSON.stringify({ versao: VERSAO, build }, null, 2) + "\n");
+
+      // Cabeçalhos de segurança (public/_headers): a política de conteúdo (CSP) só deixa rodar os
+      // scripts do próprio site + o script de tema do index.html, identificado pelo hash dele.
+      const cabecalhos = path.join(pasta, "_headers");
+      if (existsSync(cabecalhos)) {
+        const html = readFileSync(path.join(pasta, "index.html"), "utf8");
+        const hashes = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(
+          (m) => `sha256-${createHash("sha256").update(m[1]).digest("base64")}`
+        );
+        writeFileSync(cabecalhos, readFileSync(cabecalhos, "utf8").replace("'__HASH_DO_SCRIPT__'", hashes.map((h) => `'${h}'`).join(" ")));
+      }
     }
   };
 }

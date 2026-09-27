@@ -7,6 +7,8 @@
 // Se os dois lados mudaram o MESMO campo, fica o valor deste aparelho.
 // Se um lado apagou e o outro editou o mesmo registro, o registro fica (nada se perde).
 
+import { ehChaveProibida } from "./json.js";
+
 function ehObjeto(v) {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
@@ -85,7 +87,8 @@ export function mesclar(base, local, remoto) {
   if (ehObjeto(local) && ehObjeto(remoto)) {
     const b = ehObjeto(base) ? base : {};
     const resultado = {};
-    const chaves = [...Object.keys(local), ...Object.keys(remoto).filter((k) => !(k in local))];
+    // "__proto__" e afins nunca são dados do app: ficam de fora (ver lib/json.js)
+    const chaves = [...Object.keys(local), ...Object.keys(remoto).filter((k) => !(k in local))].filter((k) => !ehChaveProibida(k));
     for (const k of chaves) {
       const temL = k in local;
       const temR = k in remoto;

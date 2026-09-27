@@ -1,6 +1,7 @@
 // Backup em arquivo: um .json com todos os dados do app e as fotos dos cupons.
 
 import { normalizar } from "../storage/storage.js";
+import { lerJSON } from "./json.js";
 
 export const APP_DO_BACKUP = "meu-financeiro";
 export const FORMATO_DO_BACKUP = 1;
@@ -52,7 +53,7 @@ const NAO_EH_BACKUP = "Esse arquivo não é um backup do Meu Financeiro.";
 export function lerBackup(texto) {
   let obj;
   try {
-    obj = JSON.parse(String(texto ?? "").replace(/^﻿/, ""));
+    obj = lerJSON(String(texto ?? "").replace(/^﻿/, ""));
   } catch {
     throw new Error(NAO_EH_BACKUP);
   }
@@ -136,7 +137,7 @@ export function quandoFoi(iso, agora = new Date()) {
 
 export function lerUltimoBackup() {
   try {
-    const valor = JSON.parse(localStorage.getItem(CHAVE_ULTIMO_BACKUP) || "null");
+    const valor = lerJSON(localStorage.getItem(CHAVE_ULTIMO_BACKUP) || "null");
     return valor && typeof valor.em === "string" ? valor.em : null;
   } catch {
     return null;
@@ -187,7 +188,7 @@ export function guardarCopia(dados, motivo, agora = new Date(), dono = null) {
 export function lerCopia(dono = null) {
   for (const chave of dono ? [chaveDaCopia(dono), CHAVE_COPIA] : [CHAVE_COPIA]) {
     try {
-      const copia = JSON.parse(localStorage.getItem(chave) || "null");
+      const copia = lerJSON(localStorage.getItem(chave) || "null");
       if (copia && copia.dados && typeof copia.em === "string") return { ...copia, chave };
     } catch {
       // cópia ilegível: tenta a próxima

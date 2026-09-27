@@ -28,6 +28,14 @@ Abra o endereço mostrado pelo Vite no navegador.
 - Categorias personalizadas com ícone e cor (menu ⋮ → Categorias, ou "Nova categoria…" direto no seletor)
 - Histórico com filtro Transferências e ícones das categorias; Início e Orçamentos com ícone e cor por categoria
 
+## Versão 10.1 — segurança
+
+- Cabeçalhos de segurança no site (public/_headers): política de conteúdo (CSP) que só deixa rodar scripts do próprio site, proteção contra iframes, nosniff, HSTS, permissões (só microfone e câmera)
+- Leitura segura de JSON (backup, nuvem, dados do navegador, resposta da IA): chaves perigosas são descartadas
+- Limite de tamanho ao descompactar dados vindos da nuvem
+- Regras do Firestore com validação de campos e tamanhos (família, convites) — precisa publicar no Firebase
+- Vite atualizado (vulnerabilidades do servidor de desenvolvimento)
+
 ## Próximos passos
 
 - Relatórios e gráficos

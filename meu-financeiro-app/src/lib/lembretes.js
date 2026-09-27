@@ -8,6 +8,7 @@
 import { useSyncExternalStore } from "react";
 import { resumoDoMes } from "./mes.js";
 import { diaMesBR, hojeISO, lerData, mesDaData, money, somarDias, somarMeses } from "./formato.js";
+import { lerJSON } from "./json.js";
 
 const CHAVE = "meu_financeiro_lembretes";
 
@@ -42,7 +43,7 @@ const ouvintes = new Set();
 export function lerAjustes() {
   if (!atual) {
     try {
-      atual = normalizar(JSON.parse(localStorage.getItem(CHAVE) || "null"));
+      atual = normalizar(lerJSON(localStorage.getItem(CHAVE) || "null"));
     } catch {
       atual = normalizar(null);
     }

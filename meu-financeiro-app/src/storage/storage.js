@@ -18,6 +18,7 @@ import {
   somarMeses
 } from "../lib/formato.js";
 import { iguais } from "../lib/mesclar.js";
+import { lerJSON } from "../lib/json.js";
 
 const CHAVE_V1 = "meu_financeiro_v1";
 const CHAVE = "meu_financeiro_v2";
@@ -73,7 +74,7 @@ export function criarSeed(hoje = hojeISO()) {
 function ler(chave) {
   try {
     const bruto = localStorage.getItem(chave);
-    return bruto ? JSON.parse(bruto) : null;
+    return bruto ? lerJSON(bruto) : null;
   } catch {
     return null;
   }
@@ -331,7 +332,7 @@ function fotosAindaNoBackup() {
   try {
     const bruto = localStorage.getItem(CHAVE_V1);
     if (!bruto || !bruto.includes("data:image")) return [];
-    return migrarV1(JSON.parse(bruto)).fotos;
+    return migrarV1(lerJSON(bruto)).fotos;
   } catch {
     return [];
   }

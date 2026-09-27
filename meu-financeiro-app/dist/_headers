@@ -1,4 +1,21 @@
-# Cloudflare Pages: arquivos que o app precisa sempre na versão mais nova
+# Cloudflare Pages: cabeçalhos de cada endereço do site.
+# (o "__HASH_DO_SCRIPT__" é trocado no build pelo hash do script de tema do index.html — ver vite.config.js)
+
+# ---------- segurança (todas as páginas) ----------
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: microphone=(self), camera=(self), geolocation=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-Xosk9RflCt3P+dzuDEJJ8GG5oNAFn1b5AbTVvZ3YetY=' https://apis.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebaseapp.com https://api.anthropic.com; frame-src 'self' https://*.firebaseapp.com https://accounts.google.com https://apis.google.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests
+
+# as páginas do login do Google (Firebase) têm scripts próprios: ficam sem a política de conteúdo
+/__/*
+  ! Content-Security-Policy
+
+# ---------- arquivos que o app precisa sempre na versão mais nova ----------
 /sw.js
   Cache-Control: no-cache
 /version.json
