@@ -4,6 +4,7 @@ import {
   BellRing,
   Cloud,
   CreditCard,
+  HandCoins,
   History,
   Home,
   Landmark,
@@ -49,6 +50,7 @@ const GRUPOS = [
     itens: [
       ["reports", BarChart3, "Relatórios"],
       ["bills", Repeat, "Contas fixas"],
+      ["emprestimos", HandCoins, "Empréstimos"],
       ["orcamentos", PiggyBank, "Orçamentos"],
       ["categorias", Tag, "Categorias"],
       ["lembretes", BellRing, "Lembretes"],

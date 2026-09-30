@@ -713,6 +713,44 @@ button:disabled{opacity:.6;cursor:default}
 .tx-right strong.neutro{color:var(--texto-2)}
 @media (max-width:380px){.cat-icones{gap:4px}.cat-icone{height:34px;font-size:16px}}
 
+/* ---------- aba Empréstimos (pages/Emprestimos.jsx) ---------- */
+.emp-totais{margin-top:0}
+.emp-totais .mini-card small{color:var(--apagado)}
+.emp-alertas{margin:14px 0 0}
+.emp-abas{margin-top:14px}
+.emp-aviso{margin:14px 0 0}
+.emp-vazio{margin:14px 4px 0;line-height:1.45}
+.emp-card{display:flex;flex-direction:column}
+.emp-cabeca{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.emp-cabeca>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.emp-cabeca b{font-size:16px;overflow-wrap:anywhere}
+.emp-cabeca small{font-size:12.5px;color:var(--apagado);overflow-wrap:anywhere}
+.emp-situacao{flex-shrink:0;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:800;white-space:nowrap}
+.emp-situacao.ok{background:var(--ok-fundo);color:var(--ok-forte)}
+.emp-situacao.atraso{background:var(--erro-fundo);color:var(--erro-forte)}
+.emp-situacao.aviso{background:var(--aviso-fundo);color:var(--aviso-texto);box-shadow:inset 0 0 0 1px var(--aviso-borda)}
+.emp-situacao.em-dia{background:var(--info-fundo);color:var(--info-texto)}
+.emp-falta{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:14px 0 8px}
+.emp-falta span{font-size:13px;color:var(--apagado);font-weight:700}
+.emp-falta strong{font-size:22px;white-space:nowrap}
+.emp-card.peguei .emp-falta strong{color:var(--erro)}
+.emp-card.emprestei .emp-falta strong,.emp-card.quitado .emp-falta strong{color:var(--ok)}
+.bar.emp-bar-ok i{background:var(--ok)}
+.emp-linha{margin:8px 0 0;font-size:13px;line-height:1.45;color:var(--texto-2)}
+.emp-linha.atraso{color:var(--erro-forte);font-weight:700}
+.emp-linha.apagada{color:var(--apagado);font-size:12.5px}
+.emp-card .row-actions{margin-top:14px}
+.emp-historico{margin-top:12px;border-top:1px solid var(--borda-2)}
+.emp-pag{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--borda-2)}
+.emp-pag:last-child{border-bottom:0;padding-bottom:0}
+.emp-pag span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.emp-pag small{font-size:12px;color:var(--apagado)}
+.emp-pag .chip-btn{flex-shrink:0}
+/* campos lado a lado: se um título quebra em 2 linhas, os campos continuam alinhados */
+.emp-form .grid2.tight>label{justify-content:flex-end}
+/* campo de data com a mesma altura dos outros campos (o do navegador sai 2px mais alto) */
+.emp-form input[type="date"]{padding-top:12px;padding-bottom:12px}
+
 /* ---------- tablet e computador: a coluna do app fica mais larga ----------
    Mesmo visual do celular, só que mais largo; a barra de baixo e o menu ⋮ acompanham a largura da coluna.
    A tela de entrada (login) continua ocupando a tela toda, como antes.

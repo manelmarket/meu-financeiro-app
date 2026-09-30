@@ -31,6 +31,7 @@ import Bancos from "./pages/Bancos";
 import Conquistas from "./pages/Conquistas";
 import Familia from "./pages/Familia";
 import Categorias from "./pages/Categorias";
+import Emprestimos from "./pages/Emprestimos";
 
 import useNuvem from "./lib/useNuvem";
 import useLembretesNoCelular from "./lib/useLembretes";
@@ -53,6 +54,7 @@ import { comOrcamento } from "./lib/orcamento";
 import { excluirBanco, guardarPagamentosDoCartao, resumoDosBancos, salvarBanco } from "./lib/saldos";
 import { excluirCategoria, salvarCategoria } from "./lib/categorias";
 import { registrarTransferencia } from "./lib/transferencias";
+import { desfazerPagamento, excluirEmprestimo, registrarPagamento, salvarEmprestimo } from "./lib/emprestimos";
 import { comPerfilDaPessoa, perfilDaPessoa } from "./lib/familia";
 import { lerConvitePendente } from "./lib/convite";
 
@@ -65,6 +67,7 @@ const ABA_DA_TELA = {
   conquistas: "home",
   familia: "home",
   bills: "home",
+  emprestimos: "home",
   orcamentos: "home",
   categorias: "home",
   lembretes: "home",
@@ -339,6 +342,56 @@ export default function App(){
   function deleteEntry(id){
 
     setData(d=>({ ...d, lancamentos: d.lancamentos.filter(x=>x.id!==id) }));
+
+  }
+
+
+
+  // ---------- empréstimos ---------- (ver lib/emprestimos.js)
+
+  // Confere com os dados de agora; se der erro devolve { erro }, senão grava e volta { ok: true }.
+  // "agora" fica fixo antes, para a conferência e a gravação criarem o mesmo id.
+  function mudarEmprestimos(mudar){
+
+    const previa = mudar(data);
+
+    if(previa.erro) return previa;
+
+    setData(d=>{ const r = mudar(d); return r.erro ? d : r.dados; });
+
+    return { ok:true };
+
+  }
+
+
+  function salvarDadosDoEmprestimo(form){
+
+    const agora = Date.now();
+
+    return mudarEmprestimos(d=>salvarEmprestimo(d, form, agora, hoje));
+
+  }
+
+
+  function apagarEmprestimo(id){
+
+    return mudarEmprestimos(d=>excluirEmprestimo(d, id));
+
+  }
+
+
+  function pagarEmprestimo(id, pagamento){
+
+    const agora = Date.now();
+
+    return mudarEmprestimos(d=>registrarPagamento(d, id, pagamento, agora));
+
+  }
+
+
+  function desfazerPagamentoDoEmprestimo(id, pagamentoId){
+
+    return mudarEmprestimos(d=>desfazerPagamento(d, id, pagamentoId));
 
   }
 
@@ -825,6 +878,19 @@ export default function App(){
         onDelete={deleteBill}
         onToggle={toggleBill}
         onCriarCategoria={salvarDadosDaCategoria}
+      />;
+      break;
+
+    case "emprestimos":
+      content =
+      <Emprestimos
+        data={data}
+        hoje={hoje}
+        onBack={()=>ir("home")}
+        onSalvar={salvarDadosDoEmprestimo}
+        onExcluir={apagarEmprestimo}
+        onPagar={pagarEmprestimo}
+        onDesfazer={desfazerPagamentoDoEmprestimo}
       />;
       break;
 
