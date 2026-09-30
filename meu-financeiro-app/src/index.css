@@ -712,3 +712,10 @@ button:disabled{opacity:.6;cursor:default}
 /* Histórico: transferência (sem sinal, cor neutra) */
 .tx-right strong.neutro{color:var(--texto-2)}
 @media (max-width:380px){.cat-icones{gap:4px}.cat-icone{height:34px;font-size:16px}}
+
+/* ---------- tablet e computador: a coluna do app fica mais larga ----------
+   Mesmo visual do celular, só que mais largo; a barra de baixo e o menu ⋮ acompanham a largura da coluna.
+   A tela de entrada (login) continua ocupando a tela toda, como antes.
+   O gráfico de colunas (Relatórios) continua do tamanho de antes: com a coluna larga, os textos dele cresciam junto. */
+@media (min-width:768px){.app-shell:not(.entrada-shell){max-width:720px}.bottom-nav{width:min(720px,100%)}.drawer{left:max(0px,calc((100vw - 720px)/2))}.page{padding-left:24px;padding-right:24px}.columns-chart svg{max-width:448px;margin:0 auto}}
+@media (min-width:1024px){.app-shell:not(.entrada-shell){max-width:860px}.bottom-nav{width:min(860px,100%)}.drawer{left:max(0px,calc((100vw - 860px)/2))}}
