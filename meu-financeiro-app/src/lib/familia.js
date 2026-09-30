@@ -68,8 +68,14 @@ function juntarBancos(daFamilia, meus) {
   return lista;
 }
 
+// empréstimos (usuario.emprestimos): ficam os da família e os meus (o mesmo, pelo id, fica o da família)
+function juntarEmprestimos(daFamilia, meus) {
+  const lista = (v) => (Array.isArray(v) ? v.filter(ehObjeto) : []);
+  return juntarBancos(lista(daFamilia), lista(meus));
+}
+
 // Entrar na família levando os próprios dados: os registros dos dois lados ficam (ver juntar.js);
-// bancos e orçamentos também (no mesmo orçamento, vale o da família); o perfil de cada um fica separado.
+// bancos, orçamentos e empréstimos também (no mesmo orçamento, vale o da família); o perfil de cada um fica separado.
 export function juntarNaFamilia(pessoal, familia, uid, perfil) {
   const junto = juntarDados(familia, pessoal);
   const uFam = familia.usuario || {};
@@ -80,6 +86,8 @@ export function juntarNaFamilia(pessoal, familia, uid, perfil) {
   if (ehObjeto(uMeu.orcamentos) || ehObjeto(uFam.orcamentos)) {
     usuario.orcamentos = { ...(ehObjeto(uMeu.orcamentos) ? uMeu.orcamentos : {}), ...(ehObjeto(uFam.orcamentos) ? uFam.orcamentos : {}) };
   }
+  const emprestimos = juntarEmprestimos(uFam.emprestimos, uMeu.emprestimos);
+  if (emprestimos.length || Array.isArray(uFam.emprestimos)) usuario.emprestimos = emprestimos;
   return comPerfilNaFamilia({ ...junto, usuario }, uid, perfil);
 }
 

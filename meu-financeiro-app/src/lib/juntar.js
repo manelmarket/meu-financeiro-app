@@ -124,6 +124,11 @@ export function juntarPerfil(local, remoto) {
     const ids = new Set(l.bancos.map((b) => String(b?.id)));
     resultado.bancos = [...l.bancos, ...r.bancos.filter((b) => !ids.has(String(b?.id)))];
   }
+  // empréstimos: ficam os dos dois lados (o mesmo empréstimo, pelo id, fica o deste aparelho)
+  if (Array.isArray(l.emprestimos) && Array.isArray(r.emprestimos)) {
+    const ids = new Set(l.emprestimos.map((e) => String(e?.id)));
+    resultado.emprestimos = [...l.emprestimos, ...r.emprestimos.filter((e) => !ids.has(String(e?.id)))];
+  }
   return resultado;
 }
 
