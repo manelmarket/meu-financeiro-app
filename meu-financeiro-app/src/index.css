@@ -197,7 +197,7 @@ button:disabled{opacity:.6;cursor:default}
 .bill:last-child{border-bottom:0}
 .bill.inactive b{color:var(--apagado-2)}
 .bill-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.switch{border:0;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;background:var(--borda-3);color:var(--apagado);min-width:74px}
+.switch{border:0;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;background:var(--erro-fundo);color:var(--erro-forte);min-width:74px}
 .switch.on{background:var(--ok-fundo);color:var(--ok-forte)}
 .chips.no-margin{margin:0}
 
