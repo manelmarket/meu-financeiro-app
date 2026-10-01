@@ -2,7 +2,7 @@
 //
 // Despesas do mês = gastos lançados no mês
 //                 + faturas de cartão que VENCEM no mês (as compras de cada fatura)
-//                 + contas fixas ativas no mês.
+//                 + contas fixas ativas no mês (a conta paga pelo botão Pagar entra com o valor pago).
 // O restante de uma fatura lançado na próxima fatura não conta de novo como despesa
 // (já contou no mês da fatura de origem), mas entra no valor a pagar da próxima fatura.
 
@@ -14,6 +14,12 @@ import { contasDasFaturas, faturaDoMes } from "./cartao.js";
 export function contaValeNoMes(conta, mes) {
   if (!Array.isArray(conta.periodos) || conta.periodos.length === 0) return conta.ativa !== false;
   return conta.periodos.some((p) => mes >= (p.inicio || "") && (!p.fim || mes < p.fim));
+}
+
+// Quanto foi pago da conta fixa no mês pelo botão Pagar (0 = não foi paga; ver lib/contasFixas.js)
+export function valorPagoNoMes(conta, mes) {
+  const lista = Array.isArray(conta?.pagamentos) ? conta.pagamentos : [];
+  return arredondar(lista.reduce((t, p) => (p && p.mes === mes ? t + (Number(p.valor) || 0) : t), 0));
 }
 
 // Liga/desliga a conta na data de hoje, mantendo os meses anteriores.
@@ -94,8 +100,11 @@ export function resumoDoMes(dados, mes, hoje = hojeISO()) {
   let fixas = 0;
   const { y, m } = lerMes(mes);
   for (const conta of dados.contasFixas || []) {
-    if (!contaValeNoMes(conta, mes)) continue;
-    const valor = Number(conta.valor) || 0;
+    // conta paga pelo botão Pagar: entra com o valor pago (ex.: conta de luz que veio diferente),
+    // mesmo que depois tenha sido desligada
+    const pago = valorPagoNoMes(conta, mes);
+    if (!contaValeNoMes(conta, mes) && !(pago > 0)) continue;
+    const valor = pago > 0 ? pago : Number(conta.valor) || 0;
     fixas += valor;
     somar(conta.categoria, valor);
     vencimentos.push({
@@ -103,7 +112,8 @@ export function resumoDoMes(dados, mes, hoje = hojeISO()) {
       tipo: "conta",
       descricao: conta.nome,
       valor,
-      data: montarData(y, m, Math.min(Math.max(1, parseInt(conta.dia, 10) || 1), diasNoMes(y, m)))
+      data: montarData(y, m, Math.min(Math.max(1, parseInt(conta.dia, 10) || 1), diasNoMes(y, m))),
+      ...(pago > 0 ? { status: "paga", pago, aPagar: 0 } : {})
     });
   }
 

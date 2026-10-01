@@ -288,7 +288,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
                 </div>
                 <div className="due-info">
                   <b>{v.descricao}</b>
-                  <span>{v.tipo === "fatura" ? textoDaFatura(v) : "Conta fixa"}</span>
+                  <span>{v.tipo === "fatura" ? textoDaFatura(v) : v.status === "paga" ? "Conta fixa · paga" : "Conta fixa"}</span>
                 </div>
                 <strong>{money(v.valor)}</strong>
               </div>

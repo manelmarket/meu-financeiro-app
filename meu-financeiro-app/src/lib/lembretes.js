@@ -132,8 +132,8 @@ export function montarAgenda(dados, ajustes, agora = new Date()) {
   for (let i = 0; i < MESES_NA_AGENDA; i += 1) {
     for (const v of resumoDoMes(dados, somarMeses(mes, i), hoje).vencimentos) {
       if (v.tipo === "fatura" ? !a.faturas : !a.contas) continue;
-      // fatura: avisa o que falta pagar (fatura já paga pelo botão Pagar não avisa)
-      const valor = Number(v.tipo === "fatura" && v.aPagar !== undefined ? v.aPagar : v.valor);
+      // fatura: avisa o que falta pagar (fatura ou conta fixa já paga pelo botão Pagar não avisa)
+      const valor = Number(v.aPagar !== undefined ? v.aPagar : v.valor);
       if (!(valor > 0) || v.data < hoje) continue;
 
       let dias = a.dias;
@@ -169,7 +169,13 @@ function pagamentosNaAssinatura(cartao) {
   return lista.length ? [lista.map((p) => [p?.id, p?.fatura, p?.valor, p?.restante || ""])] : [];
 }
 
-// Muda quando mudam os cartões, os pagamentos das faturas, as contas fixas ou os ajustes
+// pagamentos de conta fixa também mudam o que o celular avisa (conta sem pagamento fica como antes)
+function pagamentosDaContaNaAssinatura(conta) {
+  const lista = Array.isArray(conta.pagamentos) ? conta.pagamentos : [];
+  return lista.length ? [lista.map((p) => [p?.id, p?.mes, p?.valor])] : [];
+}
+
+// Muda quando mudam os cartões, os pagamentos das faturas, as contas fixas (e os pagamentos delas) ou os ajustes
 // (não muda com o passar dos dias).
 // Serve para avisar que os lembretes do celular precisam ser atualizados quando o app não
 // consegue entregar a agenda sozinho.
@@ -177,7 +183,7 @@ export function assinaturaDasRegras(dados, ajustes) {
   const a = normalizar(ajustes);
   const texto = JSON.stringify([
     (dados.cartoes || []).map((c) => [c.id, c.nome, c.vencimento, c.fechamento, ...pagamentosNaAssinatura(c)]),
-    (dados.contasFixas || []).map((c) => [c.id, c.nome, c.dia, c.valor, c.ativa !== false, c.periodos || null]),
+    (dados.contasFixas || []).map((c) => [c.id, c.nome, c.dia, c.valor, c.ativa !== false, c.periodos || null, ...pagamentosDaContaNaAssinatura(c)]),
     a.dias,
     a.hora,
     a.faturas,
