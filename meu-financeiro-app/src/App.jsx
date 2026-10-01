@@ -51,7 +51,7 @@ import { apagarCupom, comprimirImagem, dataURLParaBlob, limparCupons, salvarCupo
 import { arredondar, hojeISO, mesDaData } from "./lib/formato";
 import { alternarConta } from "./lib/mes";
 import { comOrcamento } from "./lib/orcamento";
-import { excluirBanco, guardarPagamentosDaConta, guardarPagamentosDoCartao, resumoDosBancos, salvarBanco } from "./lib/saldos";
+import { excluirBanco, guardarPagamentosDaConta, guardarPagamentosDoCartao, guardarPagamentosDoEmprestimo, resumoDosBancos, salvarBanco } from "./lib/saldos";
 import { excluirCategoria, salvarCategoria } from "./lib/categorias";
 import { registrarTransferencia } from "./lib/transferencias";
 import { desfazerPagamento, excluirEmprestimo, registrarPagamento, salvarEmprestimo } from "./lib/emprestimos";
@@ -376,7 +376,8 @@ export default function App(){
 
   function apagarEmprestimo(id){
 
-    return mudarEmprestimos(d=>excluirEmprestimo(d, id));
+    // o que já entrou nos bancos (Recebi) continua no saldo deles (ver lib/saldos.js)
+    return mudarEmprestimos(d=>excluirEmprestimo(guardarPagamentosDoEmprestimo(d, id), id));
 
   }
 

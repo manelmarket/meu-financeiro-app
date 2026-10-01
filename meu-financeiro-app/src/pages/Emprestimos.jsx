@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
+import EscolherBanco, { bancoInicial, lembrarBanco } from "../components/EscolherBanco.jsx";
 import { arredondar, dataBR, money, parseValor } from "../lib/formato.js";
+import { acharBanco, resumoDosBancos } from "../lib/saldos.js";
 import {
   nomeDoEmprestimo,
   pagamentosDoEmprestimo,
@@ -10,7 +12,11 @@ import {
 
 // Tela "Empréstimos": o que a pessoa pegou emprestado (Peguei) e o que ela emprestou (Emprestei).
 // Cada empréstimo pode ser em parcelas (valores do contrato) ou sem parcelas (paga quando puder).
-// Nesta versão os empréstimos ficam só aqui: não entram no Meu mês, nos bancos nem no patrimônio.
+// No Recebi, o dinheiro pode entrar num banco (o saldo dele sobe) ou ser recebido em espécie.
+// Fora isso, os empréstimos ficam só aqui: não entram no Meu mês nem no patrimônio.
+
+// o banco do último recebimento fica guardado neste aparelho
+const CHAVE_BANCO = "meu_financeiro_banco_do_emprestimo";
 
 const TEXTO = {
   peguei: {
@@ -319,7 +325,7 @@ function EmprestimoForm({ inicial, tipoDaLista, hoje, onSalvar, onCancelar }) {
 }
 
 // Cartão de um empréstimo: quanto falta, parcelas, próximo vencimento, botões e histórico
-function CartaoDoEmprestimo({ item, historicoAberto, onHistorico, onPagar, onEditar, onExcluir, onDesfazer }) {
+function CartaoDoEmprestimo({ item, nomesDosBancos, historicoAberto, onHistorico, onPagar, onEditar, onExcluir, onDesfazer }) {
   const { emprestimo: e, resumo: r } = item;
   const t = TEXTO[e.tipo];
   const s = SITUACAO[r.situacao];
@@ -405,6 +411,11 @@ function CartaoDoEmprestimo({ item, historicoAberto, onHistorico, onPagar, onEdi
                 <small>
                   {p.parcela ? `Parcela ${p.parcela} · ` : ""}
                   {p.anterior ? (parcelado ? `venceu ${dataBR(p.data)} · antes do cadastro` : "antes do cadastro") : dataBR(p.data)}
+                  {p.bancoId != null && p.bancoId !== ""
+                    ? ` · ${nomesDosBancos.get(String(p.bancoId)) || "banco excluído"}`
+                    : p.especie
+                      ? " · em espécie"
+                      : ""}
                 </small>
               </span>
               <button className="chip-btn neutral" onClick={() => onDesfazer(p)}>
@@ -419,12 +430,15 @@ function CartaoDoEmprestimo({ item, historicoAberto, onHistorico, onPagar, onEdi
 }
 
 // Janela para pagar uma parcela (ou registrar um pagamento, sem parcelas)
-function JanelaDePagamento({ item, hoje, onConfirmar, onFechar }) {
+function JanelaDePagamento({ item, hoje, bancos = [], onConfirmar, onFechar }) {
   const { emprestimo: e, resumo: r } = item;
   const t = TEXTO[e.tipo];
   const parcelado = e.forma === "parcelado";
+  // Recebi (emprestei): escolhe o banco onde o dinheiro entrou ou "recebido em espécie"
+  const recebe = e.tipo === "emprestei";
   const [valor, setValor] = useState(() => textoDoValor(valorSugerido(e, hoje)));
   const [dataPag, setDataPag] = useState(hoje);
+  const [bancoId, setBancoId] = useState(() => (recebe ? bancoInicial(CHAVE_BANCO, bancos) : ""));
   const [erro, setErro] = useState("");
   const janela = useRef(null);
 
@@ -443,8 +457,14 @@ function JanelaDePagamento({ item, hoje, onConfirmar, onFechar }) {
   const v = parseValor(valor);
 
   function confirmar() {
-    const res = onConfirmar({ valor, data: dataPag });
-    if (res?.erro) setErro(res.erro);
+    const banco = recebe ? bancos.find((b) => String(b.banco.id) === bancoId) || null : null;
+    // "em espécie" só quando a pessoa escolheu essa opção (sem bancos cadastrados, fica só registrado)
+    const res = onConfirmar({ valor, data: dataPag, bancoId: banco ? banco.banco.id : "", especie: recebe && bancos.length > 0 && !banco });
+    if (res?.erro) {
+      setErro(res.erro);
+      return;
+    }
+    if (recebe && bancos.length) lembrarBanco(CHAVE_BANCO, banco ? banco.banco.id : "");
   }
 
   return (
@@ -511,6 +531,21 @@ function JanelaDePagamento({ item, hoje, onConfirmar, onFechar }) {
             </p>
           )
         )}
+        {recebe && (
+          <EscolherBanco
+            titulo="Em qual banco entrou o dinheiro?"
+            bancos={bancos}
+            bancoId={bancoId}
+            onEscolher={(id) => {
+              setBancoId(id);
+              setErro("");
+            }}
+            semBanco={{ titulo: "Recebido em espécie", detalhe: "Não entra em nenhum banco" }}
+            semBancos="Você ainda não tem bancos cadastrados (aba Bancos). O recebimento fica registrado sem entrar em nenhum banco."
+            valor={v}
+            sinal={1}
+          />
+        )}
         {erro && <p className="form-error">{erro}</p>}
 
         <div className="actions">
@@ -546,6 +581,8 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
   const abertos = daLista.itens.filter((i) => i.resumo.situacao !== "quitado");
   const quitados = daLista.itens.filter((i) => i.resumo.situacao === "quitado");
   const atrasados = [...r.peguei.atrasados, ...r.emprestei.atrasados];
+  const bancos = resumoDosBancos(data).bancos;
+  const nomesDosBancos = new Map(bancos.map((b) => [String(b.banco.id), b.banco.nome]));
 
   // a janela sempre usa os dados de agora: se o empréstimo foi excluído ou quitado (ex.: em outro aparelho), ela fecha
   const itemPagando = pagando != null ? todos.find((i) => String(i.emprestimo.id) === String(pagando)) || null : null;
@@ -554,8 +591,15 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
   }, [pagando, itemPagando]);
 
   function excluir({ emprestimo: e }) {
-    const n = pagamentosDoEmprestimo(e).length;
-    const pergunta = `Excluir o empréstimo "${nomeDoEmprestimo(e)}"${n ? ` e os ${n} pagamentos registrados nele` : ""}?`;
+    const pagamentos = pagamentosDoEmprestimo(e);
+    const n = pagamentos.length;
+    const comBanco = pagamentos.some((p) => p.bancoId != null && p.bancoId !== "");
+    const nosBancos = !comBanco
+      ? ""
+      : e.tipo === "emprestei"
+        ? " O que já entrou nos bancos continua lá."
+        : " O que já saiu dos bancos continua descontado.";
+    const pergunta = `Excluir o empréstimo "${nomeDoEmprestimo(e)}"${n ? ` e os ${n} pagamentos registrados nele` : ""}?${nosBancos}`;
     if (!window.confirm(pergunta)) return;
     const res = onExcluir(e.id);
     setAviso(res?.erro ? res.erro : `Empréstimo "${nomeDoEmprestimo(e)}" excluído.`);
@@ -563,7 +607,13 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
   }
 
   function desfazer({ emprestimo: e }, p) {
-    const pergunta = `Desfazer ${e.tipo === "peguei" ? "o pagamento" : "o recebimento"} de ${money(Number(p.valor))}${p.parcela ? ` (parcela ${p.parcela})` : ""}?`;
+    const banco = p.bancoId != null && p.bancoId !== "" ? acharBanco(data, p.bancoId) : null;
+    const noBanco = !banco
+      ? ""
+      : e.tipo === "emprestei"
+        ? ` O valor sai do banco (${banco.nome}).`
+        : ` O valor volta para o banco (${banco.nome}).`;
+    const pergunta = `Desfazer ${e.tipo === "peguei" ? "o pagamento" : "o recebimento"} de ${money(Number(p.valor))}${p.parcela ? ` (parcela ${p.parcela})` : ""}?${noBanco}`;
     if (!window.confirm(pergunta)) return;
     const res = onDesfazer(e.id, p.id);
     if (res?.erro) setAviso(res.erro);
@@ -577,7 +627,9 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
       e.forma === "parcelado"
         ? `parcela ${rr.proxima.numero} de ${rr.quantidade} de ${nomeDoEmprestimo(e)} (${money(parseValor(pagamento.valor))})`
         : `${money(parseValor(pagamento.valor))} de ${nomeDoEmprestimo(e)}`;
-    setAviso(`${TEXTO[e.tipo].registrado}: ${detalhe}.`);
+    const banco = pagamento.bancoId != null && pagamento.bancoId !== "" ? acharBanco(data, pagamento.bancoId) : null;
+    const onde = banco ? ` O valor entrou no banco ${banco.nome}.` : pagamento.especie ? " Recebido em espécie." : "";
+    setAviso(`${TEXTO[e.tipo].registrado}: ${detalhe}.${onde}`);
     setPagando(null);
     return { ok: true };
   }
@@ -607,6 +659,7 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
       <CartaoDoEmprestimo
         key={id}
         item={item}
+        nomesDosBancos={nomesDosBancos}
         historicoAberto={historico === id}
         onHistorico={() => setHistorico((h) => (h === id ? null : id))}
         onPagar={() => setPagando(id)}
@@ -713,6 +766,7 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
           key={pagando}
           item={itemPagando}
           hoje={hoje}
+          bancos={bancos}
           onConfirmar={(p) => confirmarPagamento(itemPagando, p)}
           onFechar={() => setPagando(null)}
         />

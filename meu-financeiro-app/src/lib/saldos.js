@@ -6,7 +6,8 @@
 // "saldo" é o valor que a pessoa informou e "ajustadoEm" o momento em que informou (milissegundos).
 //
 // Saldo de agora = saldo informado + o que foi lançado DEPOIS disso com esse banco:
-//   receitas (+), gastos (−), pagamentos de fatura de cartão (−) e de contas fixas (−).
+//   receitas (+), gastos (−), pagamentos de fatura de cartão (−) e de contas fixas (−)
+//   e o que foi recebido de empréstimos (+).
 // Como o saldo é calculado, ele fica igual em todos os aparelhos e, se um lançamento for excluído,
 // o valor volta para o banco sozinho.
 
@@ -28,6 +29,17 @@ export function acharBanco(dados, id) {
 
 function mesmoBanco(bancoId, id) {
   return bancoId != null && bancoId !== "" && String(bancoId) === id;
+}
+
+// Empréstimo na lista de movimentações: com quem e o que foi ("Empréstimo recebido · Ajuda no aluguel")
+function nomeNoEmprestimo(e) {
+  return String(e.pessoa || e.descricao || "Empréstimo");
+}
+
+function formaDoEmprestimo(e, p) {
+  const recebe = e.tipo === "emprestei";
+  const texto = p.parcela ? `Parcela ${p.parcela} ${recebe ? "recebida" : "paga"}` : recebe ? "Empréstimo recebido" : "Pagamento de empréstimo";
+  return e.descricao && e.pessoa ? `${texto} · ${e.descricao}` : texto;
 }
 
 // Movimentações que mexem no saldo do banco depois do último valor informado (mais nova primeiro)
@@ -132,7 +144,28 @@ export function movimentosDoBanco(dados, banco) {
     }
   }
 
-  // pagamentos de cartões e de contas fixas que já foram excluídos (continuam descontados do banco)
+  // empréstimos: o que foi recebido num banco (Recebi da aba Empréstimos, ver lib/emprestimos.js)
+  for (const e of Array.isArray(dados?.usuario?.emprestimos) ? dados.usuario.emprestimos : []) {
+    if (!e || typeof e !== "object") continue;
+    for (const p of Array.isArray(e.pagamentos) ? e.pagamentos : []) {
+      if (!p || !mesmoBanco(p.bancoId, id)) continue;
+      const quando = Number(p.criadoEm) || Number(p.id) || 0;
+      if (quando <= desde) continue;
+      const valor = arredondar(Number(p.valor) || 0);
+      if (!(valor > 0)) continue;
+      lista.push({
+        id: `e-${e.id}-${p.id}`,
+        tipo: e.tipo === "emprestei" ? "entrada" : "saida",
+        descricao: nomeNoEmprestimo(e),
+        forma: formaDoEmprestimo(e, p),
+        valor,
+        data: p.data,
+        quando
+      });
+    }
+  }
+
+  // pagamentos de cartões, contas fixas e empréstimos que já foram excluídos (continuam no saldo do banco)
   for (const x of Array.isArray(banco.pagamentosAvulsos) ? banco.pagamentosAvulsos : []) {
     const quando = Number(x?.quando) || 0;
     if (quando <= desde) continue;
@@ -140,7 +173,7 @@ export function movimentosDoBanco(dados, banco) {
     if (!(valor > 0)) continue;
     lista.push({
       id: `a-${x.id}`,
-      tipo: "saida",
+      tipo: x.tipo === "entrada" ? "entrada" : "saida",
       descricao: String(x.descricao || "Fatura"),
       forma: String(x.forma || "Pagamento de fatura"),
       valor,
@@ -252,27 +285,9 @@ export function guardarPagamentosDoCartao(dados, cartaoId) {
   return mudou ? comLista(dados, bancos) : dados;
 }
 
-// Antes de excluir uma conta fixa: os pagamentos feitos com dinheiro dos bancos continuam descontados
-// (como nos cartões, ficam guardados no banco como "pagamentos avulsos").
-export function guardarPagamentosDaConta(dados, contaId) {
-  const conta = (Array.isArray(dados?.contasFixas) ? dados.contasFixas : []).find((c) => String(c?.id) === String(contaId));
-  if (!conta) return dados;
-  const porBanco = new Map();
-  for (const p of Array.isArray(conta.pagamentos) ? conta.pagamentos : []) {
-    if (!p || p.bancoId == null || p.bancoId === "") continue;
-    const valor = arredondar(Number(p.valor) || 0);
-    if (!(valor > 0)) continue;
-    const chave = String(p.bancoId);
-    if (!porBanco.has(chave)) porBanco.set(chave, []);
-    porBanco.get(chave).push({
-      id: `f${conta.id}-${p.id}`,
-      descricao: String(conta.nome || "Conta fixa"),
-      forma: nomeMes(p.mes) ? `Conta fixa de ${nomeMes(p.mes)}` : "Conta fixa",
-      valor,
-      data: p.data,
-      quando: Number(p.criadoEm) || Number(p.id) || 0
-    });
-  }
+// Guarda nos bancos, como "pagamentos avulsos", o que já tinha passado por eles
+// (porBanco: Map bancoId -> [{ id, tipo?, descricao, forma, valor, data, quando }])
+function guardarComoAvulsos(dados, porBanco) {
   if (!porBanco.size) return dados;
   let mudou = false;
   const bancos = lerBancos(dados).map((b) => {
@@ -286,4 +301,55 @@ export function guardarPagamentosDaConta(dados, contaId) {
     return { ...b, pagamentosAvulsos: [...ja, ...novos.filter((x) => !ids.has(x.id))] };
   });
   return mudou ? comLista(dados, bancos) : dados;
+}
+
+function comBanco(porBanco, bancoId, item) {
+  const chave = String(bancoId);
+  if (!porBanco.has(chave)) porBanco.set(chave, []);
+  porBanco.get(chave).push(item);
+}
+
+// Antes de excluir uma conta fixa: os pagamentos feitos com dinheiro dos bancos continuam descontados
+// (como nos cartões, ficam guardados no banco como "pagamentos avulsos").
+export function guardarPagamentosDaConta(dados, contaId) {
+  const conta = (Array.isArray(dados?.contasFixas) ? dados.contasFixas : []).find((c) => String(c?.id) === String(contaId));
+  if (!conta) return dados;
+  const porBanco = new Map();
+  for (const p of Array.isArray(conta.pagamentos) ? conta.pagamentos : []) {
+    if (!p || p.bancoId == null || p.bancoId === "") continue;
+    const valor = arredondar(Number(p.valor) || 0);
+    if (!(valor > 0)) continue;
+    comBanco(porBanco, p.bancoId, {
+      id: `f${conta.id}-${p.id}`,
+      descricao: String(conta.nome || "Conta fixa"),
+      forma: nomeMes(p.mes) ? `Conta fixa de ${nomeMes(p.mes)}` : "Conta fixa",
+      valor,
+      data: p.data,
+      quando: Number(p.criadoEm) || Number(p.id) || 0
+    });
+  }
+  return guardarComoAvulsos(dados, porBanco);
+}
+
+// Antes de excluir um empréstimo: o que já entrou (ou saiu) dos bancos continua no saldo deles
+export function guardarPagamentosDoEmprestimo(dados, emprestimoId) {
+  const lista = Array.isArray(dados?.usuario?.emprestimos) ? dados.usuario.emprestimos : [];
+  const e = lista.find((x) => x && typeof x === "object" && String(x.id) === String(emprestimoId));
+  if (!e) return dados;
+  const porBanco = new Map();
+  for (const p of Array.isArray(e.pagamentos) ? e.pagamentos : []) {
+    if (!p || p.bancoId == null || p.bancoId === "") continue;
+    const valor = arredondar(Number(p.valor) || 0);
+    if (!(valor > 0)) continue;
+    comBanco(porBanco, p.bancoId, {
+      id: `e${e.id}-${p.id}`,
+      tipo: e.tipo === "emprestei" ? "entrada" : "saida",
+      descricao: nomeNoEmprestimo(e),
+      forma: formaDoEmprestimo(e, p),
+      valor,
+      data: p.data,
+      quando: Number(p.criadoEm) || Number(p.id) || 0
+    });
+  }
+  return guardarComoAvulsos(dados, porBanco);
 }

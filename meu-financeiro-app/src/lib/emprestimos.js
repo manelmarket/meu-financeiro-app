@@ -6,10 +6,12 @@
 //   { id, tipo: "peguei" | "emprestei", descricao, pessoa, valor, data, forma: "parcelado" | "livre",
 //     parcelas, valorParcela, primeiroVencimento,   -> em parcelas (os valores do contrato)
 //     total, prazo,                                 -> sem parcelas: quanto volta e até quando (opcional)
-//     observacao, pagamentos: [{ id, data, valor, parcela?, anterior? }], criadoEm }
+//     observacao, pagamentos: [{ id, data, valor, parcela?, anterior?, bancoId?, criadoEm?, especie? }], criadoEm }
 // "valor" é quanto a pessoa recebeu (peguei) ou entregou (emprestei); os juros são a diferença entre
 // o total que volta e esse valor. "anterior" marca o que já tinha sido pago antes do cadastro.
-// Nesta versão os empréstimos ficam só nesta tela: não entram no Meu mês, nos bancos nem no patrimônio.
+// No Recebi (emprestei), o dinheiro pode entrar num banco ("bancoId": o saldo dele sobe, ver
+// lib/saldos.js) ou ser recebido em espécie ("especie": true). Fora isso, os empréstimos ficam só
+// nesta tela: não entram no Meu mês nem no patrimônio.
 
 import {
   arredondar,
@@ -24,6 +26,7 @@ import {
   parseValor,
   somarMeses
 } from "./formato.js";
+import { acharBanco } from "./saldos.js";
 
 export const TIPOS_DE_EMPRESTIMO = ["peguei", "emprestei"];
 export const FORMAS_DE_PAGAR = ["parcelado", "livre"];
@@ -301,8 +304,9 @@ export function valorSugerido(emp, hoje = hojeISO()) {
 }
 
 // Pagamento novo. Em parcelas: paga a parcela em aberto mais antiga. Sem parcelas: abate do que falta.
+// bancoId: o banco onde o dinheiro entrou (Recebi); especie: true quando foi recebido em espécie.
 // Devolve { erro } ou { dados, pagamento }.
-export function registrarPagamento(dados, id, { valor, data }, agora = Date.now()) {
+export function registrarPagamento(dados, id, { valor, data, bancoId, especie } = {}, agora = Date.now()) {
   const emp = acharEmprestimo(dados, id);
   if (!emp) return { erro: "Este empréstimo não existe mais." };
   const v = parseValor(valor);
@@ -311,8 +315,17 @@ export function registrarPagamento(dados, id, { valor, data }, agora = Date.now(
   const r = resumoDoEmprestimo(emp, data);
   if (r.situacao === "quitado") return { erro: "Este empréstimo já está quitado." };
   if (emp.forma !== "parcelado" && v > r.falta + 0.004) return { erro: `Falta só ${money(r.falta)}.` };
+  const temBanco = bancoId != null && bancoId !== "";
+  const banco = temBanco ? acharBanco(dados, bancoId) : null;
+  if (temBanco && !banco) return { erro: "Esse banco não existe mais. Escolha outro." };
 
-  const pagamento = { id: agora, data, valor: v, ...(emp.forma === "parcelado" ? { parcela: r.proxima.numero } : {}) };
+  const pagamento = {
+    id: agora,
+    data,
+    valor: v,
+    ...(emp.forma === "parcelado" ? { parcela: r.proxima.numero } : {}),
+    ...(banco ? { bancoId: banco.id, criadoEm: agora } : especie ? { especie: true } : {})
+  };
   return {
     dados: comLista(
       dados,
