@@ -6,11 +6,11 @@
 // "saldo" é o valor que a pessoa informou e "ajustadoEm" o momento em que informou (milissegundos).
 //
 // Saldo de agora = saldo informado + o que foi lançado DEPOIS disso com esse banco:
-//   receitas (+), gastos (−) e pagamentos de fatura de cartão (−).
+//   receitas (+), gastos (−), pagamentos de fatura de cartão (−) e de contas fixas (−).
 // Como o saldo é calculado, ele fica igual em todos os aparelhos e, se um lançamento for excluído,
 // o valor volta para o banco sozinho.
 
-import { arredondar } from "./formato.js";
+import { arredondar, nomeMes } from "./formato.js";
 
 // Transferência entre bancos, saque e depósito (ver lib/transferencias.js): mexem no saldo,
 // mas não são gasto nem receita.
@@ -112,7 +112,27 @@ export function movimentosDoBanco(dados, banco) {
     }
   }
 
-  // pagamentos de fatura de cartões que já foram excluídos (continuam descontados do banco)
+  // pagamentos de contas fixas (botão Pagar da aba Contas fixas, ver lib/contasFixas.js)
+  for (const c of Array.isArray(dados?.contasFixas) ? dados.contasFixas : []) {
+    for (const p of Array.isArray(c?.pagamentos) ? c.pagamentos : []) {
+      if (!p || !mesmoBanco(p.bancoId, id)) continue;
+      const quando = Number(p.criadoEm) || Number(p.id) || 0;
+      if (quando <= desde) continue;
+      const valor = arredondar(Number(p.valor) || 0);
+      if (!(valor > 0)) continue;
+      lista.push({
+        id: `cf-${c.id}-${p.id}`,
+        tipo: "saida",
+        descricao: String(c.nome || "Conta fixa"),
+        forma: nomeMes(p.mes) ? `Conta fixa de ${nomeMes(p.mes)}` : "Conta fixa",
+        valor,
+        data: p.data,
+        quando
+      });
+    }
+  }
+
+  // pagamentos de cartões e de contas fixas que já foram excluídos (continuam descontados do banco)
   for (const x of Array.isArray(banco.pagamentosAvulsos) ? banco.pagamentosAvulsos : []) {
     const quando = Number(x?.quando) || 0;
     if (quando <= desde) continue;
@@ -122,7 +142,7 @@ export function movimentosDoBanco(dados, banco) {
       id: `a-${x.id}`,
       tipo: "saida",
       descricao: String(x.descricao || "Fatura"),
-      forma: "Pagamento de fatura",
+      forma: String(x.forma || "Pagamento de fatura"),
       valor,
       data: x.data,
       quando
@@ -212,6 +232,42 @@ export function guardarPagamentosDoCartao(dados, cartaoId) {
     porBanco.get(chave).push({
       id: `c${cartao.id}-${p.id}`,
       descricao: `Fatura ${cartao.nome}`,
+      valor,
+      data: p.data,
+      quando: Number(p.criadoEm) || Number(p.id) || 0
+    });
+  }
+  if (!porBanco.size) return dados;
+  let mudou = false;
+  const bancos = lerBancos(dados).map((b) => {
+    const desde = Number(b.ajustadoEm) || 0;
+    // os pagamentos de antes do valor informado já estão dentro dele
+    const novos = (porBanco.get(String(b.id)) || []).filter((x) => x.quando > desde);
+    if (!novos.length) return b;
+    const ja = Array.isArray(b.pagamentosAvulsos) ? b.pagamentosAvulsos : [];
+    const ids = new Set(ja.map((x) => x?.id));
+    mudou = true;
+    return { ...b, pagamentosAvulsos: [...ja, ...novos.filter((x) => !ids.has(x.id))] };
+  });
+  return mudou ? comLista(dados, bancos) : dados;
+}
+
+// Antes de excluir uma conta fixa: os pagamentos feitos com dinheiro dos bancos continuam descontados
+// (como nos cartões, ficam guardados no banco como "pagamentos avulsos").
+export function guardarPagamentosDaConta(dados, contaId) {
+  const conta = (Array.isArray(dados?.contasFixas) ? dados.contasFixas : []).find((c) => String(c?.id) === String(contaId));
+  if (!conta) return dados;
+  const porBanco = new Map();
+  for (const p of Array.isArray(conta.pagamentos) ? conta.pagamentos : []) {
+    if (!p || p.bancoId == null || p.bancoId === "") continue;
+    const valor = arredondar(Number(p.valor) || 0);
+    if (!(valor > 0)) continue;
+    const chave = String(p.bancoId);
+    if (!porBanco.has(chave)) porBanco.set(chave, []);
+    porBanco.get(chave).push({
+      id: `f${conta.id}-${p.id}`,
+      descricao: String(conta.nome || "Conta fixa"),
+      forma: nomeMes(p.mes) ? `Conta fixa de ${nomeMes(p.mes)}` : "Conta fixa",
       valor,
       data: p.data,
       quando: Number(p.criadoEm) || Number(p.id) || 0

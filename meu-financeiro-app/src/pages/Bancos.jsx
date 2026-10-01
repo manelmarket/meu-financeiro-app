@@ -188,7 +188,7 @@ export default function Bancos({ data, hoje, onSalvar, onExcluir, onTransferir }
       </section>
 
       <p className="muted small banco-dica">
-        Ao lançar um gasto ou receita no Novo e escolher o banco, o saldo muda sozinho. Pagamentos de fatura também.
+        Ao lançar um gasto ou receita no Novo e escolher o banco, o saldo muda sozinho. Pagamentos de fatura e de contas fixas também.
         Transferir, sacar e depositar só mudam o saldo (não contam como gasto nem receita).
       </p>
 

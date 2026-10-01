@@ -51,10 +51,11 @@ import { apagarCupom, comprimirImagem, dataURLParaBlob, limparCupons, salvarCupo
 import { arredondar, hojeISO, mesDaData } from "./lib/formato";
 import { alternarConta } from "./lib/mes";
 import { comOrcamento } from "./lib/orcamento";
-import { excluirBanco, guardarPagamentosDoCartao, resumoDosBancos, salvarBanco } from "./lib/saldos";
+import { excluirBanco, guardarPagamentosDaConta, guardarPagamentosDoCartao, resumoDosBancos, salvarBanco } from "./lib/saldos";
 import { excluirCategoria, salvarCategoria } from "./lib/categorias";
 import { registrarTransferencia } from "./lib/transferencias";
 import { desfazerPagamento, excluirEmprestimo, registrarPagamento, salvarEmprestimo } from "./lib/emprestimos";
+import { desfazerPagamentoDaConta, pagarConta } from "./lib/contasFixas";
 import { comPerfilDaPessoa, perfilDaPessoa } from "./lib/familia";
 import { lerConvitePendente } from "./lib/convite";
 
@@ -554,7 +555,8 @@ export default function App(){
 
   function deleteBill(id){
 
-    setData(d=>({ ...d, contasFixas: (d.contasFixas || []).filter(c=>c.id!==id) }));
+    // os pagamentos feitos com dinheiro dos bancos continuam descontados (ver lib/saldos.js)
+    setData(d=>{ const g = guardarPagamentosDaConta(d, id); return { ...g, contasFixas: (g.contasFixas || []).filter(c=>c.id!==id) }; });
 
   }
 
@@ -568,6 +570,36 @@ export default function App(){
       contasFixas: (d.contasFixas || []).map(c=> c.id===id ? alternarConta(c, hojeISO()) : c)
 
     }));
+
+  }
+
+
+  // Pagar conta fixa (ver lib/contasFixas.js): form = { mes, valor, data, bancoId }.
+  // Confere com os dados de agora; se der erro devolve { erro }, senão grava e volta { ok: true }.
+  function pagarContaFixa(id, form){
+
+    const agora = Date.now();
+
+    const previa = pagarConta(data, id, form, agora);
+
+    if(previa.erro) return previa;
+
+    setData(d=>{ const r = pagarConta(d, id, form, agora); return r.erro ? d : r.dados; });
+
+    return { ok:true };
+
+  }
+
+
+  function desfazerPagamentoDeConta(id, pagamentoId){
+
+    const previa = desfazerPagamentoDaConta(data, id, pagamentoId);
+
+    if(previa.erro) return previa;
+
+    setData(d=>{ const r = desfazerPagamentoDaConta(d, id, pagamentoId); return r.erro ? d : r.dados; });
+
+    return { ok:true };
 
   }
 
@@ -873,10 +905,13 @@ export default function App(){
       content =
       <Bills
         data={data}
+        hoje={hoje}
         onBack={()=>ir("home")}
         onSave={saveBill}
         onDelete={deleteBill}
         onToggle={toggleBill}
+        onPagar={pagarContaFixa}
+        onDesfazerPagamento={desfazerPagamentoDeConta}
         onCriarCategoria={salvarDadosDaCategoria}
       />;
       break;

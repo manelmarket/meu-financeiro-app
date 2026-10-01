@@ -751,6 +751,37 @@ button:disabled{opacity:.6;cursor:default}
 /* campo de data com a mesma altura dos outros campos (o do navegador sai 2px mais alto) */
 .emp-form input[type="date"]{padding-top:12px;padding-bottom:12px}
 
+/* ---------- Contas fixas: botão Pagar (pages/Bills.jsx e components/PagarConta.jsx) ---------- */
+.contas-mes{margin-top:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,.14);display:flex;flex-direction:column;gap:8px}
+.contas-mes-valores{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.contas-mes-valores div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.contas-mes-valores span{font-size:12.5px}
+.contas-mes-valores b{font-size:18px;white-space:nowrap}
+.balance-card .bar.contas-bar{background:rgba(255,255,255,.16)}
+.balance-card .bar.contas-bar i{background:#34d399}
+.conta-aviso{margin:14px 0 0}
+.conta-situacao{display:block;margin-top:5px;font-size:12.5px;font-weight:700;line-height:1.4}
+.conta-situacao.ok{color:var(--ok-forte)}
+.conta-situacao.atraso{color:var(--erro-forte)}
+.conta-situacao.aviso{color:var(--aviso-texto)}
+.conta-situacao.neutra{color:var(--texto-3)}
+.conta-historico{margin-top:10px;border-top:1px solid var(--borda-2)}
+.conta-pag{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--borda-2)}
+.conta-pag:last-child{border-bottom:0;padding-bottom:0}
+.conta-pag span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.conta-pag small{font-size:12px;color:var(--apagado)}
+.conta-pag .chip-btn{flex-shrink:0}
+/* janela Pagar: lista dos bancos (nome e saldo na mesma linha) */
+.conta-bancos{display:flex;flex-direction:column;gap:8px}
+.conta-banco{display:flex;align-items:center;gap:10px;text-align:left;border:2px solid var(--borda);background:var(--superficie);color:var(--texto);border-radius:14px;padding:11px 13px;font-size:14px}
+.conta-banco::before{content:"";width:14px;height:14px;border-radius:50%;border:2px solid var(--borda-campo);flex-shrink:0;box-sizing:border-box}
+.conta-banco b{flex:1;min-width:0;overflow-wrap:anywhere}
+.conta-banco small{font-size:13px;font-weight:700;color:var(--texto-3);white-space:nowrap}
+.conta-banco small.neg{color:var(--erro)}
+.conta-banco.ativo{border-color:var(--primaria-texto);background:var(--primaria-suave)}
+.conta-banco.ativo::before{border:4px solid var(--primaria-texto)}
+.conta-modal .pag-fatura.atrasada small{color:var(--erro-forte)}
+
 /* ---------- tablet e computador: a coluna do app fica mais larga ----------
    Mesmo visual do celular, só que mais largo; a barra de baixo e o menu ⋮ acompanham a largura da coluna.
    A tela de entrada (login) continua ocupando a tela toda, como antes.
