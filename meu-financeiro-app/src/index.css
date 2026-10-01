@@ -771,15 +771,17 @@ button:disabled{opacity:.6;cursor:default}
 .conta-pag span{display:flex;flex-direction:column;gap:2px;min-width:0}
 .conta-pag small{font-size:12px;color:var(--apagado)}
 .conta-pag .chip-btn{flex-shrink:0}
-/* janela Pagar: lista dos bancos (nome e saldo na mesma linha) */
-.conta-bancos{display:flex;flex-direction:column;gap:8px}
-.conta-banco{display:flex;align-items:center;gap:10px;text-align:left;border:2px solid var(--borda);background:var(--superficie);color:var(--texto);border-radius:14px;padding:11px 13px;font-size:14px}
-.conta-banco::before{content:"";width:14px;height:14px;border-radius:50%;border:2px solid var(--borda-campo);flex-shrink:0;box-sizing:border-box}
-.conta-banco b{flex:1;min-width:0;overflow-wrap:anywhere}
-.conta-banco small{font-size:13px;font-weight:700;color:var(--texto-3);white-space:nowrap}
-.conta-banco small.neg{color:var(--erro)}
-.conta-banco.ativo{border-color:var(--primaria-texto);background:var(--primaria-suave)}
-.conta-banco.ativo::before{border:4px solid var(--primaria-texto)}
+/* escolher o banco (components/EscolherBanco.jsx): nome e saldo na mesma linha */
+.banco-opcoes{display:flex;flex-direction:column;gap:8px}
+.banco-opcao{display:flex;align-items:center;gap:10px;text-align:left;border:2px solid var(--borda);background:var(--superficie);color:var(--texto);border-radius:14px;padding:11px 13px;font-size:14px}
+.banco-opcao::before{content:"";width:14px;height:14px;border-radius:50%;border:2px solid var(--borda-campo);flex-shrink:0;box-sizing:border-box}
+.banco-opcao>b{flex:1;min-width:0;overflow-wrap:anywhere}
+.banco-opcao>small{font-size:13px;font-weight:700;color:var(--texto-3);white-space:nowrap}
+.banco-opcao>small.neg{color:var(--erro)}
+.banco-opcao-texto{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.banco-opcao-texto small{font-size:12.5px;font-weight:600;color:var(--apagado)}
+.banco-opcao.ativo{border-color:var(--primaria-texto);background:var(--primaria-suave)}
+.banco-opcao.ativo::before{border:4px solid var(--primaria-texto)}
 .conta-modal .pag-fatura.atrasada small{color:var(--erro-forte)}
 
 /* ---------- tablet e computador: a coluna do app fica mais larga ----------

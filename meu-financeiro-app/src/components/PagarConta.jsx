@@ -1,29 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
-import { arredondar, diaMesBR, money, nomeMes, parseValor } from "../lib/formato.js";
+import EscolherBanco, { bancoInicial, lembrarBanco } from "./EscolherBanco.jsx";
+import { diaMesBR, money, nomeMes, parseValor } from "../lib/formato.js";
 
 // Janela "Pagar conta fixa": o mês, o valor, a data e de qual banco sai o dinheiro.
 // meses: os meses que dá para pagar (ver mesesParaPagar em lib/contasFixas.js), o primeiro já vem escolhido;
 // bancos: [{ banco, atual }] (ver resumoDosBancos em lib/saldos.js).
 // onConfirmar({ mes, valor, data, bancoId }) devolve { erro } ou { ok }.
 
+// o banco da última conta paga fica guardado neste aparelho
 const CHAVE_BANCO = "meu_financeiro_banco_da_conta";
-
-function bancoGuardado() {
-  try {
-    return localStorage.getItem(CHAVE_BANCO) || "";
-  } catch {
-    return "";
-  }
-}
-
-function guardarBanco(id) {
-  try {
-    localStorage.setItem(CHAVE_BANCO, String(id ?? ""));
-  } catch {
-    // sem espaço: só não lembra da próxima vez
-  }
-}
 
 // 1200 -> "1.200,00"
 function textoDoValor(v) {
@@ -48,12 +34,7 @@ export default function PagarConta({ conta, meses, bancos = [], hoje, onConfirma
   const [mes, setMes] = useState(() => meses[0]?.mes);
   const [valor, setValor] = useState(() => textoDoValor(Number(conta.valor) || 0));
   const [dataPag, setDataPag] = useState(hoje);
-  const [bancoId, setBancoId] = useState(() => {
-    const guardado = bancoGuardado();
-    if (guardado === "nenhum") return "";
-    const existe = bancos.find((b) => String(b.banco.id) === guardado);
-    return existe ? String(existe.banco.id) : bancos[0] ? String(bancos[0].banco.id) : "";
-  });
+  const [bancoId, setBancoId] = useState(() => bancoInicial(CHAVE_BANCO, bancos));
   const [erro, setErro] = useState("");
   const janela = useRef(null);
 
@@ -90,7 +71,7 @@ export default function PagarConta({ conta, meses, bancos = [], hoje, onConfirma
       setErro(r.erro);
       return;
     }
-    if (bancos.length) guardarBanco(banco ? banco.banco.id : "nenhum");
+    if (bancos.length) lembrarBanco(CHAVE_BANCO, banco ? banco.banco.id : "");
   }
 
   return (
@@ -168,57 +149,19 @@ export default function PagarConta({ conta, meses, bancos = [], hoje, onConfirma
           </label>
         </div>
 
-        {bancos.length > 0 ? (
-          <div className="pag-campo" role="radiogroup" aria-label="De qual banco sai o dinheiro">
-            <span>De qual banco sai o dinheiro?</span>
-            <div className="conta-bancos">
-              {bancos.map((b) => {
-                const ativo = String(b.banco.id) === bancoId;
-                return (
-                  <button
-                    type="button"
-                    key={b.banco.id}
-                    role="radio"
-                    aria-checked={ativo}
-                    className={`conta-banco${ativo ? " ativo" : ""}`}
-                    onClick={() => {
-                      setBancoId(String(b.banco.id));
-                      setErro("");
-                    }}
-                  >
-                    <b>{b.banco.nome}</b>
-                    <small className={b.atual < 0 ? "neg" : ""}>{money(b.atual)}</small>
-                  </button>
-                );
-              })}
-              <button
-                type="button"
-                role="radio"
-                aria-checked={bancoId === ""}
-                className={`conta-banco${bancoId === "" ? " ativo" : ""}`}
-                onClick={() => {
-                  setBancoId("");
-                  setErro("");
-                }}
-              >
-                <b>Não descontar de nenhum banco</b>
-              </button>
-            </div>
-          </div>
-        ) : (
-          <p className="hint">
-            Você ainda não tem bancos cadastrados (aba Bancos). A conta fica marcada como paga, sem descontar de nenhum banco.
-          </p>
-        )}
-
-        {v > 0 && banco && (
-          <p className="pag-libera">
-            {banco.banco.nome}: {money(banco.atual)} → {money(arredondar(banco.atual - v))}
-          </p>
-        )}
-        {v > 0 && !banco && bancos.length > 0 && (
-          <p className="muted small no-margin">A conta fica marcada como paga, sem mexer no saldo dos bancos.</p>
-        )}
+        <EscolherBanco
+          titulo="De qual banco sai o dinheiro?"
+          bancos={bancos}
+          bancoId={bancoId}
+          onEscolher={(id) => {
+            setBancoId(id);
+            setErro("");
+          }}
+          semBanco={{ titulo: "Não descontar de nenhum banco", detalhe: "Pago em espécie" }}
+          semBancos="Você ainda não tem bancos cadastrados (aba Bancos). A conta fica marcada como paga, sem descontar de nenhum banco."
+          valor={v}
+          sinal={-1}
+        />
         {erro && <p className="form-error">{erro}</p>}
 
         <div className="actions">
