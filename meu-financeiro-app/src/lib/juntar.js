@@ -6,7 +6,7 @@
 // - mesmo id dos dois lados e igual: fica um;
 // - dado de demonstração que um lado não mexeu: fica a versão do lado que mexeu;
 // - mesmo cartão/meta/conta/investimento/bem (mesmo nome): vira um só (compras, pagamentos
-//   das faturas e movimentações das metas são somados);
+//   das faturas e das contas fixas e movimentações das metas são somados);
 // - coisas diferentes que por acaso têm o mesmo id: ficam as duas (uma ganha id novo).
 
 import { iguais } from "./mesclar.js";
@@ -96,6 +96,9 @@ function juntarLista(chave, L, R, S, usados) {
           junto.pagamentos = juntarLista("pagamentos", lista(l.pagamentos), lista(r.pagamentos), [], usados);
         }
         resultado[i] = junto;
+      } else if (chave === "contasFixas" && (Array.isArray(l.pagamentos) || Array.isArray(r.pagamentos))) {
+        // pagamentos da conta fixa (botão Pagar): ficam os dos dois aparelhos
+        resultado[i] = { ...l, pagamentos: juntarLista("pagamentos", lista(l.pagamentos), lista(r.pagamentos), [], usados) };
       }
       // outros (mesmo nome): fica a versão deste aparelho
       continue;
