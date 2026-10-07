@@ -17,6 +17,7 @@ import CardDetails from "./pages/CardDetails";
 import FutureEntries from "./pages/FutureEntries";
 import InvoiceCalendar from "./pages/InvoiceCalendar";
 import Bills from "./pages/Bills";
+import Vencimentos from "./pages/Vencimentos";
 import Investments from "./pages/Investments";
 import Patrimony from "./pages/Patrimony";
 import Assistant from "./pages/Assistant";
@@ -68,6 +69,7 @@ const ABA_DA_TELA = {
   conquistas: "home",
   familia: "home",
   bills: "home",
+  vencimentos: "home",
   emprestimos: "home",
   orcamentos: "home",
   categorias: "home",
@@ -83,6 +85,7 @@ const ITEM_DO_MENU = {
   "card-details": "cards",
   future: "cards",
   calendar: "cards",
+  vencimentos: "home",
   profile: "settings"
 };
 
@@ -899,6 +902,17 @@ export default function App(){
         hoje={hoje}
         onBack={()=> cartaoAtual ? ir("card-details", { cardId:cartaoAtual.id }) : ir("cards")}
         onOpenCard={(id)=>ir("card-details", { cardId:id })}
+      />;
+      break;
+
+    case "vencimentos":
+      content =
+      <Vencimentos
+        data={data}
+        hoje={hoje}
+        onBack={()=>ir("home")}
+        onOpenCard={(id)=>ir("card-details", { cardId:id })}
+        onOpenBills={()=>ir("bills")}
       />;
       break;
 

@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
+import { Bell } from "lucide-react";
 import MonthPicker from "../components/MonthPicker.jsx";
+import Notificacoes from "../components/Notificacoes.jsx";
 import { ICONE_FRASE } from "./Assistant.jsx";
 import { lerData, mesDaData, money, nomeMes, MESES } from "../lib/formato.js";
 import { resumoDoMes } from "../lib/mes.js";
@@ -12,8 +14,6 @@ import { agendaDesatualizada, usarAjustes } from "../lib/lembretes.js";
 import { textoDoPagamento } from "../lib/cartao.js";
 import { conquistas, conquistasNovas } from "../lib/conquistas.js";
 import { infoDaCategoria, mapaDeCategorias } from "../lib/categorias.js";
-
-const ICONE_ALERTA = { aviso: "⚠️", ok: "✅", info: "📅" };
 
 // "Fatura do cartão", "Fatura do cartão · paga", "Fatura do cartão · falta R$ 200,00"
 function textoDaFatura(v) {
@@ -79,6 +79,7 @@ function situacaoDosDados(nuvem, ultimoBackup, hoje, demonstracao) {
 export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, onOpenCard, onOpenPage }) {
   const mesHoje = mesDaData(hoje);
   const [mes, setMes] = useState(mesHoje);
+  const [notifAberto, setNotifAberto] = useState(false);
   const r = useMemo(() => resumoDoMes(data, mes, hoje), [data, mes, hoje]);
   const demonstracao = useMemo(() => ehSoDemonstracao(data), [data]);
   const situacao = situacaoDosDados(nuvem, lerUltimoBackup(), hoje, demonstracao);
@@ -98,6 +99,8 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
     () => (dadosProntos ? conquistasNovas(conquistas(data, hoje, { familia: Boolean(nuvem?.familia) })) : []),
     [data, hoje, nuvem?.familia?.id, dadosProntos]
   );
+  // os "vence hoje/amanhã/em tal dia" viram o botão Vencimentos; o resto vai para o sino de notificações
+  const vencendo = alertasDoMes.filter((a) => a.id.startsWith("vence-")).length;
   const avisos = [
     ...(nuvem?.aviso ? [{ id: "aviso-nuvem", tipo: "info", pagina: "familia", texto: nuvem.aviso }] : []),
     ...(novasConquistas.length
@@ -113,7 +116,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
           }
         ]
       : []),
-    ...alertasDoMes,
+    ...alertasDoMes.filter((a) => !a.id.startsWith("vence-")),
     ...(lembretesVelhos
       ? [
           {
@@ -138,29 +141,46 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
 
   return (
     <div className="page">
-      <header className="topbar">
+      <header className="topbar com-sino">
         <div>
           <div className="eyebrow">Meu mês</div>
           <h1>Olá, {nomeParaMostrar(perfil || data.usuario, nuvem?.usuario) || "você"} 👋</h1>
         </div>
+        <button
+          type="button"
+          className="notif-btn"
+          title="Notificações"
+          aria-label={avisos.length > 0 ? `Notificações (${avisos.length})` : "Notificações"}
+          onClick={() => setNotifAberto(true)}
+        >
+          <Bell size={20} strokeWidth={2.4} />
+          {avisos.length > 0 && (
+            <span className="notif-badge" aria-hidden="true">
+              {avisos.length > 9 ? "9+" : avisos.length}
+            </span>
+          )}
+        </button>
       </header>
 
-      {avisos.length > 0 && (
-        <section className="alerts" aria-label="Alertas">
-          {avisos.map((a) => (
-            <button
-              type="button"
-              key={a.id}
-              className={`alert ${a.tipo}`}
-              onClick={() => abrirAlerta(a)}
-              disabled={a.cartaoId == null && !a.pagina}
-            >
-              <span aria-hidden="true">{ICONE_ALERTA[a.tipo]}</span>
-              <p>{a.texto}</p>
-            </button>
-          ))}
-        </section>
-      )}
+      <button type="button" className="cloud-row due-btn" onClick={() => onOpenPage("vencimentos")}>
+        <span className="cloud-icon com-badge" aria-hidden="true">
+          🗓️
+          {vencendo > 0 && <i className="notif-badge">{vencendo > 9 ? "9+" : vencendo}</i>}
+        </span>
+        <span className="cloud-text">
+          <b>Vencimentos</b>
+          <small>
+            {vencendo === 0
+              ? "Nada vencendo nos próximos dias"
+              : vencendo === 1
+                ? "1 conta ou fatura vence nos próximos dias"
+                : `${vencendo} contas e faturas vencem nos próximos dias`}
+          </small>
+        </span>
+        <span className="chevron" aria-hidden="true">
+          ›
+        </span>
+      </button>
 
       <MonthPicker mes={mes} mesHoje={mesHoje} onChange={setMes} />
 
@@ -327,6 +347,17 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
       <button className="primary wide" onClick={onNew}>
         + Adicionar lançamento
       </button>
+
+      {notifAberto && (
+        <Notificacoes
+          avisos={avisos}
+          onAbrir={(a) => {
+            setNotifAberto(false);
+            abrirAlerta(a);
+          }}
+          onFechar={() => setNotifAberto(false)}
+        />
+      )}
     </div>
   );
 }

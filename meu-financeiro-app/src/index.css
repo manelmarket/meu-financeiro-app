@@ -314,6 +314,14 @@ button:disabled{opacity:.6;cursor:default}
 .conteudo{position:relative}
 .menu-btn{position:absolute;left:12px;top:31px;z-index:5;border:0;width:36px;height:36px;border-radius:50%;background:var(--superficie);color:var(--texto-2);box-shadow:0 4px 14px var(--sombra-media);display:flex;align-items:center;justify-content:center;padding:0}
 .app-shell .topbar{padding-left:46px}
+/* sino de notificações do Início: espelha o botão do menu, do lado direito */
+.notif-btn{position:absolute;right:12px;top:31px;z-index:5;border:0;width:36px;height:36px;border-radius:50%;background:var(--superficie);color:var(--texto-2);box-shadow:0 4px 14px var(--sombra-media);display:flex;align-items:center;justify-content:center;padding:0}
+.topbar.com-sino{padding-right:40px}
+.notif-badge{position:absolute;top:-4px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:var(--erro);color:#fff;font-size:11px;font-weight:800;font-style:normal;line-height:1;display:flex;align-items:center;justify-content:center;padding:0 5px;box-shadow:0 0 0 2px var(--fundo-app)}
+.cloud-icon.com-badge{position:relative}
+.cloud-icon.com-badge .notif-badge{top:-7px;right:-10px}
+.notif-modal{max-height:82vh}
+.notif-modal .notif-lista{margin:0;overflow-y:auto}
 .drawer-root{position:fixed;inset:0;z-index:1000;visibility:hidden;pointer-events:none;transition:visibility 0s linear .25s}
 .drawer-root.aberto{visibility:visible;pointer-events:auto;transition-delay:0s}
 .drawer-fundo{position:absolute;inset:0;background:rgba(15,23,42,.45);opacity:0;transition:opacity .22s ease}
