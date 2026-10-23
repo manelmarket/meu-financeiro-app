@@ -9,7 +9,8 @@ import AvisoAtualizacao from "./components/AvisoAtualizacao";
 
 import Home from "./pages/Home";
 import Reports from "./pages/Reports";
-import NewEntry from "./pages/NewEntry";
+import NewEntry, { bancoGuardado } from "./pages/NewEntry";
+import { esquecerFraseDoJarvis, lancarDaFrase, lerPedidoDoJarvis, pedidoAssinadoValido } from "./lib/jarvis";
 import History from "./pages/History";
 import Cards from "./pages/Cards";
 import Goals from "./pages/Goals";
@@ -99,10 +100,68 @@ export default function App(){
 
   const [menuAberto,setMenuAberto] = useState(false);
 
+  // resultado de um lançamento pedido ao Jarvis: { ok, texto }
+  const [avisoJarvis,setAvisoJarvis] = useState(null);
+
   // login com Google + sincronização dos dados com a nuvem
   const nuvem = useNuvem(data, setData);
 
   const hoje = hojeISO();
+
+
+
+  // aberto pelo Jarvis (?jarvis=frase&t=...&sig=...):
+  // - assinatura válida: grava o lançamento e mostra o aviso "Jarvis lançou ..." (o Jarvis lê esse aviso)
+  // - senão: abre o Novo lançamento já preenchido, e a pessoa toca em Salvar
+  useEffect(()=>{
+
+    const pedido = lerPedidoDoJarvis();
+
+    if(!pedido) return;
+
+    (async ()=>{
+
+      if(await pedidoAssinadoValido(pedido)){
+
+        esquecerFraseDoJarvis();
+
+        const r = lancarDaFrase(pedido.frase, data, hoje, resumoDosBancos(data).bancos, bancoGuardado(resumoDosBancos(data).bancos));
+
+        if(!r.erro){
+
+          salvarMovimento(r);
+
+          setAvisoJarvis({ ok:true, texto:`Jarvis lançou ${r.resumo}` });
+
+          return;
+
+        }
+
+        setAvisoJarvis({ ok:false, texto:`Jarvis não lançou: ${r.erro}. Preencha na mão.` });
+
+        // devolve a frase para o Novo lançamento tentar preencher
+        try { sessionStorage.setItem("meu_financeiro_jarvis", JSON.stringify({ ...pedido, sig:"", t:"" })); } catch {}
+
+      }
+
+      setTela({ page:"new" });
+
+    })();
+
+  },[]);
+
+
+
+  // o aviso do Jarvis some sozinho
+  useEffect(()=>{
+
+    if(!avisoJarvis) return;
+
+    const id = setTimeout(()=>setAvisoJarvis(null), 9000);
+
+    return ()=>clearTimeout(id);
+
+  },[avisoJarvis]);
 
 
 
@@ -1084,6 +1143,19 @@ export default function App(){
     <div className="app-shell">
 
       <AvisoAtualizacao />
+
+      {avisoJarvis &&
+        <div
+          role="status"
+          style={{
+            position:"fixed", top:12, left:12, right:12, zIndex:1000, padding:"14px 16px", borderRadius:12,
+            fontWeight:600, color:"#fff", background: avisoJarvis.ok ? "#15803d" : "#b45309",
+            boxShadow:"0 6px 20px rgba(0,0,0,.35)"
+          }}
+        >
+          {avisoJarvis.ok ? "✅ " : "⚠️ "}{avisoJarvis.texto}
+        </div>
+      }
 
       {erroSalvar &&
         <div className="save-error">

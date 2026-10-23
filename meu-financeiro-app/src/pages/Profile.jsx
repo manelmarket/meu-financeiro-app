@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Avatar from "../components/Avatar.jsx";
+import ChaveDoJarvis from "../components/ChaveDoJarvis.jsx";
 import { nomeParaMostrar, primeiroNome, validarPerfil } from "../lib/perfil.js";
 
 // Perfil da conta que está conectada (vale em todos os aparelhos dessa conta;
@@ -102,6 +103,8 @@ export default function Profile({ data, perfil: perfilDaPessoa, hoje, nuvem, onB
           </button>
         </div>
       </section>
+
+      <ChaveDoJarvis />
     </div>
   );
 }

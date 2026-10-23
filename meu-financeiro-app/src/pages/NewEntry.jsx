@@ -1,6 +1,8 @@
 import React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
+import { esquecerFraseDoJarvis, lerFraseDoJarvis } from "../lib/jarvis.js";
+import { interpretarFrase } from "../lib/interpretar.js";
 import ScanButton from "../components/ScanButton.jsx";
 import FalarOuEscrever from "../components/FalarOuEscrever.jsx";
 import { SeletorCategoria } from "../components/Categoria.jsx";
@@ -16,7 +18,7 @@ const FORMAS_DE_RECEITA = FORMAS_PAGAMENTO.filter((f) => f !== "Cartão");
 const CHAVE_BANCO = "meu_financeiro_ultimo_banco";
 const FORA = "";
 
-function bancoGuardado(bancos) {
+export function bancoGuardado(bancos) {
   let id = "";
   try {
     id = localStorage.getItem(CHAVE_BANCO) || "";
@@ -145,6 +147,16 @@ export default function NewEntry({
     setFoto(blob);
     setErro("");
   }
+
+  // pedido por voz ao Jarvis (?jarvis=frase): preenche os campos; a pessoa confere e toca em Salvar
+  useEffect(() => {
+    const frase = lerFraseDoJarvis();
+    if (!frase) return;
+    esquecerFraseDoJarvis();
+    const r = interpretarFrase(frase, dados, hoje);
+    if (r.entendido) preencherPelaFrase(r);
+    else setErro(`O Jarvis pediu "${frase}", mas não entendi o valor. Preencha os campos.`);
+  }, []);
 
   // o que a frase falada/escrita entendeu (ver lib/interpretar.js) vai para os campos
   function preencherPelaFrase(r) {

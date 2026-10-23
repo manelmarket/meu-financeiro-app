@@ -5,6 +5,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { aplicarAparencia } from "./lib/aparencia";
 import { marcarModoApp } from "./lib/modoApp";
 import { guardarConviteDaUrl } from "./lib/convite";
+import { guardarFraseDoJarvis } from "./lib/jarvis";
 import { iniciarPonteAndroid } from "./lib/appAndroid";
 import { registrarServiceWorker } from "./lib/atualizacao";
 import "./index.css";
@@ -17,6 +18,9 @@ marcarModoApp();
 
 // aberto pelo link de convite da família (?convite=...): guarda o código para a tela Família
 guardarConviteDaUrl();
+
+// aberto pelo Jarvis (?jarvis=frase): guarda a frase para preencher o Novo lançamento
+guardarFraseDoJarvis();
 
 // app Android novo: canal de mensagens para os lembretes de vencimento
 iniciarPonteAndroid();
