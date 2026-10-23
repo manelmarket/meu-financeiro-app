@@ -1,0 +1,456 @@
+diff --git a/meu-financeiro-app/src/App.jsx b/meu-financeiro-app/src/App.jsx
+index 3920289..6a4bc96 100644
+--- a/meu-financeiro-app/src/App.jsx
++++ b/meu-financeiro-app/src/App.jsx
+@@ -9,7 +9,8 @@ import AvisoAtualizacao from "./components/AvisoAtualizacao";
+ 
+ import Home from "./pages/Home";
+ import Reports from "./pages/Reports";
+-import NewEntry from "./pages/NewEntry";
++import NewEntry, { bancoGuardado } from "./pages/NewEntry";
++import { esquecerFraseDoJarvis, lancarDaFrase, lerPedidoDoJarvis, pedidoAssinadoValido } from "./lib/jarvis";
+ import History from "./pages/History";
+ import Cards from "./pages/Cards";
+ import Goals from "./pages/Goals";
+@@ -99,6 +100,9 @@ export default function App(){
+ 
+   const [menuAberto,setMenuAberto] = useState(false);
+ 
++  // resultado de um lançamento pedido ao Jarvis: { ok, texto }
++  const [avisoJarvis,setAvisoJarvis] = useState(null);
++
+   // login com Google + sincronização dos dados com a nuvem
+   const nuvem = useNuvem(data, setData);
+ 
+@@ -106,6 +110,61 @@ export default function App(){
+ 
+ 
+ 
++  // aberto pelo Jarvis (?jarvis=frase&t=...&sig=...):
++  // - assinatura válida: grava o lançamento e mostra o aviso "Jarvis lançou ..." (o Jarvis lê esse aviso)
++  // - senão: abre o Novo lançamento já preenchido, e a pessoa toca em Salvar
++  useEffect(()=>{
++
++    const pedido = lerPedidoDoJarvis();
++
++    if(!pedido) return;
++
++    (async ()=>{
++
++      if(await pedidoAssinadoValido(pedido)){
++
++        esquecerFraseDoJarvis();
++
++        const r = lancarDaFrase(pedido.frase, data, hoje, resumoDosBancos(data).bancos, bancoGuardado(resumoDosBancos(data).bancos));
++
++        if(!r.erro){
++
++          salvarMovimento(r);
++
++          setAvisoJarvis({ ok:true, texto:`Jarvis lançou ${r.resumo}` });
++
++          return;
++
++        }
++
++        setAvisoJarvis({ ok:false, texto:`Jarvis não lançou: ${r.erro}. Preencha na mão.` });
++
++        // devolve a frase para o Novo lançamento tentar preencher
++        try { sessionStorage.setItem("meu_financeiro_jarvis", JSON.stringify({ ...pedido, sig:"", t:"" })); } catch {}
++
++      }
++
++      setTela({ page:"new" });
++
++    })();
++
++  },[]);
++
++
++
++  // o aviso do Jarvis some sozinho
++  useEffect(()=>{
++
++    if(!avisoJarvis) return;
++
++    const id = setTimeout(()=>setAvisoJarvis(null), 9000);
++
++    return ()=>clearTimeout(id);
++
++  },[avisoJarvis]);
++
++
++
+   useEffect(()=>{
+ 
+     const salvou = saveData(data);
+@@ -1085,6 +1144,19 @@ export default function App(){
+ 
+       <AvisoAtualizacao />
+ 
++      {avisoJarvis &&
++        <div
++          role="status"
++          style={{
++            position:"fixed", top:12, left:12, right:12, zIndex:1000, padding:"14px 16px", borderRadius:12,
++            fontWeight:600, color:"#fff", background: avisoJarvis.ok ? "#15803d" : "#b45309",
++            boxShadow:"0 6px 20px rgba(0,0,0,.35)"
++          }}
++        >
++          {avisoJarvis.ok ? "✅ " : "⚠️ "}{avisoJarvis.texto}
++        </div>
++      }
++
+       {erroSalvar &&
+         <div className="save-error">
+           ⚠️ Não consegui salvar neste aparelho (armazenamento cheio). As últimas alterações podem se perder ao fechar o app.
+diff --git a/meu-financeiro-app/src/components/ChaveDoJarvis.jsx b/meu-financeiro-app/src/components/ChaveDoJarvis.jsx
+new file mode 100644
+index 0000000..454d5f0
+--- /dev/null
++++ b/meu-financeiro-app/src/components/ChaveDoJarvis.jsx
+@@ -0,0 +1,54 @@
++import React, { useState } from "react";
++import { gerarChaveDoJarvis, lerChaveDoJarvis, salvarChaveDoJarvis } from "../lib/jarvis.js";
++
++// Chave que deixa o Jarvis (assistente de voz do Android) gravar lançamentos sozinho neste aparelho.
++// Sem chave, o Jarvis só preenche o Novo lançamento e a pessoa toca em Salvar.
++export default function ChaveDoJarvis() {
++  const [chave, setChave] = useState(() => lerChaveDoJarvis());
++  const [aviso, setAviso] = useState("");
++
++  function salvar(nova) {
++    const ok = salvarChaveDoJarvis(nova);
++    setChave(nova);
++    setAviso(ok ? (nova ? "Chave salva neste aparelho." : "Chave removida: o Jarvis volta a só preencher.") : "Não consegui salvar a chave neste aparelho.");
++  }
++
++  async function copiar() {
++    try {
++      await navigator.clipboard.writeText(chave);
++      setAviso("Chave copiada. Cole no Jarvis: Sistema → Chave do Meu Financeiro.");
++    } catch {
++      setAviso("Não consegui copiar. Segure sobre a chave e copie.");
++    }
++  }
++
++  return (
++    <section className="section-card form">
++      <h2 className="no-margin">Jarvis (comandos de voz)</h2>
++      <p className="hint">
++        Com uma chave, o Jarvis grava os lançamentos pedidos por voz sozinho. Cadastre a mesma chave no Jarvis
++        (Sistema → Chave do Meu Financeiro). Sem chave, ele só preenche e você toca em Salvar.
++      </p>
++      <label>
++        Chave deste aparelho
++        <input value={chave} readOnly placeholder="Nenhuma chave: o Jarvis só preenche" />
++      </label>
++      {aviso && <p className="hint">{aviso}</p>}
++      <div className="actions">
++        <button type="button" className="primary" onClick={() => salvar(gerarChaveDoJarvis())}>
++          {chave ? "Gerar outra" : "Gerar chave"}
++        </button>
++        {chave && (
++          <button type="button" onClick={copiar}>
++            Copiar
++          </button>
++        )}
++        {chave && (
++          <button type="button" onClick={() => salvar("")}>
++            Remover
++          </button>
++        )}
++      </div>
++    </section>
++  );
++}
+diff --git a/meu-financeiro-app/src/lib/jarvis.js b/meu-financeiro-app/src/lib/jarvis.js
+new file mode 100644
+index 0000000..b6c9b2d
+--- /dev/null
++++ b/meu-financeiro-app/src/lib/jarvis.js
+@@ -0,0 +1,202 @@
++// Lançamento pedido por voz ao Jarvis (assistente de voz do Android).
++//
++// O Jarvis abre o app por um link:   .../?jarvis=<frase>&t=<hora>&sig=<assinatura>
++//
++// Dois modos:
++// - COM assinatura válida (a chave do Jarvis está cadastrada neste aparelho, em Perfil): o app grava o
++//   lançamento sozinho e mostra o aviso "Jarvis lançou ...". O Jarvis lê esse aviso e volta ao app anterior.
++// - SEM assinatura válida (ou sem chave): o link só PREENCHE o Novo lançamento; quem grava é a pessoa,
++//   tocando em Salvar. Assim, um link malicioso nunca consegue registrar um gasto sozinho.
++//
++// A assinatura é HMAC-SHA256(chave, "<hora>|<frase>"): a chave nunca vai no link, o pedido vale por
++// 2 minutos e cada assinatura só funciona uma vez (não dá para repetir um link antigo).
++
++import { interpretarFrase } from "./interpretar.js";
++import { montarLancamento, MAXIMO_DE_PARCELAS } from "./lancar.js";
++import { arredondar, dataValida, money } from "./formato.js";
++import { acharCarteira } from "./transferencias.js";
++
++const CHAVE_PEDIDO = "meu_financeiro_jarvis";
++const CHAVE_SEGREDO = "meu_financeiro_jarvis_chave";
++const CHAVE_USADOS = "meu_financeiro_jarvis_usados";
++const LIMITE_DA_FRASE = 300; // caracteres
++const VALIDADE = 2 * 60 * 1000; // ms
++
++// ---------- pedido que veio no link ----------
++
++export function guardarFraseDoJarvis() {
++  if (typeof window === "undefined") return;
++  try {
++    const url = new URL(window.location.href);
++    if (!url.searchParams.has("jarvis")) return;
++    const bruto = String(url.searchParams.get("jarvis") || "");
++    const frase = bruto.replace(/\s+/g, " ").trim().slice(0, LIMITE_DA_FRASE);
++    if (frase) {
++      sessionStorage.setItem(
++        CHAVE_PEDIDO,
++        JSON.stringify({
++          bruto,
++          frase,
++          t: String(url.searchParams.get("t") || ""),
++          sig: String(url.searchParams.get("sig") || "").toLowerCase()
++        })
++      );
++    }
++    for (const p of ["jarvis", "t", "sig"]) url.searchParams.delete(p);
++    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
++  } catch {
++    // sem sessionStorage: a pessoa preenche na mão
++  }
++}
++
++export function lerPedidoDoJarvis() {
++  try {
++    const bruto = sessionStorage.getItem(CHAVE_PEDIDO);
++    const p = bruto ? JSON.parse(bruto) : null;
++    return p && typeof p.frase === "string" && p.frase ? p : null;
++  } catch {
++    return null;
++  }
++}
++
++export function lerFraseDoJarvis() {
++  return lerPedidoDoJarvis()?.frase || "";
++}
++
++export function esquecerFraseDoJarvis() {
++  try {
++    sessionStorage.removeItem(CHAVE_PEDIDO);
++  } catch {
++    // nada a fazer
++  }
++}
++
++// ---------- chave deste aparelho ----------
++
++export function lerChaveDoJarvis() {
++  try {
++    return localStorage.getItem(CHAVE_SEGREDO) || "";
++  } catch {
++    return "";
++  }
++}
++
++export function salvarChaveDoJarvis(chave) {
++  try {
++    const limpa = String(chave || "").trim();
++    if (limpa) localStorage.setItem(CHAVE_SEGREDO, limpa);
++    else localStorage.removeItem(CHAVE_SEGREDO);
++    return true;
++  } catch {
++    return false;
++  }
++}
++
++export function gerarChaveDoJarvis() {
++  const letras = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
++  const bytes = crypto.getRandomValues(new Uint8Array(24));
++  return Array.from(bytes, (b) => letras[b % letras.length]).join("");
++}
++
++// ---------- assinatura ----------
++
++async function assinar(chave, t, texto) {
++  const enc = new TextEncoder();
++  const k = await crypto.subtle.importKey("raw", enc.encode(chave), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
++  const mac = await crypto.subtle.sign("HMAC", k, enc.encode(`${t}|${texto}`));
++  return Array.from(new Uint8Array(mac), (b) => b.toString(16).padStart(2, "0")).join("");
++}
++
++function jaUsada(sig) {
++  try {
++    return (JSON.parse(localStorage.getItem(CHAVE_USADOS) || "[]") || []).includes(sig);
++  } catch {
++    return false;
++  }
++}
++
++function marcarUsada(sig) {
++  try {
++    const lista = (JSON.parse(localStorage.getItem(CHAVE_USADOS) || "[]") || []).filter((x) => typeof x === "string");
++    localStorage.setItem(CHAVE_USADOS, JSON.stringify([...lista, sig].slice(-30)));
++  } catch {
++    // sem localStorage: vale só a janela de 2 minutos
++  }
++}
++
++// true se o pedido foi assinado com a chave deste aparelho, é recente e ainda não foi usado
++export async function pedidoAssinadoValido(pedido, agora = Date.now()) {
++  try {
++    const chave = lerChaveDoJarvis();
++    if (!chave || !pedido?.sig || !pedido?.t) return false;
++    const t = Number(pedido.t);
++    if (!Number.isFinite(t) || Math.abs(agora - t) > VALIDADE) return false;
++    if (jaUsada(pedido.sig)) return false;
++    const esperada = await assinar(chave, pedido.t, pedido.bruto);
++    if (esperada.length !== pedido.sig.length) return false;
++    let dif = 0;
++    for (let i = 0; i < esperada.length; i++) dif |= esperada.charCodeAt(i) ^ pedido.sig.charCodeAt(i);
++    if (dif !== 0) return false;
++    marcarUsada(pedido.sig);
++    return true;
++  } catch {
++    return false;
++  }
++}
++
++// ---------- gravação direta ----------
++
++// Frase → { lancamento, compras, resumo } pronto para salvar, ou { erro }.
++// Usa as mesmas regras do Novo lançamento (banco padrão, carteira para dinheiro, cartão e parcelas).
++// Transferências e frases confusas não são gravadas aqui: voltam para o preenchimento manual.
++export function lancarDaFrase(frase, dados, hoje, bancos = [], bancoPadrao = "", agora = Date.now()) {
++  const r = interpretarFrase(frase, dados, hoje);
++  if (!r.entendido) return { erro: "não entendi o valor" };
++  if (r.tipo === "transferencia") return { erro: "transferências são feitas no app" };
++  const total = Number(r.valor);
++  if (!(total > 0)) return { erro: "valor inválido" };
++
++  const cartoes = dados.cartoes || [];
++  const carteira = acharCarteira(dados);
++  const bancoDoDinheiro = carteira ? String(carteira.id) : "";
++  const bancoExiste = (id) => bancos.some((b) => String(b.banco.id) === String(id));
++
++  let partes;
++  if (r.tipo === "entrada") {
++    const p = r.partes[0] || {};
++    partes = [
++      { forma: p.forma || "Pix", valor: total, bancoId: p.bancoId && bancoExiste(p.bancoId) ? String(p.bancoId) : bancoPadrao || null }
++    ];
++  } else {
++    const lista = r.partes.length ? r.partes : [{ forma: "Pix", valor: null }];
++    if (lista.filter((p) => !p.valor).length > 1) return { erro: "frase com mais de uma forma de pagamento sem valor" };
++    const conhecidas = arredondar(lista.reduce((t, p) => t + (p.valor || 0), 0));
++    partes = lista.map((p) => ({
++      forma: p.forma,
++      valor: p.valor ? p.valor : arredondar(total - conhecidas),
++      bancoId:
++        p.forma === "Cartão"
++          ? null
++          : p.bancoId && bancoExiste(p.bancoId)
++            ? String(p.bancoId)
++            : p.forma === "Dinheiro"
++              ? bancoDoDinheiro || null
++              : bancoPadrao || null,
++      cartaoId: p.cartaoId && cartoes.some((c) => String(c.id) === String(p.cartaoId)) ? p.cartaoId : (cartoes[0]?.id ?? ""),
++      parcelas: Math.min(MAXIMO_DE_PARCELAS, Math.max(1, p.parcelas || 1))
++    }));
++  }
++
++  const descricao = String(r.descricao || "").trim() || "Lançamento do Jarvis";
++  const form = {
++    tipo: r.tipo,
++    descricao,
++    categoria: r.categoria,
++    data: dataValida(r.data) ? r.data : hoje,
++    valor: total,
++    partes
++  };
++  const montado = montarLancamento(form, cartoes, agora);
++  if (montado.erro) return { erro: montado.erro };
++  return { ...montado, resumo: `${money(total)}: ${descricao}` };
++}
+diff --git a/meu-financeiro-app/src/main.jsx b/meu-financeiro-app/src/main.jsx
+index 10f6ee5..7d28de7 100644
+--- a/meu-financeiro-app/src/main.jsx
++++ b/meu-financeiro-app/src/main.jsx
+@@ -5,6 +5,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
+ import { aplicarAparencia } from "./lib/aparencia";
+ import { marcarModoApp } from "./lib/modoApp";
+ import { guardarConviteDaUrl } from "./lib/convite";
++import { guardarFraseDoJarvis } from "./lib/jarvis";
+ import { iniciarPonteAndroid } from "./lib/appAndroid";
+ import { registrarServiceWorker } from "./lib/atualizacao";
+ import "./index.css";
+@@ -18,6 +19,9 @@ marcarModoApp();
+ // aberto pelo link de convite da família (?convite=...): guarda o código para a tela Família
+ guardarConviteDaUrl();
+ 
++// aberto pelo Jarvis (?jarvis=frase): guarda a frase para preencher o Novo lançamento
++guardarFraseDoJarvis();
++
+ // app Android novo: canal de mensagens para os lembretes de vencimento
+ iniciarPonteAndroid();
+ 
+diff --git a/meu-financeiro-app/src/pages/NewEntry.jsx b/meu-financeiro-app/src/pages/NewEntry.jsx
+index dfb9e8d..da4ba8e 100644
+--- a/meu-financeiro-app/src/pages/NewEntry.jsx
++++ b/meu-financeiro-app/src/pages/NewEntry.jsx
+@@ -1,6 +1,8 @@
+ import React from "react";
+-import { useState } from "react";
++import { useEffect, useState } from "react";
+ import { X } from "lucide-react";
++import { esquecerFraseDoJarvis, lerFraseDoJarvis } from "../lib/jarvis.js";
++import { interpretarFrase } from "../lib/interpretar.js";
+ import ScanButton from "../components/ScanButton.jsx";
+ import FalarOuEscrever from "../components/FalarOuEscrever.jsx";
+ import { SeletorCategoria } from "../components/Categoria.jsx";
+@@ -16,7 +18,7 @@ const FORMAS_DE_RECEITA = FORMAS_PAGAMENTO.filter((f) => f !== "Cartão");
+ const CHAVE_BANCO = "meu_financeiro_ultimo_banco";
+ const FORA = "";
+ 
+-function bancoGuardado(bancos) {
++export function bancoGuardado(bancos) {
+   let id = "";
+   try {
+     id = localStorage.getItem(CHAVE_BANCO) || "";
+@@ -146,6 +148,16 @@ export default function NewEntry({
+     setErro("");
+   }
+ 
++  // pedido por voz ao Jarvis (?jarvis=frase): preenche os campos; a pessoa confere e toca em Salvar
++  useEffect(() => {
++    const frase = lerFraseDoJarvis();
++    if (!frase) return;
++    esquecerFraseDoJarvis();
++    const r = interpretarFrase(frase, dados, hoje);
++    if (r.entendido) preencherPelaFrase(r);
++    else setErro(`O Jarvis pediu "${frase}", mas não entendi o valor. Preencha os campos.`);
++  }, []);
++
+   // o que a frase falada/escrita entendeu (ver lib/interpretar.js) vai para os campos
+   function preencherPelaFrase(r) {
+     setErro("");
+diff --git a/meu-financeiro-app/src/pages/Profile.jsx b/meu-financeiro-app/src/pages/Profile.jsx
+index f1a14d1..a7c1ee0 100644
+--- a/meu-financeiro-app/src/pages/Profile.jsx
++++ b/meu-financeiro-app/src/pages/Profile.jsx
+@@ -1,5 +1,6 @@
+ import React, { useState } from "react";
+ import Avatar from "../components/Avatar.jsx";
++import ChaveDoJarvis from "../components/ChaveDoJarvis.jsx";
+ import { nomeParaMostrar, primeiroNome, validarPerfil } from "../lib/perfil.js";
+ 
+ // Perfil da conta que está conectada (vale em todos os aparelhos dessa conta;
+@@ -102,6 +103,8 @@ export default function Profile({ data, perfil: perfilDaPessoa, hoje, nuvem, onB
+           </button>
+         </div>
+       </section>
++
++      <ChaveDoJarvis />
+     </div>
+   );
+ }
