@@ -216,21 +216,21 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
 
       <MonthPicker mes={mes} mesHoje={mesHoje} onChange={setMes} />
 
-      <section className="balance-card">
+      <button type="button" className="balance-card card-botao" onClick={() => onOpenPage("mes", { aba: "saldo", mes })}>
         <span>Saldo do mês</span>
         <strong className={r.saldo < 0 ? "neg" : ""}>{money(r.saldo)}</strong>
-        <small>Receitas menos despesas de {nomeMes(mes)}</small>
-      </section>
+        <small>Receitas menos despesas de {nomeMes(mes)} · toque para ver</small>
+      </button>
 
       <div className="grid2">
-        <section className="mini-card positive">
+        <button type="button" className="mini-card positive card-botao" onClick={() => onOpenPage("mes", { aba: "receitas", mes })}>
           <span>Receita</span>
           <strong>{money(r.receitas)}</strong>
-        </section>
-        <section className="mini-card negative">
+        </button>
+        <button type="button" className="mini-card negative card-botao" onClick={() => onOpenPage("mes", { aba: "despesas", mes })}>
           <span>Despesas</span>
           <strong>{money(r.despesas)}</strong>
-        </section>
+        </button>
       </div>
 
       <p className="origin-line">

@@ -35,6 +35,7 @@ import Conquistas from "./pages/Conquistas";
 import Familia from "./pages/Familia";
 import Categorias from "./pages/Categorias";
 import Emprestimos from "./pages/Emprestimos";
+import MesDetalhe from "./pages/MesDetalhe";
 
 import useNuvem from "./lib/useNuvem";
 import useLembretesNoCelular from "./lib/useLembretes";
@@ -81,6 +82,7 @@ const ABA_DA_TELA = {
   lembretes: "home",
   assistant: "home",
   jarvis: "jarvis",
+  mes: "home",
   investments: "home",
   patrimony: "home",
   backup: "home"
@@ -1173,6 +1175,19 @@ export default function App(){
       />;
       break;
 
+    case "mes":
+      content =
+      <MesDetalhe
+        data={data}
+        hoje={hoje}
+        mesInicial={tela.mes}
+        abaInicial={tela.aba}
+        onBack={()=>ir("home")}
+        onOpenCard={(id)=>ir("card-details", { cardId:id })}
+        onOpenBills={()=>ir("bills")}
+      />;
+      break;
+
     case "jarvis":
       content =
       <Jarvis
@@ -1250,7 +1265,7 @@ export default function App(){
         onNew={()=>ir("new")}
         onOpenBills={()=>ir("bills")}
         onOpenCard={(id)=>ir("card-details", { cardId:id })}
-        onOpenPage={(p)=>ir(p)}
+        onOpenPage={(p, extra)=>ir(p, extra)}
       />;
 
   }
