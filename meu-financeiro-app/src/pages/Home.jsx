@@ -162,6 +162,16 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
         </button>
       </header>
 
+      <button type="button" className="cloud-row due-btn" onClick={() => onOpenPage("jarvis")}>
+        <span className="cloud-icon" aria-hidden="true">
+          🤖
+        </span>
+        <span className="cloud-text">
+          <b>Fale com o Jarvis</b>
+          <small>Lance, corrija, pague e pergunte do seu jeito</small>
+        </span>
+      </button>
+
       <button type="button" className="cloud-row due-btn" onClick={() => onOpenPage("vencimentos")}>
         <span className="cloud-icon com-badge" aria-hidden="true">
           🗓️

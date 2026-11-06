@@ -14,7 +14,7 @@ import {
 
 export const ICONE_FRASE = { aviso: "⚠️", ok: "✅", dica: "💡", info: "📌" };
 
-function ConfigIA({ config, onChange }) {
+export function ConfigIA({ config, onChange }) {
   const [provedor, setProvedor] = useState(config?.provedor || "gemini");
   const [chave, setChave] = useState(config?.chave || "");
   const [modelo, setModelo] = useState(config?.modelo || "");
