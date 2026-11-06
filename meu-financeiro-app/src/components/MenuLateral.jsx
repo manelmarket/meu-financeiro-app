@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import {
   BarChart3,
   BellRing,
+  Bot,
   Cloud,
   CreditCard,
   HandCoins,
@@ -40,6 +41,7 @@ const GRUPOS = [
       ["home", Home, "Início"],
       ["bancos", Wallet, "Bancos"],
       ["new", PlusCircle, "Novo lançamento"],
+      ["jarvis", Bot, "Jarvis (fale comigo)"],
       ["history", History, "Histórico"],
       ["cards", CreditCard, "Cartões"],
       ["goals", Target, "Metas"]

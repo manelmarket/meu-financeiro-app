@@ -798,3 +798,31 @@ button:disabled{opacity:.6;cursor:default}
    O gráfico de colunas (Relatórios) continua do tamanho de antes: com a coluna larga, os textos dele cresciam junto. */
 @media (min-width:768px){.app-shell:not(.entrada-shell){max-width:720px}.bottom-nav{width:min(720px,100%)}.drawer{left:max(0px,calc((100vw - 720px)/2))}.page{padding-left:24px;padding-right:24px}.columns-chart svg{max-width:448px;margin:0 auto}}
 @media (min-width:1024px){.app-shell:not(.entrada-shell){max-width:860px}.bottom-nav{width:min(860px,100%)}.drawer{left:max(0px,calc((100vw - 860px)/2))}}
+
+/* ---------- Jarvis: conversa ---------- */
+.jarvis-ajustes{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.jarvis-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--borda);background:var(--superficie);color:var(--texto);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700}
+.jarvis-chip.ativo{background:var(--primaria-suave);border-color:var(--primaria-borda);color:var(--primaria-tinta)}
+.jarvis-chip:disabled{opacity:.6}
+.jarvis-conversa{display:flex;flex-direction:column;gap:10px;min-height:180px}
+.jarvis-vazio{background:var(--primaria-suave);border:1px solid var(--primaria-borda);border-radius:18px;padding:14px}
+.jarvis-vazio p{margin:0 0 10px;font-size:14px;line-height:1.5;color:var(--texto)}
+.jarvis-exemplos{display:flex;flex-wrap:wrap;gap:8px}
+.jarvis-msg{max-width:88%;border-radius:18px;padding:10px 13px;font-size:14.5px;line-height:1.45;overflow-wrap:anywhere}
+.jarvis-msg p{margin:0}
+.jarvis-msg.pessoa{align-self:flex-end;background:var(--primaria);color:#fff;border-bottom-right-radius:6px}
+.jarvis-msg.jarvis{align-self:flex-start;background:var(--superficie);border:1px solid var(--borda);color:var(--texto);border-bottom-left-radius:6px}
+.jarvis-msg.pensando{color:var(--apagado);animation:pulsar 1.2s ease-in-out infinite}
+.jarvis-itens{margin:8px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px;font-size:13.5px;font-weight:600}
+.jarvis-itens li.erro{color:var(--erro-texto)}
+.jarvis-botoes{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:10px}
+.jarvis-botoes button{display:inline-flex;align-items:center;gap:5px;padding:9px 14px;border-radius:12px;font-weight:800}
+.jarvis-estado{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:700;color:var(--apagado)}
+.jarvis-estado.ok{margin-top:0;margin-right:auto;color:var(--ok-texto)}
+.jarvis-entrada{position:sticky;bottom:84px;z-index:5;display:flex;gap:8px;margin-top:14px;padding:10px;background:var(--superficie);border:1px solid var(--borda);border-radius:18px;box-shadow:0 6px 20px var(--sombra)}
+.jarvis-entrada input{flex:1;min-width:0;border:1px solid var(--borda-campo);background:var(--superficie);color:var(--texto);border-radius:13px;padding:12px 13px;outline:none;font-size:15px}
+.jarvis-entrada input:focus{border-color:var(--primaria-texto)}
+.jarvis-entrada .enviar{background:var(--primaria-tinta)}
+.jarvis-passos{margin-top:18px}
+.jarvis-passos ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.45}
+.jarvis-nota{margin-top:12px}

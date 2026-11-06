@@ -22,6 +22,7 @@ import Vencimentos from "./pages/Vencimentos";
 import Investments from "./pages/Investments";
 import Patrimony from "./pages/Patrimony";
 import Assistant from "./pages/Assistant";
+import Jarvis from "./pages/Jarvis";
 import Backup from "./pages/Backup";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
@@ -76,6 +77,7 @@ const ABA_DA_TELA = {
   categorias: "home",
   lembretes: "home",
   assistant: "home",
+  jarvis: "home",
   investments: "home",
   patrimony: "home",
   backup: "home"
@@ -1049,6 +1051,20 @@ export default function App(){
         onSave={(item)=>salvarNaLista("bens", item)}
         onDelete={(id)=>apagarDaLista("bens", id)}
         onOpenInvestments={()=>ir("investments", { voltar:"patrimony" })}
+      />;
+      break;
+
+    case "jarvis":
+      content =
+      <Jarvis
+        data={data}
+        setData={setData}
+        hoje={hoje}
+        perfil={perfilDaPessoa(data, nuvem.usuario, Boolean(nuvem.familia))}
+        comPerfil={(d, perfil)=>comPerfilDaPessoa(d, perfil, nuvem.usuario, Boolean(nuvem.familia))}
+        guardarPagamentosDaConta={guardarPagamentosDaConta}
+        onIr={(p)=>ir(p)}
+        onBack={()=>ir("home")}
       />;
       break;
 

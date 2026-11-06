@@ -150,7 +150,11 @@ export async function pedidoAssinadoValido(pedido, agora = Date.now()) {
 // Usa as mesmas regras do Novo lançamento (banco padrão, carteira para dinheiro, cartão e parcelas).
 // Transferências e frases confusas não são gravadas aqui: voltam para o preenchimento manual.
 export function lancarDaFrase(frase, dados, hoje, bancos = [], bancoPadrao = "", agora = Date.now()) {
-  const r = interpretarFrase(frase, dados, hoje);
+  return lancarDoResultado(interpretarFrase(frase, dados, hoje), dados, hoje, bancos, bancoPadrao, agora);
+}
+
+// O mesmo, a partir do que o interpretador (ou a IA, via resultadoDaIA) entendeu
+export function lancarDoResultado(r, dados, hoje, bancos = [], bancoPadrao = "", agora = Date.now()) {
   if (!r.entendido) return { erro: "não entendi o valor" };
   if (r.tipo === "transferencia") return { erro: "transferências são feitas no app" };
   const total = Number(r.valor);
