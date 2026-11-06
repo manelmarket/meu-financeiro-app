@@ -415,33 +415,41 @@ export default function Jarvis({ data, setData, hoje, perfil, comPerfil, guardar
       </section>
 
       <div className="jarvis-entrada">
-        <input
-          value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              enviar();
-            }
-          }}
-          placeholder={ouvindo ? "Ouvindo… pode falar" : "Fale ou escreva…"}
-          disabled={pensando}
-          aria-label="Mensagem para o Jarvis"
-        />
         {suporteVoz && (
-          <button
-            type="button"
-            className={`falar-mic${ouvindo ? " ouvindo" : ""}`}
-            onClick={ouvir}
-            disabled={pensando}
-            aria-label={ouvindo ? "Parar de ouvir" : "Falar com o Jarvis"}
-          >
-            {ouvindo ? <Square size={16} strokeWidth={2.6} /> : <Mic size={18} strokeWidth={2.4} />}
-          </button>
+          <div className="jarvis-mic-grande">
+            <button
+              type="button"
+              className={`jarvis-mic-botao${ouvindo ? " ouvindo" : ""}`}
+              onClick={ouvir}
+              disabled={pensando}
+              aria-label={ouvindo ? "Parar de ouvir" : "Falar com o Jarvis"}
+              aria-pressed={ouvindo}
+            >
+              {ouvindo ? <Square size={28} strokeWidth={2.6} /> : <Mic size={34} strokeWidth={2.2} />}
+            </button>
+            <span className="jarvis-mic-texto" aria-live="polite">
+              {pensando ? "Pensando…" : ouvindo ? "Ouvindo… toque para parar" : "Toque para falar"}
+            </span>
+          </div>
         )}
-        <button type="button" className="falar-mic enviar" onClick={() => enviar()} disabled={pensando || !texto.trim()} aria-label="Enviar">
-          <Send size={17} strokeWidth={2.4} />
-        </button>
+        <div className="jarvis-linha">
+          <input
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                enviar();
+              }
+            }}
+            placeholder={ouvindo ? "Ouvindo… pode falar" : suporteVoz ? "Ou escreva aqui…" : "Escreva para o Jarvis…"}
+            disabled={pensando}
+            aria-label="Mensagem para o Jarvis"
+          />
+          <button type="button" className="falar-mic enviar" onClick={() => enviar()} disabled={pensando || !texto.trim()} aria-label="Enviar">
+            <Send size={17} strokeWidth={2.4} />
+          </button>
+        </div>
       </div>
 
       {!config ? (

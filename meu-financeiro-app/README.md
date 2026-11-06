@@ -71,6 +71,11 @@ Abra o endereço mostrado pelo Vite no navegador.
 - Troca de tema com as cores se misturando
 - Temas → Animações liga/desliga; com "reduzir movimento" do celular ficam desligadas
 
+## Versão 1.0.9 — microfone grande no Jarvis
+
+- Tela do Jarvis com um botão grande e redondo de áudio no centro ("Toque para falar"); ouvindo, fica vermelho com ondas pulsando
+- O campo de texto continua logo abaixo, para escrever quando preferir
+
 ## Próximos passos
 
 - Relatórios e gráficos
