@@ -80,7 +80,7 @@ const ABA_DA_TELA = {
   categorias: "home",
   lembretes: "home",
   assistant: "home",
-  jarvis: "home",
+  jarvis: "jarvis",
   investments: "home",
   patrimony: "home",
   backup: "home"

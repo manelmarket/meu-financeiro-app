@@ -39,6 +39,14 @@
   --destaque-1:#2e1065;--destaque-2:#4c1d95;
   --graf-1:#5b21b6;--graf-2:#8b5cf6;--graf-3:#c4b5fd;--graf-trilha:#ede9fe;--graf-receitas:#8b5cf6;--graf-despesas:#eb6834;
 }
+/* tema Violeta Elétrico */
+[data-tema="violeta"]{
+  --entrada-1:#0b0b2e;--entrada-2:#15154d;--entrada-brilho:rgba(91,91,255,.55);--entrada-brilho-2:rgba(56,189,248,.18);
+  --primaria:#3b3bf5;--primaria-texto:#3333e0;--primaria-suave:#f0f0ff;--primaria-suave-2:#e2e2ff;--primaria-suave-3:#ececff;
+  --primaria-tinta:#1b1b8f;--primaria-tinta-2:#26269e;--primaria-borda:#c9c9ff;
+  --destaque-1:#15154d;--destaque-2:#2a2ab8;
+  --graf-1:#2a2ab8;--graf-2:#5b5bff;--graf-3:#a5a5ff;--graf-trilha:#e2e2ff;--graf-receitas:#5b5bff;--graf-despesas:#eb6834;
+}
 /* tema Grafite & Dourado */
 [data-tema="dourado"]{
   --entrada-1:#0c0a09;--entrada-2:#1c1917;--entrada-brilho:rgba(217,119,6,.42);--entrada-brilho-2:rgba(251,191,36,.14);
@@ -79,6 +87,12 @@
   --primaria-tinta:#ddd6fe;--primaria-tinta-2:#f0abfc;--primaria-borda:rgba(167,139,250,.35);
   --destaque-1:#4c1d95;--destaque-2:#2e1065;
   --graf-1:#8b5cf6;--graf-2:#a78bfa;--graf-3:#c4b5fd;--graf-trilha:#2a1f4d;--graf-receitas:#a78bfa;--graf-despesas:#fb923c;
+}
+[data-modo="escuro"][data-tema="violeta"]{
+  --primaria:#5b5bff;--primaria-texto:#9d9dff;--primaria-suave:rgba(91,91,255,.16);--primaria-suave-2:rgba(91,91,255,.26);--primaria-suave-3:rgba(91,91,255,.2);
+  --primaria-tinta:#d4d4ff;--primaria-tinta-2:#c7c7ff;--primaria-borda:rgba(157,157,255,.35);
+  --destaque-1:#2a2ab8;--destaque-2:#15154d;
+  --graf-1:#5b5bff;--graf-2:#8484ff;--graf-3:#b9b9ff;--graf-trilha:#232352;--graf-receitas:#8484ff;--graf-despesas:#fb923c;
 }
 [data-modo="escuro"][data-tema="dourado"]{
   --primaria-texto:#fbbf24;--primaria-suave:rgba(245,158,11,.14);--primaria-suave-2:rgba(245,158,11,.22);--primaria-suave-3:rgba(251,191,36,.2);
@@ -826,3 +840,106 @@ button:disabled{opacity:.6;cursor:default}
 .jarvis-passos{margin-top:18px}
 .jarvis-passos ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.45}
 .jarvis-nota{margin-top:12px}
+
+/* ================= estilos do app (Temas → Estilo do app) =================
+   O <html> recebe data-estilo="classico|banco|vidro" (ver lib/aparencia.js). O Clássico é o visual original. */
+
+/* ----- Temas: prévias e lista de estilos ----- */
+.tema-previa.banco{padding:8px 8px 8px}
+.tema-previa-bolinhas{display:flex;gap:5px;margin-top:3px}
+.tema-previa-bolinhas b{width:11px;height:11px;border-radius:50%}
+.tema-previa-botao.redondo{width:22px;height:22px;border-radius:50%;align-self:center;margin-top:-2px}
+.estilos-lista{display:flex;flex-direction:column;gap:10px}
+.estilo-opcao{position:relative;border:2px solid var(--borda);background:var(--superficie);border-radius:16px;padding:12px 40px 12px 12px;text-align:left;color:var(--texto)}
+.estilo-opcao.ativo{border-color:var(--primaria-texto);box-shadow:0 0 0 3px var(--primaria-suave-2)}
+.estilo-opcao .tema-marcado{top:50%;right:12px;transform:translateY(-50%)}
+
+/* ----- topo do Início (Banco digital e Vidro) ----- */
+.heroi{background:var(--primaria);color:#fff;padding:22px 18px 46px;display:flex;flex-direction:column;gap:20px}
+.heroi-topo{display:flex;align-items:center;justify-content:space-between;padding-left:46px;min-height:44px}
+.heroi-ola{display:flex;flex-direction:column;gap:2px}
+.heroi-ola small{font-size:13px;color:rgba(255,255,255,.85)}
+.heroi-ola b{font-size:17px}
+.heroi-botoes{display:flex;gap:8px}
+.heroi-botoes button{position:relative;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;padding:0}
+.heroi-ponto{position:absolute;top:9px;right:10px;width:9px;height:9px;border-radius:50%;background:#ffb020;box-shadow:0 0 0 2px var(--primaria)}
+.heroi-saldo{border:0;background:transparent;color:#fff;text-align:left;padding:0;display:flex;flex-direction:column;gap:6px}
+.heroi-saldo small{font-size:13.5px;color:rgba(255,255,255,.85)}
+.heroi-saldo strong{font-size:38px;line-height:1.1;letter-spacing:-.5px}
+.heroi-saldo strong.neg{color:#ffd1cc}
+.heroi-acoes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.heroi-acoes button{border:0;background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:0}
+.heroi-acoes button span{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center}
+.heroi-acoes button.destaque span{background:#fff;color:var(--primaria)}
+.page.page-heroi{margin-top:-24px;border-radius:24px 24px 0 0;background:var(--fundo-app);position:relative;padding-top:18px}
+[data-modo="escuro"] .heroi{background:linear-gradient(160deg,var(--destaque-1),var(--destaque-2))}
+[data-modo="escuro"] .heroi-acoes button.destaque span{color:var(--destaque-1)}
+/* botão do menu ⋮ sobre o topo colorido */
+.conteudo:has(.heroi) > .menu-btn{background:rgba(255,255,255,.18);color:#fff;box-shadow:none;top:26px;left:14px;width:40px;height:40px}
+
+/* ----- barra de baixo com o + no meio ----- */
+.bottom-nav.moderna{grid-template-columns:repeat(5,1fr);height:78px;border-top:1px solid var(--borda-3)}
+.bottom-nav.moderna button{font-size:11.5px;font-weight:600;gap:4px}
+.bottom-nav.moderna button.active{font-weight:700}
+.bottom-nav .nav-central span{width:58px;height:58px;margin-top:-26px;border-radius:50%;background:var(--primaria);color:#fff;display:flex;align-items:center;justify-content:center;border:4px solid var(--fundo-app);box-shadow:0 8px 20px var(--sombra-forte)}
+
+/* ----- Banco digital: fundo cinza-claro, cartões brancos sem borda e mais redondos ----- */
+[data-estilo="banco"]{--fundo-app:#f3f4f8;--superficie-3:#eef0f6}
+[data-estilo="banco"][data-modo="escuro"]{--fundo-app:#0b1220;--superficie-3:#1b2638}
+[data-estilo="banco"] .section-card,[data-estilo="banco"] .mini-card,[data-estilo="banco"] .cloud-row{border:0;border-radius:20px;box-shadow:0 1px 2px var(--sombra)}
+[data-estilo="banco"] .balance-card{background:var(--superficie);color:var(--texto);box-shadow:0 1px 2px var(--sombra)}
+[data-estilo="banco"] .balance-card span,[data-estilo="banco"] .balance-card small{color:var(--apagado)}
+[data-estilo="banco"] .primary{border-radius:16px}
+[data-estilo="banco"] .chips .active-chip{background:var(--primaria)}
+[data-estilo="banco"] .credit-card{background:linear-gradient(150deg,var(--destaque-1),var(--primaria))}
+
+/* ----- Vidro (glassmorfismo): fundo colorido fixo e cartões de vidro fosco ----- */
+[data-estilo="vidro"]{
+  --fundo-app:transparent;
+  --superficie:rgba(255,255,255,.62);--superficie-2:rgba(255,255,255,.45);--superficie-3:rgba(255,255,255,.5);--superficie-4:rgba(255,255,255,.4);
+  --borda:rgba(255,255,255,.7);--borda-2:rgba(255,255,255,.55);--borda-3:rgba(255,255,255,.6);--borda-campo:rgba(15,23,42,.14);
+  --barra-nav:rgba(255,255,255,.55);
+  --vidro-fundo:radial-gradient(circle at 12% 8%,var(--graf-3) 0,transparent 42%),radial-gradient(circle at 92% 30%,#f9a8d4 0,transparent 40%),radial-gradient(circle at 30% 85%,#a5f3fc 0,transparent 45%),linear-gradient(160deg,#eef2ff,#fdf2f8);
+  --vidro-sombra:0 8px 32px rgba(31,38,135,.12);
+}
+[data-estilo="vidro"][data-modo="escuro"]{
+  --superficie:rgba(255,255,255,.09);--superficie-2:rgba(255,255,255,.06);--superficie-3:rgba(255,255,255,.1);--superficie-4:rgba(255,255,255,.08);
+  --borda:rgba(255,255,255,.14);--borda-2:rgba(255,255,255,.1);--borda-3:rgba(255,255,255,.14);--borda-campo:rgba(255,255,255,.18);
+  --barra-nav:rgba(15,15,35,.5);
+  --vidro-fundo:radial-gradient(circle at 15% 10%,var(--graf-1) 0,transparent 45%),radial-gradient(circle at 90% 35%,#db2777 0,transparent 42%),radial-gradient(circle at 25% 90%,#0891b2 0,transparent 45%),linear-gradient(160deg,#0b1022,#120a24);
+  --vidro-sombra:0 8px 32px rgba(0,0,0,.35);
+}
+[data-estilo="vidro"] body{background:var(--vidro-fundo);background-attachment:fixed}
+[data-estilo="vidro"] .app-shell{background:var(--vidro-fundo);background-attachment:fixed}
+[data-estilo="vidro"] .section-card,[data-estilo="vidro"] .mini-card,[data-estilo="vidro"] .cloud-row,[data-estilo="vidro"] .balance-card,
+[data-estilo="vidro"] .month-picker,[data-estilo="vidro"] .jarvis-entrada,[data-estilo="vidro"] .jarvis-msg.jarvis,[data-estilo="vidro"] .falar-box,
+[data-estilo="vidro"] .tema-opcao,[data-estilo="vidro"] .estilo-opcao,[data-estilo="vidro"] .search,[data-estilo="vidro"] .jarvis-chip{
+  background:var(--superficie);border:1px solid var(--borda);box-shadow:var(--vidro-sombra);
+  -webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%)
+}
+[data-estilo="vidro"] .section-card,[data-estilo="vidro"] .mini-card,[data-estilo="vidro"] .cloud-row{border-radius:22px}
+[data-estilo="vidro"] .balance-card{color:var(--texto)}
+[data-estilo="vidro"] .balance-card span,[data-estilo="vidro"] .balance-card small{color:var(--apagado)}
+[data-estilo="vidro"] .bottom-nav{-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border-top:1px solid var(--borda)}
+[data-estilo="vidro"] .bottom-nav .nav-central span{border-color:transparent}
+/* menus e janelas: vidro mais opaco, para ler bem por cima de tudo */
+[data-estilo="vidro"] .drawer,[data-estilo="vidro"] .modal{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
+[data-estilo="vidro"][data-modo="escuro"] .drawer,[data-estilo="vidro"][data-modo="escuro"] .modal{background:rgba(20,20,40,.88)}
+[data-estilo="vidro"] .menu-btn,[data-estilo="vidro"] .back,[data-estilo="vidro"] .notif-btn{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+/* topo do Início em vidro */
+[data-estilo="vidro"] .heroi{margin:12px 12px 0;border-radius:28px;padding:20px 16px 22px;background:var(--superficie);color:var(--texto);border:1px solid var(--borda);box-shadow:var(--vidro-sombra);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%)}
+[data-estilo="vidro"] .heroi-topo{padding-left:52px}
+[data-estilo="vidro"] .heroi-ola small,[data-estilo="vidro"] .heroi-saldo small{color:var(--apagado)}
+[data-estilo="vidro"] .heroi-saldo{color:var(--texto)}
+[data-estilo="vidro"] .heroi-saldo strong.neg{color:var(--erro)}
+[data-estilo="vidro"] .heroi-botoes button,[data-estilo="vidro"] .heroi-acoes button span{background:var(--superficie-3);color:var(--texto);border:1px solid var(--borda)}
+[data-estilo="vidro"] .heroi-acoes button{color:var(--texto)}
+[data-estilo="vidro"] .heroi-acoes button.destaque span{background:var(--primaria);color:#fff;border-color:transparent}
+[data-estilo="vidro"] .heroi-ponto{box-shadow:none}
+[data-estilo="vidro"] .page.page-heroi{margin-top:0;border-radius:0;background:transparent}
+[data-estilo="vidro"] .conteudo:has(.heroi) > .menu-btn{background:var(--superficie-3);color:var(--texto);border:1px solid var(--borda);top:34px;left:28px}
+[data-estilo="vidro"][data-modo="escuro"] .heroi-ola small,[data-estilo="vidro"][data-modo="escuro"] .heroi-saldo small{color:rgba(255,255,255,.8)}
+@media (prefers-reduced-transparency:reduce){
+  [data-estilo="vidro"]{--superficie:rgba(255,255,255,.94)}
+  [data-estilo="vidro"][data-modo="escuro"]{--superficie:rgba(17,26,43,.96)}
+}

@@ -1,6 +1,6 @@
-// Aparência do app neste aparelho: tema de cores e modo escuro.
-// Fica guardada só neste aparelho. É aplicada no <html> como data-tema e data-modo;
-// as cores de cada tema estão no começo do index.css.
+// Aparência do app neste aparelho: estilo (layout), tema de cores e modo escuro.
+// Fica guardada só neste aparelho. É aplicada no <html> como data-estilo, data-tema e data-modo;
+// as cores de cada tema estão no começo do index.css e cada estilo no fim dele.
 // (O index.html aplica a aparência guardada antes da primeira pintura, para não piscar.)
 
 import { useSyncExternalStore } from "react";
@@ -29,6 +29,12 @@ export const TEMAS = [
     cores: { principal: "#7c3aed", destaque: ["#2e1065", "#4c1d95"], suave: "#ede9fe", grafico: ["#5b21b6", "#8b5cf6", "#c4b5fd"] }
   },
   {
+    id: "violeta",
+    nome: "Violeta Elétrico",
+    descricao: "Forte e moderno, cara de banco digital.",
+    cores: { principal: "#3b3bf5", destaque: ["#1b1b8f", "#3b3bf5"], suave: "#ececff", grafico: ["#2a2ab8", "#5b5bff", "#a5a5ff"] }
+  },
+  {
     id: "dourado",
     nome: "Grafite & Dourado",
     descricao: "Visual premium, grafite com dourado.",
@@ -36,10 +42,28 @@ export const TEMAS = [
   }
 ];
 
-const PADRAO = { tema: "azul", escuro: false };
+// Estilos (o "jeito" das telas). As cores vêm do tema; o Vidro tem fundo colorido e cartões de vidro.
+export const ESTILOS = [
+  { id: "classico", nome: "Clássico", descricao: "O visual original do app." },
+  { id: "banco", nome: "Banco digital", descricao: "Saldo em destaque no topo, botões redondos e o + no meio da barra." },
+  { id: "vidro", nome: "Vidro", descricao: "Glassmorfismo: cartões de vidro fosco sobre um fundo colorido." }
+];
+
+// Temas prontos: estilo + cores + modo, num toque
+export const TEMAS_PRONTOS = [
+  { id: "banco-violeta", nome: "Banco digital Violeta", estilo: "banco", tema: "violeta", escuro: false },
+  { id: "banco-verde", nome: "Banco digital Verde", estilo: "banco", tema: "verde", escuro: false },
+  { id: "banco-azul", nome: "Banco digital Azul", estilo: "banco", tema: "azul", escuro: false },
+  { id: "vidro-aurora", nome: "Vidro Aurora", estilo: "vidro", tema: "roxo", escuro: true },
+  { id: "vidro-ceu", nome: "Vidro Céu", estilo: "vidro", tema: "azul", escuro: false }
+];
+
+const PADRAO = { tema: "azul", escuro: false, estilo: "classico" };
 
 // cor da barra do celular (status bar) em cada combinação
-const COR_DA_BARRA = { azul: "#0f172a", verde: "#022c22", roxo: "#2e1065", dourado: "#1c1917" };
+const COR_DA_BARRA = { azul: "#0f172a", verde: "#022c22", roxo: "#2e1065", violeta: "#1b1b8f", dourado: "#1c1917" };
+// no Banco digital o topo é da cor principal do tema
+const COR_DA_BARRA_BANCO = { azul: "#2563eb", verde: "#047857", roxo: "#7c3aed", violeta: "#3b3bf5", dourado: "#b45309" };
 const COR_DA_BARRA_ESCURO = "#0b1220";
 
 function ler() {
@@ -47,7 +71,8 @@ function ler() {
     const a = lerJSON(localStorage.getItem(CHAVE_APARENCIA) || "null");
     return {
       tema: TEMAS.some((t) => t.id === a?.tema) ? a.tema : PADRAO.tema,
-      escuro: a?.escuro === true
+      escuro: a?.escuro === true,
+      estilo: ESTILOS.some((e) => e.id === a?.estilo) ? a.estilo : PADRAO.estilo
     };
   } catch {
     return { ...PADRAO };
@@ -66,8 +91,15 @@ export function aplicarAparencia(a = atual) {
   const raiz = document.documentElement;
   raiz.dataset.tema = a.tema;
   raiz.dataset.modo = a.escuro ? "escuro" : "claro";
+  raiz.dataset.estilo = a.estilo || "classico";
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", a.escuro ? COR_DA_BARRA_ESCURO : COR_DA_BARRA[a.tema] || COR_DA_BARRA.azul);
+  const cor =
+    a.estilo === "banco" && !a.escuro
+      ? COR_DA_BARRA_BANCO[a.tema]
+      : a.escuro
+        ? COR_DA_BARRA_ESCURO
+        : COR_DA_BARRA[a.tema];
+  if (meta) meta.setAttribute("content", cor || COR_DA_BARRA.azul);
 }
 
 export function lerAparencia() {
