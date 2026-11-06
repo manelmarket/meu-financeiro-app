@@ -1,3 +1,5 @@
+import { FileSpreadsheet, FileText } from "lucide-react";
+import { baixarPlanilha } from "../lib/exportar.js";
 import React, { useMemo, useState } from "react";
 import MonthPicker from "../components/MonthPicker.jsx";
 import Donut from "../components/Donut.jsx";
@@ -17,7 +19,8 @@ function numero(v) {
   return money(v).replace(/R\$\s?/u, "");
 }
 
-export default function Reports({ data, hoje, onBack }) {
+export default function Reports({ data, hoje, onBack, onImprimir }) {
+  const [baixando, setBaixando] = useState("");
   const mesHoje = mesDaData(hoje);
   const [mes, setMes] = useState(mesHoje);
 
@@ -42,6 +45,31 @@ export default function Reports({ data, hoje, onBack }) {
       </header>
 
       <MonthPicker mes={mes} mesHoje={mesHoje} onChange={setMes} />
+
+      <div className="relatorio-botoes">
+        <button
+          type="button"
+          className="secondary"
+          disabled={Boolean(baixando)}
+          onClick={async () => {
+            setBaixando("Gerando planilha…");
+            try {
+              await baixarPlanilha(data, mes, hoje);
+              setBaixando("");
+            } catch {
+              setBaixando("Não consegui gerar a planilha. Tente de novo.");
+            }
+          }}
+        >
+          <FileSpreadsheet size={17} /> Baixar Excel
+        </button>
+        {onImprimir && (
+          <button type="button" className="secondary" onClick={() => onImprimir(mes)}>
+            <FileText size={17} /> PDF / imprimir
+          </button>
+        )}
+      </div>
+      {baixando && <p className="hint">{baixando}</p>}
 
       <div className="kpi-grid">
         <section className="mini-card positive">

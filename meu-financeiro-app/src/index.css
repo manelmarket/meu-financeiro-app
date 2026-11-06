@@ -1232,3 +1232,34 @@ button:disabled{opacity:.6;cursor:default}
 /* olho do Início clássico (ao lado do sino) */
 .notif-btn.olho-btn{right:56px}
 .topbar.com-sino{padding-right:88px}
+
+/* ----- relatório: botões, folha e impressão (PDF) ----- */
+.relatorio-botoes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.relatorio-botoes .secondary{padding:12px 10px;font-size:14px}
+.relatorio-topo{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.relatorio-topo .primary{display:inline-flex;align-items:center;gap:8px}
+.relatorio-folha{background:#fff;color:#0f172a;border-radius:16px;padding:20px 18px;margin-top:10px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.relatorio-folha header h1{margin:0;font-size:22px}
+.relatorio-folha header p{margin:4px 0 14px;color:#475569;font-size:12.5px}
+.relatorio-folha h2{font-size:15px;margin:18px 0 6px;color:#0f172a}
+.relatorio-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.relatorio-kpis div{border:1px solid #e2e8f0;border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.relatorio-kpis small{color:#475569;font-size:11.5px}
+.relatorio-kpis b{font-size:14px}
+.relatorio-folha .in{color:#047857}.relatorio-folha .out{color:#b91c1c}
+.relatorio-nota{font-size:11.5px;color:#475569;margin:8px 0 0}
+.relatorio-folha table{width:100%;border-collapse:collapse;font-size:12.5px}
+.relatorio-folha th{text-align:left;color:#475569;font-weight:700;border-bottom:1.5px solid #cbd5e1;padding:5px 4px}
+.relatorio-folha td{border-bottom:1px solid #e2e8f0;padding:5px 4px;vertical-align:top}
+.relatorio-folha td small{color:#64748b}
+.relatorio-folha .num{text-align:right;white-space:nowrap}
+@media print{
+  @page{margin:14mm}
+  body,.app-shell{background:#fff !important;box-shadow:none !important}
+  .bottom-nav,.menu-btn,.nao-imprimir,.aviso-jarvis,.save-error,.drawer-root,.drawer{display:none !important}
+  .app-shell{padding:0 !important;max-width:none !important}
+  .page{padding:0 !important}
+  .tela-anim{animation:none !important}
+  .relatorio-folha{box-shadow:none;border-radius:0;padding:0;margin:0}
+  .relatorio-folha tr{break-inside:avoid}
+}

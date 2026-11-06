@@ -39,6 +39,7 @@ import MesDetalhe from "./pages/MesDetalhe";
 import Importar from "./pages/Importar";
 import ReceitasFixas from "./pages/ReceitasFixas";
 import Assinaturas from "./pages/Assinaturas";
+import RelatorioImpressao from "./pages/RelatorioImpressao";
 import { ignorarAssinatura } from "./lib/assinaturas";
 import { excluirReceitaFixa, lancarReceitasDoDia, ligarReceitaFixa, pularMes, receber, salvarReceitaFixa } from "./lib/receitasFixas";
 
@@ -93,6 +94,7 @@ const ABA_DA_TELA = {
   importar: "home",
   "receitas-fixas": "home",
   assinaturas: "home",
+  "relatorio-pdf": "home",
   investments: "home",
   patrimony: "home",
   backup: "home"
@@ -1122,6 +1124,7 @@ export default function App(){
         data={data}
         hoje={hoje}
         onBack={()=>ir("home")}
+        onImprimir={(mes)=>ir("relatorio-pdf", { mes })}
       />;
       break;
 
@@ -1258,6 +1261,16 @@ export default function App(){
         onSave={(item)=>salvarNaLista("bens", item)}
         onDelete={(id)=>apagarDaLista("bens", id)}
         onOpenInvestments={()=>ir("investments", { voltar:"patrimony" })}
+      />;
+      break;
+
+    case "relatorio-pdf":
+      content =
+      <RelatorioImpressao
+        data={data}
+        hoje={hoje}
+        mes={tela.mes || mesDaData(hoje)}
+        onBack={()=>ir("reports")}
       />;
       break;
 
