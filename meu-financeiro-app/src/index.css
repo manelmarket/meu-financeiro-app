@@ -833,7 +833,8 @@ button:disabled{opacity:.6;cursor:default}
 .jarvis-botoes button{display:inline-flex;align-items:center;gap:5px;padding:9px 14px;border-radius:12px;font-weight:800}
 .jarvis-estado{display:inline-block;margin-top:8px;font-size:12.5px;font-weight:700;color:var(--apagado)}
 .jarvis-estado.ok{margin-top:0;margin-right:auto;color:var(--ok-texto)}
-.jarvis-entrada{position:sticky;bottom:84px;z-index:5;display:flex;gap:8px;margin-top:14px;padding:10px;background:var(--superficie);border:1px solid var(--borda);border-radius:18px;box-shadow:0 6px 20px var(--sombra)}
+.jarvis-entrada{position:sticky;bottom:84px;z-index:5;display:flex;flex-direction:column;gap:10px;margin-top:14px;padding:10px;background:var(--superficie);border:1px solid var(--borda);border-radius:18px;box-shadow:0 6px 20px var(--sombra)}
+.jarvis-linha{display:flex;gap:8px}
 .jarvis-entrada input{flex:1;min-width:0;border:1px solid var(--borda-campo);background:var(--superficie);color:var(--texto);border-radius:13px;padding:12px 13px;outline:none;font-size:15px}
 .jarvis-entrada input:focus{border-color:var(--primaria-texto)}
 .jarvis-entrada .enviar{background:var(--primaria-tinta)}
@@ -1010,3 +1011,19 @@ button:disabled{opacity:.6;cursor:default}
   /* troca de tema: as cores se misturam */
   ::view-transition-old(root),::view-transition-new(root){animation-duration:.35s}
 }
+
+/* Jarvis: microfone grande no centro */
+.jarvis-mic-grande{display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:4px}
+.jarvis-mic-botao{position:relative;width:80px;height:80px;border-radius:50%;border:0;background:var(--primaria);color:#fff;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 0 0 8px var(--primaria-suave-2),0 10px 24px var(--sombra-forte)}
+.jarvis-mic-botao.ouvindo{background:var(--erro);box-shadow:0 0 0 8px var(--erro-fundo),0 10px 24px var(--sombra-forte)}
+.jarvis-mic-botao:disabled{opacity:.6}
+.jarvis-mic-texto{font-size:13px;font-weight:700;color:var(--apagado)}
+@keyframes onda-mic{from{transform:scale(1);opacity:.55}to{transform:scale(1.9);opacity:0}}
+@media (prefers-reduced-motion:no-preference){
+  :root:not([data-animacoes="nao"]) .jarvis-mic-botao{transition:transform .12s ease,background-color .2s ease}
+  :root:not([data-animacoes="nao"]) .jarvis-mic-botao:active{transform:scale(.94)}
+  :root:not([data-animacoes="nao"]) .jarvis-mic-botao.ouvindo::before,
+  :root:not([data-animacoes="nao"]) .jarvis-mic-botao.ouvindo::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--erro);z-index:-1;animation:onda-mic 1.4s ease-out infinite}
+  :root:not([data-animacoes="nao"]) .jarvis-mic-botao.ouvindo::after{animation-delay:.7s}
+}
+@media (max-height:700px){.jarvis-mic-botao{width:64px;height:64px}.jarvis-mic-grande{gap:6px}}
