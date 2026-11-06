@@ -36,6 +36,7 @@ import Familia from "./pages/Familia";
 import Categorias from "./pages/Categorias";
 import Emprestimos from "./pages/Emprestimos";
 import MesDetalhe from "./pages/MesDetalhe";
+import Importar from "./pages/Importar";
 
 import useNuvem from "./lib/useNuvem";
 import useLembretesNoCelular from "./lib/useLembretes";
@@ -83,6 +84,7 @@ const ABA_DA_TELA = {
   assistant: "home",
   jarvis: "jarvis",
   mes: "home",
+  importar: "home",
   investments: "home",
   patrimony: "home",
   backup: "home"
@@ -1172,6 +1174,17 @@ export default function App(){
         onSave={(item)=>salvarNaLista("bens", item)}
         onDelete={(id)=>apagarDaLista("bens", id)}
         onOpenInvestments={()=>ir("investments", { voltar:"patrimony" })}
+      />;
+      break;
+
+    case "importar":
+      content =
+      <Importar
+        data={data}
+        setData={setData}
+        hoje={hoje}
+        onBack={()=>ir("home")}
+        onIr={(p)=>ir(p)}
       />;
       break;
 

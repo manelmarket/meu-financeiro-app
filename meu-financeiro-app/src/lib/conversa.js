@@ -52,7 +52,8 @@ export const PAGINAS = {
   temas: "Temas",
   profile: "Perfil",
   settings: "Configurações",
-  backup: "Backup e nuvem"
+  backup: "Backup e nuvem",
+  importar: "Importar planilha"
 };
 
 // ---------- utilidades ----------
