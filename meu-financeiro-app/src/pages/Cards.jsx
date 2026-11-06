@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Plus } from "lucide-react";
 import CardSummary from "../components/CardSummary.jsx";
 import CardForm from "../components/CardForm.jsx";
+import CartaoModerno from "../components/CartaoModerno.jsx";
+import { usarAparencia } from "../lib/aparencia.js";
 import PagarFatura from "../components/PagarFatura.jsx";
 import { faturasParaPagar, resumoDoCartao } from "../lib/cartao.js";
 import { money, rotuloMes } from "../lib/formato.js";
@@ -11,6 +13,9 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
   // fatura sendo paga: { cartaoId, mes }
   const [pagando, setPagando] = useState(null);
   const [aviso, setAviso] = useState("");
+  const [novoCartao, setNovoCartao] = useState(false);
+  const { estilo } = usarAparencia();
+  const moderno = estilo === "banco" || estilo === "vidro";
 
   useEffect(() => {
     if (!aviso) return undefined;
@@ -41,6 +46,65 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
     setPagando(null);
     setAviso(
       `Pagamento de ${money(pagamento.valor)} registrado na fatura de ${rotuloMes(pagamento.fatura)} do cartão ${cartaoPagando.nome}.`
+    );
+  }
+
+  const janelaDePagamento = faturasPagando.length > 0 && (
+    <PagarFatura
+      key={`${pagando.cartaoId}-${pagando.mes}`}
+      cartao={cartaoPagando}
+      faturas={faturasPagando}
+      inicial={pagando.mes}
+      disponivel={resumoPagando.disponivel}
+      bancos={resumoDosBancos(data).bancos}
+      hoje={hoje}
+      onConfirmar={confirmarPagamento}
+      onFechar={() => setPagando(null)}
+    />
+  );
+
+  if (moderno) {
+    const semCartao = data.cartoes.length === 0;
+    return (
+      <div className="page cartoes-m">
+        <header className="topbar cartoes-m-topo">
+          <div>
+            <h1>Cartões</h1>
+          </div>
+          <button type="button" className="cartoes-m-mais" onClick={() => setNovoCartao((v) => !v)} aria-label="Adicionar cartão" aria-expanded={novoCartao || semCartao}>
+            <Plus size={20} strokeWidth={2.4} />
+          </button>
+        </header>
+        {aviso && (
+          <p className="pag-feito" role="status">
+            {aviso}
+          </p>
+        )}
+        {(novoCartao || semCartao) && (
+          <CardForm
+            titulo="Adicionar cartão"
+            textoBotao="Adicionar"
+            onSave={(c) => {
+              onSaveCard(c);
+              setNovoCartao(false);
+            }}
+          />
+        )}
+        {data.cartoes.map((cartao) => (
+          <CartaoModerno
+            key={cartao.id}
+            cartao={cartao}
+            resumo={resumoDoCartao(cartao, hoje)}
+            hoje={hoje}
+            onAbrir={() => onOpen(cartao.id)}
+            onPagar={(fatura) => fatura && setPagando({ cartaoId: cartao.id, mes: fatura.mes })}
+            onNovaCompra={() => onNewPurchase(cartao.id)}
+            onCalendario={onCalendar}
+            onExcluir={() => excluirCartao(cartao)}
+          />
+        ))}
+        {janelaDePagamento}
+      </div>
     );
   }
 
@@ -102,19 +166,7 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
 
       <CardForm titulo="Adicionar cartão" textoBotao="Adicionar" onSave={onSaveCard} />
 
-      {faturasPagando.length > 0 && (
-        <PagarFatura
-          key={`${pagando.cartaoId}-${pagando.mes}`}
-          cartao={cartaoPagando}
-          faturas={faturasPagando}
-          inicial={pagando.mes}
-          disponivel={resumoPagando.disponivel}
-          bancos={resumoDosBancos(data).bancos}
-          hoje={hoje}
-          onConfirmar={confirmarPagamento}
-          onFechar={() => setPagando(null)}
-        />
-      )}
+      {janelaDePagamento}
     </div>
   );
 }

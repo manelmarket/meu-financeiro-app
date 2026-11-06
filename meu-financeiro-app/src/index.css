@@ -1027,3 +1027,86 @@ button:disabled{opacity:.6;cursor:default}
   :root:not([data-animacoes="nao"]) .jarvis-mic-botao.ouvindo::after{animation-delay:.7s}
 }
 @media (max-height:700px){.jarvis-mic-botao{width:64px;height:64px}.jarvis-mic-grande{gap:6px}}
+
+/* ================= telas no jeito da prévia (estilos Banco digital e Vidro) ================= */
+/* ----- Extrato ----- */
+.extrato .topbar h1,.cartoes-m .topbar h1{font-size:27px;letter-spacing:-.3px}
+.extrato-busca{width:100%;height:48px;border-radius:14px;border:1px solid var(--borda);background:var(--superficie);color:var(--texto);padding:0 14px;font-size:15px;box-shadow:0 1px 2px var(--sombra)}
+.extrato-filtros{margin:12px 0 2px}
+.extrato-filtros button,.chips-categoria-lista button{min-height:38px;padding:0 14px;font-size:14px;font-weight:700;border-radius:999px;border:1px solid var(--borda-3);background:var(--superficie);color:var(--texto-2)}
+.extrato-filtros button.active-chip{background:var(--primaria);border-color:var(--primaria);color:#fff}
+.extrato-resumo .mini-card{padding:12px 14px}
+.extrato-resumo .mini-card strong{font-size:18px}
+.extrato-dia h2{margin:18px 4px 8px;font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--apagado)}
+.extrato-lista{margin-top:0;padding:2px 14px}
+.extrato-item{gap:12px;justify-content:flex-start}
+.extrato-item:last-child{border-bottom:0}
+.extrato-icone{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;font-weight:800}
+.extrato-texto{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.extrato-texto span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.extrato-vazio{text-align:center;margin:28px 0}
+
+/* ----- Cartões ----- */
+.cartoes-m-topo{align-items:center}
+.cartoes-m-mais{width:44px;height:44px;border-radius:50%;border:0;background:var(--superficie);color:var(--texto);display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px var(--sombra-media);padding:0}
+.cartao-m{margin-bottom:26px}
+.cartao-m-visual{position:relative;overflow:hidden;width:100%;min-height:196px;border:0;border-radius:24px;padding:22px;display:flex;flex-direction:column;justify-content:space-between;gap:18px;text-align:left;color:#fff;background:#12132b;box-shadow:0 14px 30px var(--sombra-forte)}
+.cartao-m-visual:not(.do-banco)::before{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:var(--primaria);opacity:.6}
+.cartao-m-visual.do-banco{background:var(--cc-fundo);color:var(--cc-texto)}
+.cartao-m-visual > span{position:relative;display:flex}
+.cartao-m-topo{justify-content:space-between;align-items:center}
+.cartao-m-topo b{font-size:22px}
+.cartao-m-topo small{font-size:13px;font-weight:700;opacity:.85}
+.cartao-m-fatura{flex-direction:column;gap:4px}
+.cartao-m-fatura small{font-size:13px;opacity:.85}
+.cartao-m-fatura strong{font-size:31px;letter-spacing:-.4px}
+.cartao-m-limite{display:flex;flex-direction:column;gap:10px}
+.cartao-m-linha{display:flex;justify-content:space-between;gap:10px;font-size:14px}
+.cartao-m-linha span{color:var(--apagado)}
+.cartao-m-disponivel{font-size:14px;font-weight:700;color:var(--ok)}
+.cartao-m-disponivel.neg{color:var(--erro)}
+.cartao-m-limite .cc-closed{font-size:13px;color:var(--texto-3);background:var(--superficie-3);border-radius:12px;padding:9px 11px}
+.cartao-m-acoes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.cartao-m-acoes button{min-height:76px;border:0;border-radius:18px;background:var(--superficie);color:var(--texto);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:700;box-shadow:0 1px 2px var(--sombra)}
+.cartao-m-acoes button.destaque{background:var(--primaria);color:#fff}
+.cartao-m-acoes button:disabled{opacity:.5}
+.cartao-m-compras h2{font-size:17px}
+.cartao-m-rodape{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding-top:12px}
+.cartao-m-rodape .perigo{color:var(--erro);display:inline-flex;align-items:center;gap:5px}
+
+/* ----- Novo lançamento ----- */
+.lancar-m-topo{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.lancar-m-topo h1{flex:1;margin:0;font-size:21px}
+.lancar-m-redondo{width:44px;height:44px;border-radius:50%;border:0;background:var(--superficie-3);color:var(--texto);display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
+.lancar-m-redondo.jarvis{background:var(--primaria-suave-2);color:var(--primaria-texto)}
+.lancar-m-frase{display:flex;align-items:center;gap:6px;margin:0 auto 12px;border:0;background:transparent;color:var(--primaria-texto);font-size:13.5px;font-weight:700;padding:6px 8px}
+.lancar-m .falar-box{margin-bottom:12px}
+.form-m .segmented{border-radius:14px}
+.form-m .segmented button{border-radius:11px}
+.form-m .segmented button[aria-checked="true"]{background:var(--superficie);color:var(--texto);box-shadow:0 1px 3px var(--sombra-media)}
+.lancar-m-valor{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0 2px}
+.lancar-m-valor small{font-size:13.5px;color:var(--apagado);font-weight:700}
+.lancar-m-valor strong{font-size:42px;line-height:1.15;letter-spacing:-.5px;color:var(--texto);margin-bottom:10px}
+.lancar-m-valor strong.in{color:var(--ok)}
+.lancar-m-valor strong.transf{color:var(--primaria-texto)}
+.teclado{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;background:var(--superficie-3);border-radius:18px;padding:10px}
+.teclado button{height:52px;border:0;border-radius:14px;background:var(--superficie);color:var(--texto);font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px var(--sombra)}
+.chips-categoria{display:flex;flex-direction:column;gap:7px}
+.chips-categoria-rotulo{font-size:13px;color:var(--texto-3);font-weight:700}
+.chips-categoria-lista{display:flex;gap:8px;flex-wrap:wrap}
+.chips-categoria-lista button.ativo{background:var(--primaria);border-color:var(--primaria);color:#fff}
+.chips-categoria-lista button.nova{border-style:dashed;color:var(--primaria-texto)}
+.form-m .actions .primary{flex:1;min-height:54px;font-size:16px}
+@media (prefers-reduced-motion:no-preference){
+  :root:not([data-animacoes="nao"]) :is(.teclado button,.cartao-m-acoes button,.cartao-m-visual,.extrato-filtros button,.chips-categoria-lista button,.lancar-m-redondo,.cartoes-m-mais){transition:transform .12s ease,background-color .2s ease}
+  :root:not([data-animacoes="nao"]) :is(.teclado button,.cartao-m-acoes button,.cartao-m-visual,.extrato-filtros button,.chips-categoria-lista button,.lancar-m-redondo,.cartoes-m-mais):active{transform:scale(.95)}
+  :root:not([data-animacoes="nao"]) .lancar-m-valor strong{transition:color .2s ease}
+}
+/* vidro */
+[data-estilo="vidro"] :is(.extrato-busca,.extrato-filtros button:not(.active-chip),.chips-categoria-lista button:not(.ativo),.cartao-m-acoes button:not(.destaque),.teclado button,.cartoes-m-mais){background:var(--superficie);border:1px solid var(--borda);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+[data-estilo="vidro"] .teclado{background:transparent;padding:0}
+[data-estilo="vidro"] .cartao-m-visual:not(.do-banco){background:linear-gradient(150deg,rgba(255,255,255,.22),rgba(255,255,255,.06)),var(--destaque-1);border:1px solid rgba(255,255,255,.3)}
+/* no Novo lançamento novo já tem o botão de voltar: o ⋮ sai para não ficar por cima */
+.conteudo:has(.lancar-m) > .menu-btn{display:none}
+.form-m .segmented.tres button{font-size:13.5px;letter-spacing:-.2px;padding:11px 2px}
+[data-estilo="vidro"][data-modo="escuro"] .lancar-m-frase,[data-estilo="vidro"][data-modo="escuro"] .chips-categoria-lista button.nova{color:rgba(255,255,255,.88)}

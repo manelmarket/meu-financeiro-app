@@ -1,11 +1,12 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { ArrowLeft, Delete, Mic, Sparkles, X } from "lucide-react";
+import { usarAparencia } from "../lib/aparencia.js";
 import { esquecerFraseDoJarvis, lerFraseDoJarvis } from "../lib/jarvis.js";
 import { interpretarFrase } from "../lib/interpretar.js";
 import ScanButton from "../components/ScanButton.jsx";
 import FalarOuEscrever from "../components/FalarOuEscrever.jsx";
-import { SeletorCategoria } from "../components/Categoria.jsx";
+import { ChipsCategoria, SeletorCategoria } from "../components/Categoria.jsx";
 import { CATEGORIA_PADRAO, FORMAS_PAGAMENTO, nomesDasCategorias } from "../lib/categorias.js";
 import { arredondar, dataBR, dataValida, hojeISO, money, parseValor, rotuloMes } from "../lib/formato.js";
 import { datasDaFatura, mesDaFatura, valoresDasParcelas } from "../lib/cartao.js";
@@ -62,8 +63,12 @@ export default function NewEntry({
   onCancel,
   onConfigurarIA,
   onCriarCategoria,
-  onTransferir
+  onTransferir,
+  onJarvis
 }) {
+  const { estilo } = usarAparencia();
+  const moderno = estilo === "banco" || estilo === "vidro";
+  const [mostrarFrase, setMostrarFrase] = useState(false);
   const bancoPadrao = bancoGuardado(bancos);
   const carteira = acharCarteira(dados);
   const bancoDoDinheiro = carteira ? String(carteira.id) : "";
@@ -312,18 +317,50 @@ export default function NewEntry({
 
   const ehTransferencia = tipo === "transferencia";
 
+  // teclado numérico (estilos Banco digital e Vidro): os dígitos entram pelos centavos
+  function teclar(t) {
+    setErro("");
+    const atual = Math.round((parseValor(valor) > 0 ? parseValor(valor) : 0) * 100);
+    let novo = t === "apagar" ? Math.floor(atual / 10) : t === "00" ? atual * 100 : atual * 10 + Number(t);
+    if (novo > 99999999999) novo = atual;
+    setValor(novo > 0 ? textoDoValor(novo / 100) : "");
+  }
+
   return (
-    <div className="page">
-      <header className="topbar">
-        <div>
-          <div className="eyebrow">Novo lançamento</div>
-          <h1>Registrar movimentação</h1>
-        </div>
-      </header>
+    <div className={`page${moderno ? " lancar-m" : ""}`}>
+      {moderno ? (
+        <header className="lancar-m-topo">
+          <button type="button" className="lancar-m-redondo" onClick={onCancel} aria-label="Voltar">
+            <ArrowLeft size={20} />
+          </button>
+          <h1>Novo lançamento</h1>
+          {onJarvis && (
+            <button type="button" className="lancar-m-redondo jarvis" onClick={onJarvis} aria-label="Lançar falando com o Jarvis">
+              <Mic size={20} />
+            </button>
+          )}
+        </header>
+      ) : (
+        <header className="topbar">
+          <div>
+            <div className="eyebrow">Novo lançamento</div>
+            <h1>Registrar movimentação</h1>
+          </div>
+        </header>
+      )}
 
-      <FalarOuEscrever dados={dados} hoje={hoje} onPreencher={preencherPelaFrase} onConfigurarIA={onConfigurarIA} />
+      {moderno ? (
+        <>
+          <button type="button" className="lancar-m-frase" onClick={() => setMostrarFrase((v) => !v)} aria-expanded={mostrarFrase}>
+            <Sparkles size={15} /> {mostrarFrase ? "Esconder" : "Preencher falando ou escrevendo uma frase"}
+          </button>
+          {mostrarFrase && <FalarOuEscrever dados={dados} hoje={hoje} onPreencher={preencherPelaFrase} onConfigurarIA={onConfigurarIA} />}
+        </>
+      ) : (
+        <FalarOuEscrever dados={dados} hoje={hoje} onPreencher={preencherPelaFrase} onConfigurarIA={onConfigurarIA} />
+      )}
 
-      <form className="section-card form" onSubmit={submit}>
+      <form className={`section-card form${moderno ? " form-m" : ""}`} onSubmit={submit}>
         <div className="segmented tres" role="radiogroup" aria-label="Tipo">
           <button
             type="button"
@@ -363,6 +400,22 @@ export default function NewEntry({
           </button>
         </div>
 
+        {moderno && (
+          <div className="lancar-m-valor">
+            <small>Valor</small>
+            <strong className={tipo === "entrada" ? "in" : ehTransferencia ? "transf" : ""} aria-live="polite">
+              {money(total > 0 ? total : 0)}
+            </strong>
+            <div className="teclado" role="group" aria-label="Teclado do valor">
+              {["1", "2", "3", "4", "5", "6", "7", "8", "9", "00", "0", "apagar"].map((t) => (
+                <button type="button" key={t} onClick={() => teclar(t)} aria-label={t === "apagar" ? "Apagar" : t}>
+                  {t === "apagar" ? <Delete size={22} /> : t}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {tipo === "saida" && <ScanButton onResult={preencherPeloCupom} onConfigurar={onConfigurarIA} categorias={categoriasDisponiveis} />}
         {foto && tipo === "saida" && (
           <p className="hint">
@@ -370,18 +423,20 @@ export default function NewEntry({
           </p>
         )}
 
-        <label>
-          Valor
-          <input
-            inputMode="decimal"
-            placeholder="0,00"
-            value={valor}
-            onChange={(e) => {
-              setValor(e.target.value);
-              setErro("");
-            }}
-          />
-        </label>
+        {!moderno && (
+          <label>
+            Valor
+            <input
+              inputMode="decimal"
+              placeholder="0,00"
+              value={valor}
+              onChange={(e) => {
+                setValor(e.target.value);
+                setErro("");
+              }}
+            />
+          </label>
+        )}
         <label>
           {ehTransferencia ? "Descrição (opcional)" : "Descrição"}
           <input
@@ -393,7 +448,12 @@ export default function NewEntry({
             }}
           />
         </label>
-        {tipo === "saida" && <SeletorCategoria dados={dados} valor={categoria} onChange={setCategoria} onCriar={onCriarCategoria} />}
+        {tipo === "saida" &&
+          (moderno ? (
+            <ChipsCategoria dados={dados} valor={categoria} onChange={setCategoria} onCriar={onCriarCategoria} />
+          ) : (
+            <SeletorCategoria dados={dados} valor={categoria} onChange={setCategoria} onCriar={onCriarCategoria} />
+          ))}
 
         {ehTransferencia ? (
           <>
@@ -540,7 +600,7 @@ export default function NewEntry({
             Cancelar
           </button>
           <button className="primary" disabled={salvando}>
-            Salvar
+            {moderno ? "Salvar lançamento" : "Salvar"}
           </button>
         </div>
       </form>

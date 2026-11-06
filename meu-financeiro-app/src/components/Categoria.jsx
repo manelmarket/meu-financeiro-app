@@ -173,3 +173,45 @@ export function SeletorCategoria({ dados, valor, onChange, onCriar, rotulo = "Ca
     </>
   );
 }
+
+// Categorias em botões (estilos Banco digital e Vidro): a escolhida fica destacada; "+ Nova" cria outra
+export function ChipsCategoria({ dados, valor, onChange, onCriar }) {
+  const [criando, setCriando] = useState(false);
+  const categorias = listarCategorias(dados);
+  const lista = categorias.some((c) => c.nome === valor) || !valor ? categorias : [...categorias, infoDaCategoria(dados, valor)];
+  return (
+    <div className="chips-categoria">
+      <span className="chips-categoria-rotulo">Categoria</span>
+      <div className="chips-categoria-lista" role="radiogroup" aria-label="Categoria">
+        {lista.map((c) => (
+          <button
+            type="button"
+            key={c.id ?? c.nome}
+            role="radio"
+            aria-checked={c.nome === valor}
+            className={c.nome === valor ? "ativo" : ""}
+            onClick={() => onChange(c.nome)}
+          >
+            <span aria-hidden="true">{c.icone}</span> {c.nome}
+          </button>
+        ))}
+        {onCriar && (
+          <button type="button" className="nova" onClick={() => setCriando(true)}>
+            + Nova
+          </button>
+        )}
+      </div>
+      {criando && (
+        <CategoriaForm
+          dados={dados}
+          onSalvar={(form) => {
+            onCriar(form);
+            onChange(form.nome.trim());
+            setCriando(false);
+          }}
+          onCancelar={() => setCriando(false)}
+        />
+      )}
+    </div>
+  );
+}
