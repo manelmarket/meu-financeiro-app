@@ -62,6 +62,7 @@ import {
 import { apagarCupom, comprimirImagem, dataURLParaBlob, limparCupons, salvarCupom } from "./storage/cupons";
 import { arredondar, hojeISO, mesDaData } from "./lib/formato";
 import { editarLancamento } from "./lib/lancar";
+import { usarValoresEscondidos } from "./lib/privacidade";
 import { alternarConta } from "./lib/mes";
 import { comOrcamento } from "./lib/orcamento";
 import { excluirBanco, guardarPagamentosDaConta, guardarPagamentosDoCartao, guardarPagamentosDoEmprestimo, resumoDosBancos, salvarBanco } from "./lib/saldos";
@@ -109,6 +110,9 @@ const ITEM_DO_MENU = {
 export default function App(){
 
   const [data,setData] = useState(()=>loadData());
+
+  // "Esconder valores": a tela é desenhada de novo ao ligar/desligar
+  const escondido = usarValoresEscondidos();
 
   const [tela,setTela] = useState({ page:"home" });
 
@@ -1459,7 +1463,7 @@ export default function App(){
 
         </button>
 
-        <div key={`${tela.page}-${tela.cardId ?? ""}`} className={`tela-anim ${direcao.current}`}>
+        <div key={`${tela.page}-${tela.cardId ?? ""}-${escondido ? "e" : "v"}`} className={`tela-anim ${direcao.current}`}>
 
           {content}
 

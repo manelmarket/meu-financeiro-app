@@ -1,18 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { ArrowLeftRight, Bell, CalendarCheck, Eye, EyeOff, Mic, Plus } from "lucide-react";
 import { money, nomeMes } from "../lib/formato.js";
 import { resumoDosBancos } from "../lib/saldos.js";
 import { nomeParaMostrar, primeiroNome } from "../lib/perfil.js";
-
-const CHAVE_ESCONDER = "meu_financeiro_esconder_valores";
-
-function lerEscondido() {
-  try {
-    return localStorage.getItem(CHAVE_ESCONDER) === "1";
-  } catch {
-    return false;
-  }
-}
+import { esconderValores, usarValoresEscondidos } from "../lib/privacidade.js";
 
 function saudacao(agora = new Date()) {
   const h = agora.getHours();
@@ -22,22 +13,12 @@ function saudacao(agora = new Date()) {
 // Topo do Início nos estilos Banco digital e Vidro: saldo dos bancos em destaque (com o olho para esconder),
 // e os botões redondos de ação rápida
 export default function HeroBanco({ data, perfil, conta, mes, saldoDoMes, avisos, onNotificacoes, onNew, onOpenPage }) {
-  const [escondido, setEscondido] = useState(() => lerEscondido());
+  const escondido = usarValoresEscondidos();
   const { bancos, total } = resumoDosBancos(data);
   const nome = primeiroNome(nomeParaMostrar(perfil || data.usuario, conta) || "");
   const temBancos = bancos.length > 0;
-  const mostrar = (v) => (escondido ? "R$ ••••" : money(v));
-
-  function alternar() {
-    const novo = !escondido;
-    setEscondido(novo);
-    try {
-      if (novo) localStorage.setItem(CHAVE_ESCONDER, "1");
-      else localStorage.removeItem(CHAVE_ESCONDER);
-    } catch {
-      // vale até fechar o app
-    }
-  }
+  const mostrar = (v) => money(v);
+  const alternar = () => esconderValores(!escondido);
 
   const detalhe = temBancos
     ? bancos

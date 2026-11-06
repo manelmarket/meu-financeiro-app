@@ -7,8 +7,7 @@ import { mapaDeCategorias, infoDaCategoria } from "../lib/categorias.js";
 import { caminhoDaTransferencia, ehTransferencia, rotuloDoSubtipo } from "../lib/transferencias.js";
 import { usarAparencia } from "../lib/aparencia.js";
 import { resumoDoMes } from "../lib/mes.js";
-import { MESES, hojeISO, mesDaData, somarDias } from "../lib/formato.js";
-const money = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+import { MESES, hojeISO, mesDaData, money, somarDias } from "../lib/formato.js";
 
 // "Pix (Nubank) + Dinheiro" — e, se parte do gasto foi no cartão, "+ cartão Itaú"
 function comoFoiPago(item, data) {

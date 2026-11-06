@@ -1228,3 +1228,7 @@ button:disabled{opacity:.6;cursor:default}
 .resumo-semana .insight p{font-size:14px}
 .resumo-ouvir{display:inline-flex;align-items:center;gap:5px}
 .resumo-semana .wide{margin-top:12px}
+
+/* olho do Início clássico (ao lado do sino) */
+.notif-btn.olho-btn{right:56px}
+.topbar.com-sino{padding-right:88px}

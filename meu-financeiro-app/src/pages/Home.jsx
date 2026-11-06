@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { Bell } from "lucide-react";
+import { Bell, Eye, EyeOff } from "lucide-react";
+import { esconderValores, usarValoresEscondidos } from "../lib/privacidade.js";
 import MonthPicker from "../components/MonthPicker.jsx";
 import Notificacoes from "../components/Notificacoes.jsx";
 import HeroBanco from "../components/HeroBanco.jsx";
@@ -180,6 +181,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
 
   // estilos Banco digital e Vidro: o topo vira o saldo em destaque com as ações rápidas
   const { estilo } = usarAparencia();
+  const escondido = usarValoresEscondidos();
   const heroi = estilo === "banco" || estilo === "vidro";
 
   return (
@@ -204,6 +206,15 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
           <div className="eyebrow">Meu mês</div>
           <h1>Olá, {nomeParaMostrar(perfil || data.usuario, nuvem?.usuario) || "você"} 👋</h1>
         </div>
+        <button
+          type="button"
+          className="notif-btn olho-btn"
+          aria-label={escondido ? "Mostrar valores" : "Esconder valores"}
+          title={escondido ? "Mostrar valores" : "Esconder valores"}
+          onClick={() => esconderValores(!escondido)}
+        >
+          {escondido ? <EyeOff size={20} strokeWidth={2.4} /> : <Eye size={20} strokeWidth={2.4} />}
+        </button>
         <button
           type="button"
           className="notif-btn"
