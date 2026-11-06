@@ -58,7 +58,7 @@ export const TEMAS_PRONTOS = [
   { id: "vidro-ceu", nome: "Vidro Céu", estilo: "vidro", tema: "azul", escuro: false }
 ];
 
-const PADRAO = { tema: "azul", escuro: false, estilo: "classico" };
+const PADRAO = { tema: "azul", escuro: false, estilo: "classico", animacoes: true };
 
 // cor da barra do celular (status bar) em cada combinação
 const COR_DA_BARRA = { azul: "#0f172a", verde: "#022c22", roxo: "#2e1065", violeta: "#1b1b8f", dourado: "#1c1917" };
@@ -72,7 +72,8 @@ function ler() {
     return {
       tema: TEMAS.some((t) => t.id === a?.tema) ? a.tema : PADRAO.tema,
       escuro: a?.escuro === true,
-      estilo: ESTILOS.some((e) => e.id === a?.estilo) ? a.estilo : PADRAO.estilo
+      estilo: ESTILOS.some((e) => e.id === a?.estilo) ? a.estilo : PADRAO.estilo,
+      animacoes: a?.animacoes !== false
     };
   } catch {
     return { ...PADRAO };
@@ -92,6 +93,7 @@ export function aplicarAparencia(a = atual) {
   raiz.dataset.tema = a.tema;
   raiz.dataset.modo = a.escuro ? "escuro" : "claro";
   raiz.dataset.estilo = a.estilo || "classico";
+  raiz.dataset.animacoes = a.animacoes === false ? "nao" : "sim";
   const meta = document.querySelector('meta[name="theme-color"]');
   const cor =
     a.estilo === "banco" && !a.escuro
@@ -106,6 +108,20 @@ export function lerAparencia() {
   return atual;
 }
 
+// as cores mudam com uma transição suave (quando o navegador sabe fazer e as animações estão ligadas)
+function comTransicao(mudar) {
+  try {
+    const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (atual.animacoes !== false && !reduzir && typeof document.startViewTransition === "function") {
+      document.startViewTransition(mudar);
+      return;
+    }
+  } catch {
+    // sem transição
+  }
+  mudar();
+}
+
 export function mudarAparencia(parcial) {
   atual = { ...atual, ...parcial };
   try {
@@ -113,7 +129,7 @@ export function mudarAparencia(parcial) {
   } catch {
     // sem espaço: vale só até fechar o app
   }
-  aplicarAparencia(atual);
+  comTransicao(() => aplicarAparencia(atual));
   avisar();
 }
 

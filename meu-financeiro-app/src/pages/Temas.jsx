@@ -1,5 +1,5 @@
 import React from "react";
-import { Check, Moon, Sun } from "lucide-react";
+import { Check, Moon, Sparkles, Sun } from "lucide-react";
 import { ESTILOS, TEMAS, TEMAS_PRONTOS, mudarAparencia, usarAparencia } from "../lib/aparencia.js";
 
 // Interruptor liga/desliga (usado aqui e no menu lateral)
@@ -152,6 +152,16 @@ export default function Temas({ onBack }) {
             <small>Fundo escuro, mais confortável à noite. Vale para todos os temas.</small>
           </span>
           <Interruptor ligado={aparencia.escuro} onMudar={(v) => mudarAparencia({ escuro: v })} rotulo="Modo escuro" />
+        </div>
+        <div className="tema-escuro tema-animacoes">
+          <span className="tema-escuro-icone" aria-hidden="true">
+            <Sparkles size={20} />
+          </span>
+          <span className="settings-text">
+            <b>Animações</b>
+            <small>Telas deslizando, listas aparecendo e botões que respondem ao toque.</small>
+          </span>
+          <Interruptor ligado={aparencia.animacoes !== false} onMudar={(v) => mudarAparencia({ animacoes: v })} rotulo="Animações" />
         </div>
       </section>
 
