@@ -1,5 +1,5 @@
 import React from "react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { MoreVertical } from "lucide-react";
 
@@ -8,40 +8,82 @@ import MenuLateral from "./components/MenuLateral";
 import AvisoAtualizacao from "./components/AvisoAtualizacao";
 
 import Home from "./pages/Home";
-import Reports from "./pages/Reports";
 import NewEntry, { bancoGuardado } from "./pages/NewEntry";
 import { esquecerFraseDoJarvis, lancarDaFrase, lerPedidoDoJarvis, pedidoAssinadoValido, pegarPedidoDeOuvir } from "./lib/jarvis";
-import History from "./pages/History";
-import Cards from "./pages/Cards";
-import Goals from "./pages/Goals";
-import CardDetails from "./pages/CardDetails";
-import FutureEntries from "./pages/FutureEntries";
-import InvoiceCalendar from "./pages/InvoiceCalendar";
-import Bills from "./pages/Bills";
-import Vencimentos from "./pages/Vencimentos";
-import Investments from "./pages/Investments";
-import Patrimony from "./pages/Patrimony";
 import Assistant from "./pages/Assistant";
-import Jarvis from "./pages/Jarvis";
-import Backup from "./pages/Backup";
-import Settings from "./pages/Settings";
-import Profile from "./pages/Profile";
 import Entrada from "./pages/Entrada";
 import Temas from "./pages/Temas";
-import Orcamentos from "./pages/Orcamentos";
-import Lembretes from "./pages/Lembretes";
-import Bancos from "./pages/Bancos";
-import Conquistas from "./pages/Conquistas";
-import Familia from "./pages/Familia";
-import Categorias from "./pages/Categorias";
-import Emprestimos from "./pages/Emprestimos";
-import MesDetalhe from "./pages/MesDetalhe";
-import Importar from "./pages/Importar";
-import ReceitasFixas from "./pages/ReceitasFixas";
-import Assinaturas from "./pages/Assinaturas";
-import RelatorioImpressao from "./pages/RelatorioImpressao";
 import { ignorarAssinatura } from "./lib/assinaturas";
 import { excluirReceitaFixa, lancarReceitasDoDia, ligarReceitaFixa, pularMes, receber, salvarReceitaFixa } from "./lib/receitasFixas";
+
+
+// Telas carregadas só quando abertas (o Início abre mais rápido); depois do Início, o resto é baixado em segundo plano
+const TELAS = {
+  Reports: () => import("./pages/Reports"),
+  History: () => import("./pages/History"),
+  Cards: () => import("./pages/Cards"),
+  Goals: () => import("./pages/Goals"),
+  CardDetails: () => import("./pages/CardDetails"),
+  FutureEntries: () => import("./pages/FutureEntries"),
+  InvoiceCalendar: () => import("./pages/InvoiceCalendar"),
+  Bills: () => import("./pages/Bills"),
+  Vencimentos: () => import("./pages/Vencimentos"),
+  Investments: () => import("./pages/Investments"),
+  Patrimony: () => import("./pages/Patrimony"),
+  Jarvis: () => import("./pages/Jarvis"),
+  Backup: () => import("./pages/Backup"),
+  Settings: () => import("./pages/Settings"),
+  Profile: () => import("./pages/Profile"),
+  Orcamentos: () => import("./pages/Orcamentos"),
+  Lembretes: () => import("./pages/Lembretes"),
+  Bancos: () => import("./pages/Bancos"),
+  Conquistas: () => import("./pages/Conquistas"),
+  Familia: () => import("./pages/Familia"),
+  Categorias: () => import("./pages/Categorias"),
+  Emprestimos: () => import("./pages/Emprestimos"),
+  MesDetalhe: () => import("./pages/MesDetalhe"),
+  Importar: () => import("./pages/Importar"),
+  ReceitasFixas: () => import("./pages/ReceitasFixas"),
+  Assinaturas: () => import("./pages/Assinaturas"),
+  RelatorioImpressao: () => import("./pages/RelatorioImpressao")
+};
+const Reports = lazy(TELAS.Reports);
+const History = lazy(TELAS.History);
+const Cards = lazy(TELAS.Cards);
+const Goals = lazy(TELAS.Goals);
+const CardDetails = lazy(TELAS.CardDetails);
+const FutureEntries = lazy(TELAS.FutureEntries);
+const InvoiceCalendar = lazy(TELAS.InvoiceCalendar);
+const Bills = lazy(TELAS.Bills);
+const Vencimentos = lazy(TELAS.Vencimentos);
+const Investments = lazy(TELAS.Investments);
+const Patrimony = lazy(TELAS.Patrimony);
+const Jarvis = lazy(TELAS.Jarvis);
+const Backup = lazy(TELAS.Backup);
+const Settings = lazy(TELAS.Settings);
+const Profile = lazy(TELAS.Profile);
+const Orcamentos = lazy(TELAS.Orcamentos);
+const Lembretes = lazy(TELAS.Lembretes);
+const Bancos = lazy(TELAS.Bancos);
+const Conquistas = lazy(TELAS.Conquistas);
+const Familia = lazy(TELAS.Familia);
+const Categorias = lazy(TELAS.Categorias);
+const Emprestimos = lazy(TELAS.Emprestimos);
+const MesDetalhe = lazy(TELAS.MesDetalhe);
+const Importar = lazy(TELAS.Importar);
+const ReceitasFixas = lazy(TELAS.ReceitasFixas);
+const Assinaturas = lazy(TELAS.Assinaturas);
+const RelatorioImpressao = lazy(TELAS.RelatorioImpressao);
+
+function baixarTelasEmSegundoPlano(){
+
+  const baixar = ()=>Object.values(TELAS).forEach(f=>f().catch(()=>{}));
+
+  if(typeof window.requestIdleCallback==="function") window.requestIdleCallback(baixar, { timeout:4000 });
+
+  else setTimeout(baixar, 1500);
+
+}
 
 import useNuvem from "./lib/useNuvem";
 import useLembretesNoCelular from "./lib/useLembretes";
@@ -301,6 +343,11 @@ export default function App(){
     telaAnterior.current = tela;
 
   }
+
+
+
+  // depois que o app abre, as outras telas são baixadas sem pressa
+  useEffect(()=>{ baixarTelasEmSegundoPlano(); },[]);
 
 
 
@@ -1478,7 +1525,11 @@ export default function App(){
 
         <div key={`${tela.page}-${tela.cardId ?? ""}-${escondido ? "e" : "v"}`} className={`tela-anim ${direcao.current}`}>
 
-          {content}
+          <Suspense fallback={<div className="page carregando-tela" aria-busy="true">Carregando…</div>}>
+
+            {content}
+
+          </Suspense>
 
         </div>
 

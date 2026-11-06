@@ -1,0 +1,27 @@
+# Roda os testes e o build do app a cada pedido de junção (pull request) e a cada mudança no main.
+name: Testes
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: meu-financeiro-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: meu-financeiro-app/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build

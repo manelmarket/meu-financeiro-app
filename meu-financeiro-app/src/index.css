@@ -1263,3 +1263,4 @@ button:disabled{opacity:.6;cursor:default}
   .relatorio-folha{box-shadow:none;border-radius:0;padding:0;margin:0}
   .relatorio-folha tr{break-inside:avoid}
 }
+.carregando-tela{color:var(--apagado);text-align:center;padding-top:40vh}
