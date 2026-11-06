@@ -5,6 +5,7 @@ import {
   Bot,
   Cloud,
   CreditCard,
+  EyeOff,
   FileSpreadsheet,
   HandCoins,
   History,
@@ -17,6 +18,8 @@ import {
   PlusCircle,
   RefreshCw,
   Repeat,
+  Repeat2,
+  BadgeDollarSign,
   Settings,
   Sparkles,
   Tag,
@@ -31,6 +34,7 @@ import Avatar from "./Avatar.jsx";
 import { Interruptor } from "../pages/Temas.jsx";
 import { nomeParaMostrar } from "../lib/perfil.js";
 import { mudarAparencia, usarAparencia } from "../lib/aparencia.js";
+import { esconderValores, usarValoresEscondidos } from "../lib/privacidade.js";
 import { aplicarAtualizacao, verificarAtualizacao } from "../lib/atualizacao.js";
 import { VERSAO_DO_APP } from "../config/versao.js";
 
@@ -53,6 +57,8 @@ const GRUPOS = [
     itens: [
       ["reports", BarChart3, "Relatórios"],
       ["bills", Repeat, "Contas fixas"],
+      ["receitas-fixas", BadgeDollarSign, "Receitas fixas"],
+      ["assinaturas", Repeat2, "Assinaturas"],
       ["emprestimos", HandCoins, "Empréstimos"],
       ["orcamentos", PiggyBank, "Orçamentos"],
       ["categorias", Tag, "Categorias"],
@@ -90,6 +96,7 @@ const TEXTO_DO_RESULTADO = {
 export default function MenuLateral({ aberto, ativo, perfil, conta, onIr, onFechar }) {
   const fecharRef = useRef(null);
   const aparencia = usarAparencia();
+  const escondido = usarValoresEscondidos();
   const [busca, setBusca] = useState(""); // "", "procurando" ou o resultado da verificação
 
   useEffect(() => {
@@ -170,6 +177,13 @@ export default function MenuLateral({ aberto, ativo, perfil, conta, onIr, onFech
                     rotulo="Modo escuro"
                     tabIndex={tab}
                   />
+                </div>
+              )}
+              {grupo.escuro && (
+                <div className="drawer-item drawer-linha">
+                  <EyeOff size={20} strokeWidth={2.1} />
+                  <span>Esconder valores</span>
+                  <Interruptor ligado={escondido} onMudar={(v) => esconderValores(v)} rotulo="Esconder valores" tabIndex={tab} />
                 </div>
               )}
               {grupo.atualizar && (

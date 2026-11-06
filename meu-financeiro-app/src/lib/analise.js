@@ -1,5 +1,6 @@
 // Análise do mês e alertas calculados pelo próprio app (sem IA, sem custo).
 
+import { resumoDaSemana } from "./semana.js";
 import { arredondar, diaMesBR, hojeISO, mesDaData, money, nomeMes, rotuloMes, somarDias, somarMeses } from "./formato.js";
 import { resumoDoMes } from "./mes.js";
 import { resumoDoCartao } from "./cartao.js";
@@ -174,6 +175,16 @@ export function alertas(dados, hoje = hojeISO()) {
     if (Number(meta.objetivo) > 0 && Number(meta.atual) >= Number(meta.objetivo)) {
       lista.push({ id: `meta-${meta.id}`, tipo: "ok", pagina: "goals", texto: `Meta atingida: ${meta.nome}!` });
     }
+  }
+
+  // 4b. gasto da semana fora do padrão (categoria bem acima da média das semanas anteriores)
+  for (const f of resumoDaSemana(dados, hoje).foraDoPadrao.slice(0, 2)) {
+    lista.push({
+      id: `fora-${f.categoria}-${hoje}`,
+      tipo: "aviso",
+      pagina: "history",
+      texto: `${f.categoria} fora do padrão: ${money(f.valor)} nos últimos 7 dias${f.pct !== null ? ` (${f.pct}% acima do normal)` : ""}.`
+    });
   }
 
   // 5. faturas e contas fixas que vencem nos próximos 3 dias

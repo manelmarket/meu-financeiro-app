@@ -1,3 +1,4 @@
+import { valoresEscondidos } from "./privacidade.js";
 // Formatação de dinheiro, leitura de valores digitados e datas locais.
 // As datas ficam sempre como texto "AAAA-MM-DD" e os meses como "AAAA-MM",
 // sem passar por UTC (evita o dia "pular" depois das 21h no Brasil).
@@ -7,7 +8,13 @@ export const MESES = [
   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
 ];
 
+// valor em reais para mostrar na tela (com "Esconder valores" ligado, vira "R$ ••••")
 export function money(v) {
+  return valoresEscondidos() ? "R$ ••••" : moneyReal(v);
+}
+
+// sempre o valor de verdade (arquivos exportados, IA, contas)
+export function moneyReal(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 

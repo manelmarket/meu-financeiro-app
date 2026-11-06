@@ -1,9 +1,16 @@
 import React, { useMemo, useState } from "react";
-import { Bell } from "lucide-react";
+import { Bell, Eye, EyeOff } from "lucide-react";
+import { esconderValores, usarValoresEscondidos } from "../lib/privacidade.js";
 import MonthPicker from "../components/MonthPicker.jsx";
 import Notificacoes from "../components/Notificacoes.jsx";
 import HeroBanco from "../components/HeroBanco.jsx";
 import { usarAparencia } from "../lib/aparencia.js";
+import { previsaoDoMes } from "../lib/previsao.js";
+import { resumoDaSemana, textoDoResumo } from "../lib/semana.js";
+import { acharAssinaturas } from "../lib/assinaturas.js";
+import { Volume2 } from "lucide-react";
+import { receitasParaConfirmar } from "../lib/receitasFixas.js";
+import { diaMesBR } from "../lib/formato.js";
 import { ICONE_FRASE } from "./Assistant.jsx";
 import { lerData, mesDaData, money, nomeMes, MESES } from "../lib/formato.js";
 import { resumoDoMes } from "../lib/mes.js";
@@ -78,7 +85,7 @@ function situacaoDosDados(nuvem, ultimoBackup, hoje, demonstracao) {
   };
 }
 
-export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, onOpenCard, onOpenPage }) {
+export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, onOpenCard, onOpenPage, onReceber, onNaoVeio }) {
   const mesHoje = mesDaData(hoje);
   const [mes, setMes] = useState(mesHoje);
   const [notifAberto, setNotifAberto] = useState(false);
@@ -132,6 +139,37 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
     ...(situacao.aviso ? [{ id: "dados", tipo: "aviso", texto: situacao.aviso, pagina: "backup" }] : [])
   ];
   const frases = useMemo(() => analiseDoMes(data, mes, hoje), [data, mes, hoje]);
+  const previsao = useMemo(() => previsaoDoMes(data, hoje), [data, hoje]);
+  const confirmar = useMemo(() => receitasParaConfirmar(data, hoje), [data, hoje]);
+  const semana = useMemo(() => resumoDaSemana(data, hoje), [data, hoje]);
+  const assinaturas = useMemo(() => acharAssinaturas(data, hoje).filter((a) => a.ativa), [data, hoje]);
+  // o resumo da semana aparece uma vez por semana (some no "Ok")
+  const [resumoVisto, setResumoVisto] = useState(() => {
+    try {
+      return localStorage.getItem("meu_financeiro_resumo_visto") || "";
+    } catch {
+      return "";
+    }
+  });
+  const mostrarResumo = resumoVisto !== semana.semana && (semana.total > 0 || semana.aPagar.length > 0);
+  function fecharResumo() {
+    try {
+      localStorage.setItem("meu_financeiro_resumo_visto", semana.semana);
+    } catch {
+      // aparece de novo na próxima abertura
+    }
+    setResumoVisto(semana.semana);
+  }
+  function ouvirResumo() {
+    try {
+      const fala = new SpeechSynthesisUtterance(textoDoResumo(semana).join(" ").replace(/R\$\s?/g, ""));
+      fala.lang = "pt-BR";
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(fala);
+    } catch {
+      // sem voz neste aparelho
+    }
+  }
 
   const maior = Math.max(1, ...r.categorias.map(([, v]) => v));
   const mapa = useMemo(() => mapaDeCategorias(data), [data]);
@@ -143,6 +181,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
 
   // estilos Banco digital e Vidro: o topo vira o saldo em destaque com as ações rápidas
   const { estilo } = usarAparencia();
+  const escondido = usarValoresEscondidos();
   const heroi = estilo === "banco" || estilo === "vidro";
 
   return (
@@ -169,6 +208,15 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
         </div>
         <button
           type="button"
+          className="notif-btn olho-btn"
+          aria-label={escondido ? "Mostrar valores" : "Esconder valores"}
+          title={escondido ? "Mostrar valores" : "Esconder valores"}
+          onClick={() => esconderValores(!escondido)}
+        >
+          {escondido ? <EyeOff size={20} strokeWidth={2.4} /> : <Eye size={20} strokeWidth={2.4} />}
+        </button>
+        <button
+          type="button"
           className="notif-btn"
           title="Notificações"
           aria-label={avisos.length > 0 ? `Notificações (${avisos.length})` : "Notificações"}
@@ -193,6 +241,88 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
           <small>Lance, corrija, pague e pergunte do seu jeito</small>
         </span>
       </button>
+
+      {confirmar.map(({ receita, mes: mesDaReceita, data: dia }) => (
+        <section className="cloud-row confirmar-receita" key={`${receita.id}-${mesDaReceita}`}>
+          <span className="cloud-icon" aria-hidden="true">
+            💰
+          </span>
+          <span className="cloud-text">
+            <b>
+              {receita.nome}: {money(Number(receita.valor))}
+            </b>
+            <small>Era para cair em {diaMesBR(dia)}. Recebeu?</small>
+          </span>
+          <span className="confirmar-botoes">
+            <button type="button" className="ghost" onClick={() => onNaoVeio?.(receita.id, mesDaReceita)}>
+              Não veio
+            </button>
+            <button type="button" className="primary" onClick={() => onReceber?.(receita.id, mesDaReceita)}>
+              Recebi
+            </button>
+          </span>
+        </section>
+      ))}
+
+      {mostrarResumo && (
+        <section className="section-card resumo-semana" aria-label="Resumo da semana">
+          <div className="section-title">
+            <h2 className="no-margin">📅 Resumo da semana</h2>
+            {"speechSynthesis" in window && (
+              <button type="button" className="link resumo-ouvir" onClick={ouvirResumo}>
+                <Volume2 size={15} /> ouvir
+              </button>
+            )}
+          </div>
+          <ul className="insights">
+            {textoDoResumo(semana).map((t, i) => (
+              <li key={i} className="insight">
+                <span aria-hidden="true">{i === 0 ? "💸" : t.includes("fora do padrão") ? "⚠️" : t.includes("vence") ? "🗓️" : "📌"}</span>
+                <p>{t}</p>
+              </li>
+            ))}
+          </ul>
+          <button type="button" className="ghost wide" onClick={fecharResumo}>
+            Ok, entendi
+          </button>
+        </section>
+      )}
+
+      <button type="button" className="cloud-row due-btn previsao-row" onClick={() => onOpenPage("mes", { aba: "previsao", mes: mesHoje })}>
+        <span className="cloud-icon" aria-hidden="true">
+          🔮
+        </span>
+        <span className="cloud-text">
+          <b>
+            {previsao.previsto >= 0 ? "Sobram" : "Faltam"} <span className={previsao.previsto < 0 ? "neg-texto" : "pos-texto"}>{money(Math.abs(previsao.previsto))}</span> até {diaMesBR(previsao.fim)}
+          </b>
+          <small>
+            Previsão se nada mudar
+            {previsao.totalPagar > 0 ? ` · ${money(previsao.totalPagar)} a pagar` : ""}
+            {previsao.totalReceber > 0 ? ` · ${money(previsao.totalReceber)} a receber` : ""}
+          </small>
+        </span>
+        <span className="chevron" aria-hidden="true">
+          ›
+        </span>
+      </button>
+
+      {assinaturas.length > 0 && (
+        <button type="button" className="cloud-row due-btn" onClick={() => onOpenPage("assinaturas")}>
+          <span className="cloud-icon" aria-hidden="true">
+            🔁
+          </span>
+          <span className="cloud-text">
+            <b>
+              {assinaturas.length} {assinaturas.length === 1 ? "assinatura" : "assinaturas"} · {money(assinaturas.reduce((t, a) => t + a.anual, 0))}/ano
+            </b>
+            <small>Você ainda usa todas?</small>
+          </span>
+          <span className="chevron" aria-hidden="true">
+            ›
+          </span>
+        </button>
+      )}
 
       <button type="button" className="cloud-row due-btn" onClick={() => onOpenPage("vencimentos")}>
         <span className="cloud-icon com-badge" aria-hidden="true">

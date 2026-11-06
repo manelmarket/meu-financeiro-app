@@ -127,3 +127,47 @@ export function montarLancamento(form, cartoes = [], agora = Date.now()) {
 
   return { lancamento, compras };
 }
+
+// ---------- editar um lançamento ----------
+// mudancas = { descricao?, valor?, categoria?, data?, obs?, cupomId? } (cupomId null = tira o comprovante)
+// Gasto pago de várias formas: o valor não muda por aqui (cada forma tem o seu valor).
+// Devolve { erro } ou { dados, lancamento }.
+export function editarLancamento(dados, id, mudancas = {}) {
+  const lista = Array.isArray(dados?.lancamentos) ? dados.lancamentos : [];
+  const atual = lista.find((l) => l && String(l.id) === String(id));
+  if (!atual) return { erro: "Esse lançamento não existe mais." };
+  const novo = { ...atual };
+
+  if (mudancas.descricao !== undefined) {
+    const d = String(mudancas.descricao || "").trim();
+    if (!d && atual.tipo !== "transferencia") return { erro: "Informe a descrição." };
+    novo.descricao = d.slice(0, 80) || atual.descricao;
+  }
+  if (mudancas.valor !== undefined) {
+    const v = valorDe(mudancas.valor);
+    if (!(v > 0)) return { erro: "Informe um valor maior que zero (ex.: 1.250,50)." };
+    const formas = Array.isArray(atual.formas) ? atual.formas : [];
+    if (formas.length > 1 && Math.abs(v - Number(atual.valor)) > 0.004) {
+      return { erro: "Este gasto foi pago de várias formas: para mudar o valor, exclua e lance de novo." };
+    }
+    if (formas.length === 1) novo.formas = [{ ...formas[0], valor: v }];
+    novo.valor = v;
+  }
+  if (mudancas.categoria !== undefined && atual.tipo === "saida") {
+    novo.categoria = String(mudancas.categoria || "Outros");
+  }
+  if (mudancas.data !== undefined) {
+    if (!dataValida(mudancas.data)) return { erro: "Informe a data." };
+    novo.data = mudancas.data;
+  }
+  if (mudancas.obs !== undefined) {
+    const o = String(mudancas.obs || "").trim().slice(0, 300);
+    if (o) novo.obs = o;
+    else delete novo.obs;
+  }
+  if (mudancas.cupomId !== undefined) {
+    if (mudancas.cupomId) novo.cupomId = String(mudancas.cupomId);
+    else delete novo.cupomId;
+  }
+  return { dados: { ...dados, lancamentos: lista.map((l) => (l === atual ? novo : l)) }, lancamento: novo };
+}

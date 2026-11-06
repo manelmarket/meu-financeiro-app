@@ -1,12 +1,13 @@
 import React from "react";
+import { Paperclip } from "lucide-react";
+import EditarLancamento from "../components/EditarLancamento.jsx";
 import { useMemo, useState } from "react";
 import { acharBanco } from "../lib/saldos.js";
 import { mapaDeCategorias, infoDaCategoria } from "../lib/categorias.js";
 import { caminhoDaTransferencia, ehTransferencia, rotuloDoSubtipo } from "../lib/transferencias.js";
 import { usarAparencia } from "../lib/aparencia.js";
 import { resumoDoMes } from "../lib/mes.js";
-import { MESES, hojeISO, mesDaData, somarDias } from "../lib/formato.js";
-const money = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+import { MESES, hojeISO, mesDaData, money, somarDias } from "../lib/formato.js";
 
 // "Pix (Nubank) + Dinheiro" — e, se parte do gasto foi no cartão, "+ cartão Itaú"
 function comoFoiPago(item, data) {
@@ -44,7 +45,8 @@ function tituloDoDia(iso, hoje) {
   return base;
 }
 
-export default function History({ data, onDelete }) {
+export default function History({ data, onDelete, onEditar, onCriarCategoria }) {
+  const [editando, setEditando] = useState(null);
   const { estilo } = usarAparencia();
   const moderno = estilo === "banco" || estilo === "vidro";
   const [busca, setBusca] = useState("");
@@ -57,6 +59,44 @@ export default function History({ data, onDelete }) {
         .filter((x) => String(x.descricao || "").toLowerCase().includes(busca.toLowerCase()))
         .sort((a, b) => b.id - a.id),
     [data, busca, filtro]
+  );
+
+  const lancEditando = editando != null ? data.lancamentos.find((l) => l && l.id === editando) : null;
+  const janela = lancEditando && onEditar && (
+    <EditarLancamento
+      key={lancEditando.id}
+      dados={data}
+      lancamento={lancEditando}
+      onCriarCategoria={onCriarCategoria}
+      onFechar={() => setEditando(null)}
+      onSalvar={(mudancas) => {
+        const r = onEditar(lancEditando.id, mudancas);
+        if (!r?.erro) setEditando(null);
+        return r;
+      }}
+      onExcluir={() => {
+        if (!window.confirm(`Excluir "${lancEditando.descricao || "lançamento"}"?`)) return;
+        onDelete(lancEditando.id);
+        setEditando(null);
+      }}
+    />
+  );
+  const abrir = (item) => ({
+    role: "button",
+    tabIndex: 0,
+    onClick: () => setEditando(item.id),
+    onKeyDown: (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        setEditando(item.id);
+      }
+    }
+  });
+  const extras = (item) => (
+    <>
+      {item.cupomId && <Paperclip size={12} className="lanc-clipe" aria-label="tem comprovante" />}
+      {item.obs && <em className="lanc-obs">{item.obs}</em>}
+    </>
   );
 
   function excluir(item) {
@@ -112,20 +152,21 @@ export default function History({ data, onDelete }) {
                 const c = transf ? null : infoDaCategoria(data, item.categoria, mapa);
                 const cor = transf ? "var(--primaria)" : item.tipo === "entrada" ? "var(--ok)" : c.cor;
                 return (
-                  <div className="transaction extrato-item" key={item.id}>
+                  <div className="transaction extrato-item clicavel" key={item.id} {...abrir(item)}>
                     <span className="extrato-icone" style={{ color: cor, background: `color-mix(in srgb, ${cor} 14%, transparent)` }} aria-hidden="true">
                       {transf ? "⇄" : c.icone}
                     </span>
                     <div className="extrato-texto">
                       <b>{transf ? item.descricao || rotuloDoSubtipo(item.subtipo) : item.descricao}</b>
                       <span>{transf ? caminhoDaTransferencia(data, item) : `${c.nome} · ${comoFoiPago(item, data)}`}</span>
+                      {extras(item)}
                     </div>
                     <div className="tx-right">
                       <strong className={transf ? "neutro" : item.tipo === "entrada" ? "in" : ""}>
                         {transf ? "" : item.tipo === "entrada" ? "+" : "−"}
                         {money(item.valor)}
                       </strong>
-                      <button className="delete" onClick={() => excluir(item)} aria-label={`Excluir ${item.descricao || "lançamento"}`}>
+                      <button className="delete" onClick={(e) => { e.stopPropagation(); excluir(item); }} aria-label={`Excluir ${item.descricao || "lançamento"}`}>
                         Excluir
                       </button>
                     </div>
@@ -135,6 +176,7 @@ export default function History({ data, onDelete }) {
             </div>
           </section>
         ))}
+        {janela}
       </div>
     );
   }
@@ -148,6 +190,7 @@ export default function History({ data, onDelete }) {
         </div>
       </header>
       <section className="section-card">
+        <p className="hint extrato-dica">Toque num lançamento para editar.</p>
         <input className="search" placeholder="Buscar lançamento..." value={busca} onChange={(e) => setBusca(e.target.value)} />
         <div className="chips">
           {FILTROS.map(([id, rotulo]) => (
@@ -160,16 +203,17 @@ export default function History({ data, onDelete }) {
         {lista.map((item) => {
           if (ehTransferencia(item)) {
             return (
-              <div className="transaction" key={item.id}>
+              <div className="transaction clicavel" key={item.id} {...abrir(item)}>
                 <div>
                   <b>{item.descricao || rotuloDoSubtipo(item.subtipo)}</b>
                   <span>
                     <span aria-hidden="true">⇄</span> {caminhoDaTransferencia(data, item)}
                   </span>
+                  {extras(item)}
                 </div>
                 <div className="tx-right">
                   <strong className="neutro">{money(item.valor)}</strong>
-                  <button className="delete" onClick={() => excluir(item)}>
+                  <button className="delete" onClick={(e) => { e.stopPropagation(); excluir(item); }}>
                     Excluir
                   </button>
                 </div>
@@ -178,19 +222,20 @@ export default function History({ data, onDelete }) {
           }
           const c = infoDaCategoria(data, item.categoria, mapa);
           return (
-            <div className="transaction" key={item.id}>
+            <div className="transaction clicavel" key={item.id} {...abrir(item)}>
               <div>
                 <b>{item.descricao}</b>
                 <span>
                   <span aria-hidden="true">{c.icone}</span> {c.nome} · {comoFoiPago(item, data)}
                 </span>
+                {extras(item)}
               </div>
               <div className="tx-right">
                 <strong className={item.tipo === "entrada" ? "in" : "out"}>
                   {item.tipo === "entrada" ? "+" : "-"}
                   {money(item.valor)}
                 </strong>
-                <button className="delete" onClick={() => excluir(item)}>
+                <button className="delete" onClick={(e) => { e.stopPropagation(); excluir(item); }}>
                   Excluir
                 </button>
               </div>
@@ -198,6 +243,7 @@ export default function History({ data, onDelete }) {
           );
         })}
       </section>
+      {janela}
     </div>
   );
 }

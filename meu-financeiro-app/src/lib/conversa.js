@@ -53,7 +53,9 @@ export const PAGINAS = {
   profile: "Perfil",
   settings: "Configurações",
   backup: "Backup e nuvem",
-  importar: "Importar planilha"
+  importar: "Importar planilha",
+  "receitas-fixas": "Receitas fixas",
+  assinaturas: "Assinaturas"
 };
 
 // ---------- utilidades ----------

@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Delete, Mic, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Delete, Mic, Paperclip, Sparkles, X } from "lucide-react";
 import { usarAparencia } from "../lib/aparencia.js";
 import { esquecerFraseDoJarvis, lerFraseDoJarvis } from "../lib/jarvis.js";
 import { interpretarFrase } from "../lib/interpretar.js";
@@ -12,7 +12,7 @@ import { arredondar, dataBR, dataValida, hojeISO, money, parseValor, rotuloMes }
 import { datasDaFatura, mesDaFatura, valoresDasParcelas } from "../lib/cartao.js";
 import { MAXIMO_DE_PARCELAS, montarLancamento } from "../lib/lancar.js";
 import { CRIAR_CARTEIRA, NOME_DA_CARTEIRA, acharCarteira, montarTransferencia } from "../lib/transferencias.js";
-import { salvarCupom } from "../storage/cupons.js";
+import { comprimirImagem, salvarCupom } from "../storage/cupons.js";
 
 const OPCOES_PARCELAS = Array.from({ length: MAXIMO_DE_PARCELAS }, (_, i) => i + 1);
 const FORMAS_DE_RECEITA = FORMAS_PAGAMENTO.filter((f) => f !== "Cartão");
@@ -88,6 +88,7 @@ export default function NewEntry({
     return outro ? String(outro.banco.id) : carteira ? String(carteira.id) : CRIAR_CARTEIRA;
   });
   const [foto, setFoto] = useState(null);
+  const [obs, setObs] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
 
@@ -248,8 +249,9 @@ export default function NewEntry({
 
     setSalvando(true);
     const agora = Date.now();
+    // a foto (cupom ou comprovante) fica na compra do cartão; sem cartão, no próprio lançamento
     let cupomId = null;
-    if (foto && previa.compras.length) {
+    if (foto) {
       try {
         cupomId = `cupom-${agora + 1}`;
         await salvarCupom(cupomId, foto);
@@ -257,7 +259,13 @@ export default function NewEntry({
         cupomId = null;
       }
     }
-    const r = montarLancamento({ ...form, ...(cupomId ? { cupomId } : {}) }, cartoes, agora);
+    const r = montarLancamento({ ...form, ...(cupomId && previa.compras.length ? { cupomId } : {}) }, cartoes, agora);
+    if (cupomId && !previa.compras.length && r.lancamento) r.lancamento.cupomId = cupomId;
+    const nota = obs.trim().slice(0, 300);
+    if (nota) {
+      if (r.lancamento) r.lancamento.obs = nota;
+      for (const c of r.compras || []) c.compra.obs = nota;
+    }
     const usado = tipo === "entrada" ? bancoReceita : partes.find((p) => p.forma !== "Cartão" && p.forma !== "Dinheiro")?.bancoId;
     if (bancos.length && usado !== undefined) guardarBanco(usado);
     onSave(r);
@@ -419,7 +427,7 @@ export default function NewEntry({
         {tipo === "saida" && <ScanButton onResult={preencherPeloCupom} onConfigurar={onConfigurarIA} categorias={categoriasDisponiveis} />}
         {foto && tipo === "saida" && (
           <p className="hint">
-            📷 Foto do cupom lida{temCartao ? " e guardada junto com a compra" : ""}. Confira os campos antes de salvar.
+            📷 Foto guardada como comprovante{temCartao ? " da compra" : ""}. Confira os campos antes de salvar.
           </p>
         )}
 
@@ -567,6 +575,38 @@ export default function NewEntry({
               {dividido ? "+ Outra forma de pagamento" : "+ Dividir em mais formas de pagamento"}
             </button>
           </div>
+        )}
+
+        {!ehTransferencia && (
+          <>
+            <label>
+              Observação (opcional)
+              <input value={obs} maxLength={300} onChange={(e) => setObs(e.target.value)} placeholder="Ex.: dividido com a Ana" />
+            </label>
+            <div className="anexar-linha">
+              <label className="secondary anexar-botao">
+                <Paperclip size={16} /> {foto ? "Trocar comprovante" : "Anexar comprovante"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const arq = e.target.files?.[0];
+                    if (!arq) return;
+                    try {
+                      setFoto(await comprimirImagem(arq));
+                    } catch {
+                      setFoto(arq);
+                    }
+                  }}
+                />
+              </label>
+              {foto && (
+                <button type="button" className="link perigo" onClick={() => setFoto(null)}>
+                  tirar foto
+                </button>
+              )}
+            </div>
+          </>
         )}
 
         <label>

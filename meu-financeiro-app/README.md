@@ -101,6 +101,19 @@ Nos estilos Banco digital e Vidro:
 - Por padrão não mexe no saldo dos bancos (para importar histórico)
 - Leitura de .xlsx com a biblioteca read-excel-file (MIT); .xls antigo: salvar como .xlsx
 
+## Versão 1.1.0 — pacote de melhorias
+
+- **Editar lançamentos**: no Extrato, toque no lançamento para mudar descrição, valor, data, categoria, observação e foto do comprovante
+- **Observação e comprovante** em qualquer lançamento (também no Novo lançamento)
+- **Receitas fixas** (salário etc.): entram sozinhas no dia ou com "Recebi / Não veio" no Início
+- **Previsão**: "Sobram R$ X até o fim do mês" no Início e aba Previsão no mês em detalhe
+- **Assinaturas**: gastos que se repetem todo mês, com custo por ano
+- **Resumo da semana** no Início (com "ouvir") e aviso de gasto fora do padrão no sino
+- **Esconder valores** no app todo (olho do Início e menu ⋮)
+- **Relatório do mês** em Excel (.xlsx) e PDF (impressão)
+- App mais rápido para abrir (telas carregadas sob demanda)
+- **Testes automáticos** (`npm test`, Vitest) rodando no GitHub a cada pedido de junção
+
 ## Próximos passos
 
 - Relatórios e gráficos
