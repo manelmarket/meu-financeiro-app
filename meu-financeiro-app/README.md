@@ -49,6 +49,13 @@ Abra o endereço mostrado pelo Vite no navegador.
 - Atalho "Falar com o Jarvis": segure o ícone do app (app instalado pelo Chrome) ou abra o endereço com `?ouvir=1` — o app abre no Jarvis já ouvindo
 - Opção "Abrir o app aqui" na tela do Jarvis: toda vez que abrir o app, ele vem direto para o Jarvis com o microfone ligado
 
+## Versão 1.0.6 — Jarvis do Android com IA
+
+- O link do Jarvis do Android (`?jarvis=frase`) passa pela IA do Assistente quando ela está ligada:
+  - com a chave do Jarvis: lançamentos são gravados sozinhos (entendidos pela IA) e perguntas são respondidas no aviso
+  - correções, exclusões, pagamentos etc. (ou sem a chave): abre a tela Jarvis, que pede confirmação
+  - sem IA, ou se a IA falhar: funciona como antes
+
 ## Próximos passos
 
 - Relatórios e gráficos

@@ -68,7 +68,7 @@ const EXEMPLOS = ["mercado 80 ontem nubank", "uber 25", "quanto gastei esse mês
 
 // Conversa com o Jarvis: fala ou escreve do jeito que quiser; ele entende, mostra o que vai fazer
 // e só grava depois do "sim" (ver lib/conversa.js)
-export default function Jarvis({ data, setData, hoje, perfil, comPerfil, guardarPagamentosDaConta, onIr, onBack, ouvirAoAbrir }) {
+export default function Jarvis({ data, setData, hoje, perfil, comPerfil, guardarPagamentosDaConta, onIr, onBack, ouvirAoAbrir, pedidoInicial }) {
   const [config, setConfig] = useState(() => lerConfigIA());
   const [mensagens, guardarMensagens] = useState(() => lerConversa());
   const [texto, setTexto] = useState("");
@@ -295,6 +295,18 @@ export default function Jarvis({ data, setData, hoje, perfil, comPerfil, guardar
     }, 300);
     return () => clearTimeout(id);
   }, [ouvirAoAbrir]);
+
+  // pedido do Jarvis do Android que precisa de confirmação: já vem entendido pela IA
+  const pedidoFeito = useRef(null);
+  useEffect(() => {
+    if (!pedidoInicial || pedidoFeito.current === pedidoInicial.id) return;
+    pedidoFeito.current = pedidoInicial.id;
+    setMensagens((lista) => [
+      ...lista.map((m) => (m.estado === "pendente" ? { ...m, estado: "cancelado" } : m)),
+      { id: Date.now() + Math.random(), autor: "pessoa", texto: pedidoInicial.frase }
+    ]);
+    prepararAcoes(pedidoInicial.resposta, pedidoInicial.acoes || []);
+  }, [pedidoInicial]);
 
   function mudarAbrirAqui() {
     const ligado = !abrirAqui;

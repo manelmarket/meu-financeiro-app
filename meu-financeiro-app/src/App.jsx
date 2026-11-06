@@ -1,5 +1,5 @@
 import React from "react";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { MoreVertical } from "lucide-react";
 
@@ -40,6 +40,9 @@ import useNuvem from "./lib/useNuvem";
 import useLembretesNoCelular from "./lib/useLembretes";
 import useVoltarParaOInicio from "./lib/useVoltar";
 import { guardarCopia } from "./lib/backup";
+import { lerConfigIA } from "./lib/ia";
+import { contextoDaConversa, conversarComIA, executarAcoes } from "./lib/conversa";
+import { lerAparencia } from "./lib/aparencia";
 import { primeiroNome } from "./lib/perfil";
 
 import {
@@ -112,18 +115,100 @@ export default function App(){
 
 
 
+  // os dados de agora (o pedido do Jarvis espera a IA responder)
+  const dadosAtuais = useRef(data);
+
+  const pedidoTratado = useRef(null);
+
+  dadosAtuais.current = data;
+
+
+
   // aberto pelo Jarvis (?jarvis=frase&t=...&sig=...):
-  // - assinatura válida: grava o lançamento e mostra o aviso "Jarvis lançou ..." (o Jarvis lê esse aviso)
-  // - senão: abre o Novo lançamento já preenchido, e a pessoa toca em Salvar
+  // - com a IA do Assistente ligada, a IA entende a frase (ver lib/conversa.js):
+  //   - assinatura válida e só lançamentos: grava sozinho e mostra "Jarvis lançou ..." (o Jarvis lê esse aviso)
+  //   - pergunta: a resposta aparece no aviso
+  //   - correções, exclusões, pagamentos... (ou sem assinatura): abre a tela Jarvis, que pede confirmação
+  // - sem IA (ou se a IA falhar), como antes:
+  //   - assinatura válida: grava o lançamento entendido pelo app e mostra o aviso
+  //   - senão: abre o Novo lançamento já preenchido, e a pessoa toca em Salvar
   useEffect(()=>{
 
     const pedido = lerPedidoDoJarvis();
 
-    if(!pedido) return;
+    // cada pedido é tratado uma vez só (mesmo que esta parte rode de novo)
+    if(!pedido || pedidoTratado.current===pedido.sig+pedido.frase) return;
+
+    pedidoTratado.current = pedido.sig+pedido.frase;
 
     (async ()=>{
 
-      if(await pedidoAssinadoValido(pedido)){
+      const assinado = await pedidoAssinadoValido(pedido);
+
+      const cfg = lerConfigIA();
+
+      if(cfg){
+
+        try{
+
+          setAvisoJarvis({ ok:true, texto:`Jarvis entendendo: "${pedido.frase}"…`, fixo:true });
+
+          const base = dadosAtuais.current;
+
+          const contexto = contextoDaConversa(base, hoje, perfilDaPessoa(base, nuvem.usuario, Boolean(nuvem.familia)), lerAparencia());
+
+          const r = await conversarComIA(cfg, [ { autor:"pessoa", texto:pedido.frase } ], contexto);
+
+          esquecerFraseDoJarvis();
+
+          // pergunta: só a resposta
+          if(!r.acoes.length){
+
+            setAvisoJarvis({ ok:true, texto:`Jarvis: ${r.resposta}` });
+
+            return;
+
+          }
+
+          if(assinado && r.acoes.every(a=>a.acao==="lancar")){
+
+            const bancos = resumoDosBancos(dadosAtuais.current).bancos;
+
+            const opcoes = { hoje, agora:Date.now(), bancos, bancoPadrao:bancoGuardado(bancos) };
+
+            const atual = dadosAtuais.current;
+
+            const previa = executarAcoes(atual, r.acoes, opcoes);
+
+            if(previa.mudou && previa.itens.every(i=>!i.erro)){
+
+              setData(d=> d===atual ? previa.dados : executarAcoes(d, r.acoes, opcoes).dados);
+
+              setAvisoJarvis({ ok:true, texto:`Jarvis lançou ${previa.itens.map(i=>i.texto).join("; ")}` });
+
+              return;
+
+            }
+
+          }
+
+          // o resto passa pela confirmação na tela Jarvis
+          setAvisoJarvis(null);
+
+          setTela({ page:"jarvis", pedido:{ id:Date.now(), frase:pedido.frase, resposta:r.resposta, acoes:r.acoes } });
+
+          return;
+
+        }catch{
+
+          // a IA falhou: segue do jeito simples
+          setAvisoJarvis(null);
+
+        }
+
+      }
+
+      if(assinado){
 
         esquecerFraseDoJarvis();
 
@@ -157,7 +242,7 @@ export default function App(){
   // o aviso do Jarvis some sozinho
   useEffect(()=>{
 
-    if(!avisoJarvis) return;
+    if(!avisoJarvis || avisoJarvis.fixo) return;
 
     const id = setTimeout(()=>setAvisoJarvis(null), 9000);
 
@@ -1077,6 +1162,7 @@ export default function App(){
         onIr={(p)=>ir(p)}
         onBack={()=>ir("home")}
         ouvirAoAbrir={tela.ouvir}
+        pedidoInicial={tela.pedido}
       />;
       break;
 
