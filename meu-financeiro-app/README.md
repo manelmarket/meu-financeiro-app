@@ -63,6 +63,14 @@ Abra o endereço mostrado pelo Vite no navegador.
 - **Temas prontos**: Banco digital Violeta, Verde e Azul; Vidro Aurora (escuro) e Vidro Céu (claro)
 - Na barra nova: Início, Extrato, +, Cartões e Jarvis (Bancos fica no saldo do Início; Metas no menu ⋮)
 
+## Versão 1.0.8 — animações
+
+- Troca de tela deslizando (para frente vem da direita, voltando vem da esquerda)
+- Cartões e listas aparecendo em cascata, barras crescendo, mensagens do Jarvis surgindo, janelas e avisos suaves
+- Botões que afundam de leve ao toque; o ícone da aba escolhida dá um pulinho
+- Troca de tema com as cores se misturando
+- Temas → Animações liga/desliga; com "reduzir movimento" do celular ficam desligadas
+
 ## Próximos passos
 
 - Relatórios e gráficos

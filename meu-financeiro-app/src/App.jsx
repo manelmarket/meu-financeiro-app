@@ -265,6 +265,28 @@ export default function App(){
 
 
 
+  // animação de troca de tela: para frente a tela nova vem da direita; voltando (ou indo para uma aba
+  // que fica antes na barra), vem da esquerda
+  const telaAnterior = useRef(tela);
+
+  const direcao = useRef("vai");
+
+  if(telaAnterior.current!==tela){
+
+    const ordem = ["home","history","bancos","new","cards","goals","jarvis"];
+
+    const de = ordem.indexOf(telaAnterior.current.page);
+
+    const para = ordem.indexOf(tela.page);
+
+    direcao.current = tela.page==="home" || (de>=0 && para>=0 && para<de) ? "volta" : "vai";
+
+    telaAnterior.current = tela;
+
+  }
+
+
+
   // cada troca de tela começa do topo
   useLayoutEffect(()=>{
 
@@ -1261,6 +1283,7 @@ export default function App(){
       {avisoJarvis &&
         <div
           role="status"
+          className="aviso-jarvis"
           style={{
             position:"fixed", top:12, left:12, right:12, zIndex:1000, padding:"14px 16px", borderRadius:12,
             fontWeight:600, color:"#fff", background: avisoJarvis.ok ? "#15803d" : "#b45309",
@@ -1295,7 +1318,11 @@ export default function App(){
 
         </button>
 
-        {content}
+        <div key={`${tela.page}-${tela.cardId ?? ""}`} className={`tela-anim ${direcao.current}`}>
+
+          {content}
+
+        </div>
 
       </div>
 
