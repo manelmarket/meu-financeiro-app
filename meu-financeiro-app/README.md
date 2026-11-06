@@ -44,6 +44,11 @@ Abra o endereço mostrado pelo Vite no navegador.
 - Nada é gravado sem confirmação (toque em Confirmar ou diga "sim"); depois dá para Desfazer
 - Lê as respostas em voz alta e tem modo "mãos livres" (volta a ouvir sozinho)
 
+## Versão 1.0.5 — atalho do Jarvis
+
+- Atalho "Falar com o Jarvis": segure o ícone do app (app instalado pelo Chrome) ou abra o endereço com `?ouvir=1` — o app abre no Jarvis já ouvindo
+- Opção "Abrir o app aqui" na tela do Jarvis: toda vez que abrir o app, ele vem direto para o Jarvis com o microfone ligado
+
 ## Próximos passos
 
 - Relatórios e gráficos
