@@ -71,6 +71,59 @@ export function esquecerFraseDoJarvis() {
   }
 }
 
+// ---------- abrir o app já no Jarvis, ouvindo ----------
+// Pelo atalho do ícone (?ouvir=1) ou pela opção "Abrir o app já no Jarvis" (vale ao abrir o app,
+// uma vez por abertura).
+
+const CHAVE_OUVIR = "meu_financeiro_jarvis_ouvir";
+const CHAVE_ABRIR_NO_JARVIS = "meu_financeiro_jarvis_ao_abrir";
+const CHAVE_JA_ABRIU = "meu_financeiro_jarvis_ja_abriu";
+
+export function guardarPedidoDeOuvir() {
+  if (typeof window === "undefined") return;
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("ouvir")) {
+      sessionStorage.setItem(CHAVE_OUVIR, "1");
+      url.searchParams.delete("ouvir");
+      window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+    } else if (lerAbrirNoJarvis() && !sessionStorage.getItem(CHAVE_JA_ABRIU) && !url.searchParams.has("jarvis") && !url.searchParams.has("convite")) {
+      sessionStorage.setItem(CHAVE_OUVIR, "1");
+    }
+    sessionStorage.setItem(CHAVE_JA_ABRIU, "1");
+  } catch {
+    // sem sessionStorage: abre normal
+  }
+}
+
+// true uma vez: o app deve abrir o Jarvis e ligar o microfone
+export function pegarPedidoDeOuvir() {
+  try {
+    if (!sessionStorage.getItem(CHAVE_OUVIR)) return false;
+    sessionStorage.removeItem(CHAVE_OUVIR);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function lerAbrirNoJarvis() {
+  try {
+    return localStorage.getItem(CHAVE_ABRIR_NO_JARVIS) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function salvarAbrirNoJarvis(ligado) {
+  try {
+    if (ligado) localStorage.setItem(CHAVE_ABRIR_NO_JARVIS, "1");
+    else localStorage.removeItem(CHAVE_ABRIR_NO_JARVIS);
+  } catch {
+    // vale só até fechar o app
+  }
+}
+
 // ---------- chave deste aparelho ----------
 
 export function lerChaveDoJarvis() {

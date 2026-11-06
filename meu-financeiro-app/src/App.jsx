@@ -10,7 +10,7 @@ import AvisoAtualizacao from "./components/AvisoAtualizacao";
 import Home from "./pages/Home";
 import Reports from "./pages/Reports";
 import NewEntry, { bancoGuardado } from "./pages/NewEntry";
-import { esquecerFraseDoJarvis, lancarDaFrase, lerPedidoDoJarvis, pedidoAssinadoValido } from "./lib/jarvis";
+import { esquecerFraseDoJarvis, lancarDaFrase, lerPedidoDoJarvis, pedidoAssinadoValido, pegarPedidoDeOuvir } from "./lib/jarvis";
 import History from "./pages/History";
 import Cards from "./pages/Cards";
 import Goals from "./pages/Goals";
@@ -303,6 +303,17 @@ export default function App(){
     });
 
   },[nuvem.status, nuvem.usuario?.uid, nuvem.familia?.id]);
+
+
+
+  // atalho "Falar com o Jarvis": depois de entrar, abre o Jarvis já ouvindo
+  useEffect(()=>{
+
+    if(precisaEntrar || !pegarPedidoDeOuvir()) return;
+
+    setTela({ page:"jarvis", ouvir:Date.now() });
+
+  },[precisaEntrar]);
 
 
 
@@ -1065,6 +1076,7 @@ export default function App(){
         guardarPagamentosDaConta={guardarPagamentosDaConta}
         onIr={(p)=>ir(p)}
         onBack={()=>ir("home")}
+        ouvirAoAbrir={tela.ouvir}
       />;
       break;
 

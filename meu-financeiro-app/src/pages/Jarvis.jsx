@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Check, Mic, Send, Square, Undo2, Volume2, VolumeX, X } from "lucide-react";
+import { Check, Mic, Send, Square, Undo2, Volume2, VolumeX, X, Zap } from "lucide-react";
 import { ConfigIA } from "./Assistant.jsx";
 import { bancoGuardado } from "./NewEntry.jsx";
 import { ErroIA, lerConfigIA } from "../lib/ia.js";
@@ -9,6 +9,7 @@ import { resumoDosBancos } from "../lib/saldos.js";
 import { lerAparencia, mudarAparencia } from "../lib/aparencia.js";
 import { apagarCupom } from "../storage/cupons.js";
 import { primeiroNome } from "../lib/perfil.js";
+import { lerAbrirNoJarvis, salvarAbrirNoJarvis } from "../lib/jarvis.js";
 
 const CHAVE_CONVERSA = "meu_financeiro_jarvis_conversa";
 const CHAVE_VOZ = "meu_financeiro_jarvis_voz";
@@ -67,13 +68,15 @@ const EXEMPLOS = ["mercado 80 ontem nubank", "uber 25", "quanto gastei esse mês
 
 // Conversa com o Jarvis: fala ou escreve do jeito que quiser; ele entende, mostra o que vai fazer
 // e só grava depois do "sim" (ver lib/conversa.js)
-export default function Jarvis({ data, setData, hoje, perfil, comPerfil, guardarPagamentosDaConta, onIr, onBack }) {
+export default function Jarvis({ data, setData, hoje, perfil, comPerfil, guardarPagamentosDaConta, onIr, onBack, ouvirAoAbrir }) {
   const [config, setConfig] = useState(() => lerConfigIA());
   const [mensagens, guardarMensagens] = useState(() => lerConversa());
   const [texto, setTexto] = useState("");
   const [ouvindo, setOuvindo] = useState(false);
   const [pensando, setPensando] = useState(false);
   const [voz, setVoz] = useState(() => lerAjusteDeVoz());
+  const [abrirAqui, setAbrirAqui] = useState(() => lerAbrirNoJarvis());
+  const jaOuviuAoAbrir = useRef(null);
   const reconhecedor = useRef(null);
   const ocupado = useRef(false);
   const fim = useRef(null);
@@ -100,6 +103,7 @@ export default function Jarvis({ data, setData, hoje, perfil, comPerfil, guardar
   useEffect(
     () => () => {
       reconhecedor.current?.abort?.();
+      reconhecedor.current = null;
       try {
         window.speechSynthesis?.cancel();
       } catch {
@@ -282,6 +286,22 @@ export default function Jarvis({ data, setData, hoje, perfil, comPerfil, guardar
     }
   }
 
+  // aberto pelo atalho "Falar com o Jarvis" (ou pela opção de abrir o app aqui): já começa ouvindo
+  useEffect(() => {
+    if (!ouvirAoAbrir || jaOuviuAoAbrir.current === ouvirAoAbrir) return;
+    const id = setTimeout(() => {
+      jaOuviuAoAbrir.current = ouvirAoAbrir;
+      ouvir();
+    }, 300);
+    return () => clearTimeout(id);
+  }, [ouvirAoAbrir]);
+
+  function mudarAbrirAqui() {
+    const ligado = !abrirAqui;
+    salvarAbrirNoJarvis(ligado);
+    setAbrirAqui(ligado);
+  }
+
   function limpar() {
     if (!window.confirm("Apagar a conversa com o Jarvis? (seus dados não mudam)")) return;
     setMensagens([]);
@@ -308,6 +328,11 @@ export default function Jarvis({ data, setData, hoje, perfil, comPerfil, guardar
         {suporteVoz && (
           <button type="button" className={`jarvis-chip${voz.maosLivres ? " ativo" : ""}`} onClick={() => mudarVoz({ maosLivres: !voz.maosLivres })}>
             <Mic size={15} /> Mãos livres {voz.maosLivres ? "ligado" : "desligado"}
+          </button>
+        )}
+        {suporteVoz && (
+          <button type="button" className={`jarvis-chip${abrirAqui ? " ativo" : ""}`} onClick={mudarAbrirAqui} title="Toda vez que abrir o app, ele vem direto para o Jarvis já ouvindo">
+            <Zap size={15} /> Abrir o app aqui {abrirAqui ? "ligado" : "desligado"}
           </button>
         )}
         {mensagens.length > 0 && (

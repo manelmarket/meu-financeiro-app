@@ -5,7 +5,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { aplicarAparencia } from "./lib/aparencia";
 import { marcarModoApp } from "./lib/modoApp";
 import { guardarConviteDaUrl } from "./lib/convite";
-import { guardarFraseDoJarvis } from "./lib/jarvis";
+import { guardarFraseDoJarvis, guardarPedidoDeOuvir } from "./lib/jarvis";
 import { iniciarPonteAndroid } from "./lib/appAndroid";
 import { registrarServiceWorker } from "./lib/atualizacao";
 import "./index.css";
@@ -21,6 +21,9 @@ guardarConviteDaUrl();
 
 // aberto pelo Jarvis (?jarvis=frase): guarda a frase para preencher o Novo lançamento
 guardarFraseDoJarvis();
+
+// atalho "Falar com o Jarvis" (?ouvir=1) ou a opção de abrir o app já no Jarvis
+guardarPedidoDeOuvir();
 
 // app Android novo: canal de mensagens para os lembretes de vencimento
 iniciarPonteAndroid();
