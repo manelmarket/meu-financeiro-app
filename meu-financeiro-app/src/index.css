@@ -1110,3 +1110,29 @@ button:disabled{opacity:.6;cursor:default}
 .conteudo:has(.lancar-m) > .menu-btn{display:none}
 .form-m .segmented.tres button{font-size:13.5px;letter-spacing:-.2px;padding:11px 2px}
 [data-estilo="vidro"][data-modo="escuro"] .lancar-m-frase,[data-estilo="vidro"][data-modo="escuro"] .chips-categoria-lista button.nova{color:rgba(255,255,255,.88)}
+
+/* ----- cards do Início que abrem o mês em detalhe ----- */
+.card-botao{width:100%;font:inherit;text-align:left;cursor:pointer}
+.mini-card.card-botao{border:1px solid var(--borda);color:var(--texto)}
+.balance-card.card-botao{border:0}
+/* saldo negativo legível nos estilos de fundo claro */
+[data-estilo="banco"] .balance-card strong.neg,[data-estilo="vidro"] .balance-card strong.neg{color:var(--erro)}
+
+/* ----- mês em detalhe ----- */
+.mes-abas{margin:14px 0 0}
+.mes-total{display:flex;flex-direction:column;gap:6px}
+.mes-total span{color:var(--apagado);font-size:14px}
+.mes-total strong{font-size:32px;line-height:1.15;letter-spacing:-.4px}
+.mes-total strong.in{color:var(--ok)}
+.mes-total strong.out,.mes-total strong.neg{color:var(--erro)}
+.mes-total small{color:var(--apagado);font-size:13px}
+.mes-conta{width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border:0;border-bottom:1px solid var(--borda-2);background:transparent;color:var(--texto);font:inherit;text-align:left}
+.mes-conta:last-child{border-bottom:0}
+.mes-conta small{color:var(--apagado);text-align:right}
+.mes-conta.total{font-weight:800}
+.mes-conta .in{color:var(--ok)}.mes-conta .out{color:var(--erro)}
+.mes-item{width:100%;border:0;border-bottom:1px solid var(--borda-2);background:transparent;color:var(--texto);font:inherit;text-align:left;cursor:pointer}
+@media (prefers-reduced-motion:no-preference){
+  :root:not([data-animacoes="nao"]) :is(.card-botao,.mes-conta,.mes-item){transition:transform .12s ease}
+  :root:not([data-animacoes="nao"]) :is(.card-botao,.mes-item):active{transform:scale(.98)}
+}

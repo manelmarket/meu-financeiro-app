@@ -84,6 +84,14 @@ Nos estilos Banco digital e Vidro:
 - **Extrato**: busca, filtros em botões, entradas e saídas do mês e lançamentos agrupados por dia
 - O estilo Clássico continua como antes
 
+## Versão 1.0.11 — mês em detalhe
+
+- No Início, os cards **Saldo do mês**, **Receita** e **Despesas** abrem a tela "mês em detalhe", já na aba do card tocado e no mês escolhido
+- Receitas: total e todas as receitas do mês
+- Despesas: total, de onde vieram (lançamentos, faturas de cartão, contas fixas), por categoria e a lista de cada parte (fatura abre o cartão; conta abre Contas fixas)
+- Saldo: a conta receitas − despesas e a comparação com o mês anterior
+- Saldo negativo legível (vermelho) nos estilos Banco digital e Vidro
+
 ## Próximos passos
 
 - Relatórios e gráficos
