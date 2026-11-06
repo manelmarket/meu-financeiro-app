@@ -3,6 +3,9 @@ import { useMemo, useState } from "react";
 import { acharBanco } from "../lib/saldos.js";
 import { mapaDeCategorias, infoDaCategoria } from "../lib/categorias.js";
 import { caminhoDaTransferencia, ehTransferencia, rotuloDoSubtipo } from "../lib/transferencias.js";
+import { usarAparencia } from "../lib/aparencia.js";
+import { resumoDoMes } from "../lib/mes.js";
+import { MESES, hojeISO, mesDaData, somarDias } from "../lib/formato.js";
 const money = (v) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 // "Pix (Nubank) + Dinheiro" — e, se parte do gasto foi no cartão, "+ cartão Itaú"
@@ -31,7 +34,19 @@ const FILTROS = [
   ["transferencia", "Transferências"]
 ];
 
+// "Hoje · 6 de novembro", "Ontem · 5 de novembro", "3 de novembro", "28 de outubro de 2025"
+function tituloDoDia(iso, hoje) {
+  const [y, m, d] = String(iso || "").split("-").map(Number);
+  if (!y) return "Sem data";
+  const base = `${d} de ${MESES[m - 1].toLowerCase()}${String(y) !== hoje.slice(0, 4) ? ` de ${y}` : ""}`;
+  if (iso === hoje) return `Hoje · ${base}`;
+  if (iso === somarDias(hoje, -1)) return `Ontem · ${base}`;
+  return base;
+}
+
 export default function History({ data, onDelete }) {
+  const { estilo } = usarAparencia();
+  const moderno = estilo === "banco" || estilo === "vidro";
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState("todos");
   const mapa = useMemo(() => mapaDeCategorias(data), [data]);
@@ -50,6 +65,78 @@ export default function History({ data, onDelete }) {
       if (!window.confirm(pergunta)) return;
     }
     onDelete(item.id);
+  }
+
+  if (moderno) {
+    const hoje = hojeISO();
+    const r = resumoDoMes(data, mesDaData(hoje), hoje);
+    const porDia = [];
+    for (const item of [...lista].sort((a, b) => String(b.data).localeCompare(String(a.data)) || b.id - a.id)) {
+      const titulo = tituloDoDia(item.data, hoje);
+      let grupo = porDia[porDia.length - 1];
+      if (!grupo || grupo.titulo !== titulo) porDia.push((grupo = { titulo, itens: [] }));
+      grupo.itens.push(item);
+    }
+    return (
+      <div className="page extrato">
+        <header className="topbar">
+          <div>
+            <h1>Extrato</h1>
+          </div>
+        </header>
+        <input className="search extrato-busca" placeholder="Buscar lançamento" aria-label="Buscar no extrato" value={busca} onChange={(e) => setBusca(e.target.value)} />
+        <div className="chips extrato-filtros" role="radiogroup" aria-label="Filtro">
+          {FILTROS.map(([id, rotulo]) => (
+            <button key={id} role="radio" aria-checked={filtro === id} className={filtro === id ? "active-chip" : ""} onClick={() => setFiltro(id)}>
+              {id === "todos" ? "Tudo" : rotulo}
+            </button>
+          ))}
+        </div>
+        <div className="grid2 extrato-resumo">
+          <section className="mini-card positive">
+            <span>Entradas em {MESES[Number(hoje.slice(5, 7)) - 1].toLowerCase()}</span>
+            <strong>{money(r.receitas)}</strong>
+          </section>
+          <section className="mini-card negative">
+            <span>Saídas em {MESES[Number(hoje.slice(5, 7)) - 1].toLowerCase()}</span>
+            <strong>{money(r.despesas)}</strong>
+          </section>
+        </div>
+        {porDia.length === 0 && <p className="muted extrato-vazio">Nada por aqui neste filtro.</p>}
+        {porDia.map((grupo) => (
+          <section className="extrato-dia" key={grupo.titulo}>
+            <h2>{grupo.titulo}</h2>
+            <div className="section-card extrato-lista">
+              {grupo.itens.map((item) => {
+                const transf = ehTransferencia(item);
+                const c = transf ? null : infoDaCategoria(data, item.categoria, mapa);
+                const cor = transf ? "var(--primaria)" : item.tipo === "entrada" ? "var(--ok)" : c.cor;
+                return (
+                  <div className="transaction extrato-item" key={item.id}>
+                    <span className="extrato-icone" style={{ color: cor, background: `color-mix(in srgb, ${cor} 14%, transparent)` }} aria-hidden="true">
+                      {transf ? "⇄" : c.icone}
+                    </span>
+                    <div className="extrato-texto">
+                      <b>{transf ? item.descricao || rotuloDoSubtipo(item.subtipo) : item.descricao}</b>
+                      <span>{transf ? caminhoDaTransferencia(data, item) : `${c.nome} · ${comoFoiPago(item, data)}`}</span>
+                    </div>
+                    <div className="tx-right">
+                      <strong className={transf ? "neutro" : item.tipo === "entrada" ? "in" : ""}>
+                        {transf ? "" : item.tipo === "entrada" ? "+" : "−"}
+                        {money(item.valor)}
+                      </strong>
+                      <button className="delete" onClick={() => excluir(item)} aria-label={`Excluir ${item.descricao || "lançamento"}`}>
+                        Excluir
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </div>
+    );
   }
 
   return (

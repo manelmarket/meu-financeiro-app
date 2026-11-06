@@ -977,6 +977,7 @@ export default function App(){
         onConfigurarIA={()=>ir("assistant")}
         onCriarCategoria={salvarDadosDaCategoria}
         onTransferir={(form)=>transferirEntreBancos(form, true)}
+        onJarvis={()=>ir("jarvis")}
       />;
       break;
 

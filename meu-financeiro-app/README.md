@@ -76,6 +76,14 @@ Abra o endereço mostrado pelo Vite no navegador.
 - Tela do Jarvis com um botão grande e redondo de áudio no centro ("Toque para falar"); ouvindo, fica vermelho com ondas pulsando
 - O campo de texto continua logo abaixo, para escrever quando preferir
 
+## Versão 1.0.10 — telas no jeito da prévia
+
+Nos estilos Banco digital e Vidro:
+- **Novo lançamento**: valor grande no centro com teclado numérico, abas Gasto/Receita/Transferência no topo, categorias em botões (com "+ Nova"), botão do Jarvis no topo e a frase falada/escrita num toque
+- **Cartões**: o cartão desenhado (com as cores do banco quando reconhece o nome), limite usado com barra, botões grandes Pagar fatura / Próximas faturas / Nova compra e a lista "Nesta fatura"
+- **Extrato**: busca, filtros em botões, entradas e saídas do mês e lançamentos agrupados por dia
+- O estilo Clássico continua como antes
+
 ## Próximos passos
 
 - Relatórios e gráficos

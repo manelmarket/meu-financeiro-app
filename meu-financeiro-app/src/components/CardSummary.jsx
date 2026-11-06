@@ -4,7 +4,7 @@ import { faturasParaPagar, melhorDiaDeCompra } from "../lib/cartao.js";
 import { bancoDoCartao, estiloDoBanco } from "../lib/bancos.js";
 
 // Linha de cada fatura fechada: valor, vencimento e como está o pagamento
-function FaturaFechada({ fatura }) {
+export function FaturaFechada({ fatura }) {
   let texto;
   if (fatura.status === "paga") {
     texto = (
