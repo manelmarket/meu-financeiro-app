@@ -92,6 +92,15 @@ Nos estilos Banco digital e Vidro:
 - Saldo: a conta receitas − despesas e a comparação com o mês anterior
 - Saldo negativo legível (vermelho) nos estilos Banco digital e Vidro
 
+## Versão 1.0.12 — importar planilha
+
+- Menu ⋮ → **Importar planilha**: envie um Excel (.xlsx) ou um extrato .csv
+- O app acha a aba com os lançamentos, pula títulos e linhas de total, e entende as colunas pelo nome (data, descrição, valor, entrada/saída, tipo, categoria, forma de pagamento, cartão, parcelas, banco); com a IA do Assistente, a IA ajuda a entender colunas e categorias
+- Separa gastos, receitas e compras no cartão (com parcelas, no cartão de mesmo nome); categorias da planilha vão para a parecida do app ou viram categorias novas
+- Marca linhas repetidas (que já existem no app) e com problema; você confere, desmarca o que não quer e importa; dá para desfazer
+- Por padrão não mexe no saldo dos bancos (para importar histórico)
+- Leitura de .xlsx com a biblioteca read-excel-file (MIT); .xls antigo: salvar como .xlsx
+
 ## Próximos passos
 
 - Relatórios e gráficos

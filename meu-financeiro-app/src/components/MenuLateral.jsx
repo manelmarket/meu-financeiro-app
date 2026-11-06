@@ -5,6 +5,7 @@ import {
   Bot,
   Cloud,
   CreditCard,
+  FileSpreadsheet,
   HandCoins,
   History,
   Home,
@@ -61,6 +62,7 @@ const GRUPOS = [
       ["patrimony", Landmark, "Patrimônio"],
       ["assistant", Sparkles, "Assistente"],
       ["familia", Users, "Família"],
+      ["importar", FileSpreadsheet, "Importar planilha"],
       ["backup", Cloud, "Backup e nuvem"]
     ]
   },
