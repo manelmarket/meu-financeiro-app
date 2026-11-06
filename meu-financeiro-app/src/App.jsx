@@ -57,6 +57,7 @@ import {
 } from "./storage/storage";
 import { apagarCupom, comprimirImagem, dataURLParaBlob, limparCupons, salvarCupom } from "./storage/cupons";
 import { arredondar, hojeISO, mesDaData } from "./lib/formato";
+import { editarLancamento } from "./lib/lancar";
 import { alternarConta } from "./lib/mes";
 import { comOrcamento } from "./lib/orcamento";
 import { excluirBanco, guardarPagamentosDaConta, guardarPagamentosDoCartao, guardarPagamentosDoEmprestimo, resumoDosBancos, salvarBanco } from "./lib/saldos";
@@ -528,7 +529,29 @@ export default function App(){
 
   function deleteEntry(id){
 
+    const foto = data.lancamentos.find(x=>x.id===id)?.cupomId;
+
+    if(foto) apagarCupom(foto).catch(()=>{});
+
     setData(d=>({ ...d, lancamentos: d.lancamentos.filter(x=>x.id!==id) }));
+
+  }
+
+
+  // editar lançamento (ver lib/lancar.js → editarLancamento); a foto antiga sai quando troca
+  function editarEntry(id, mudancas){
+
+    const previa = editarLancamento(data, id, mudancas);
+
+    if(previa.erro) return previa;
+
+    const fotoAntiga = data.lancamentos.find(x=>x.id===id)?.cupomId;
+
+    if(mudancas.cupomId!==undefined && fotoAntiga && fotoAntiga!==mudancas.cupomId) apagarCupom(fotoAntiga).catch(()=>{});
+
+    setData(d=>{ const r = editarLancamento(d, id, mudancas); return r.erro ? d : r.dados; });
+
+    return { ok:true };
 
   }
 
@@ -1030,6 +1053,8 @@ export default function App(){
       <History
         data={data}
         onDelete={deleteEntry}
+        onEditar={editarEntry}
+        onCriarCategoria={salvarDadosDaCategoria}
       />;
       break;
 
