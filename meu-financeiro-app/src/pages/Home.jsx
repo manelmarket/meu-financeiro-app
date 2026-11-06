@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import { Bell } from "lucide-react";
 import MonthPicker from "../components/MonthPicker.jsx";
 import Notificacoes from "../components/Notificacoes.jsx";
+import HeroBanco from "../components/HeroBanco.jsx";
+import { usarAparencia } from "../lib/aparencia.js";
 import { ICONE_FRASE } from "./Assistant.jsx";
 import { lerData, mesDaData, money, nomeMes, MESES } from "../lib/formato.js";
 import { resumoDoMes } from "../lib/mes.js";
@@ -139,8 +141,27 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
     else if (a.pagina) onOpenPage(a.pagina);
   }
 
+  // estilos Banco digital e Vidro: o topo vira o saldo em destaque com as ações rápidas
+  const { estilo } = usarAparencia();
+  const heroi = estilo === "banco" || estilo === "vidro";
+
   return (
-    <div className="page">
+    <>
+    {heroi && (
+      <HeroBanco
+        data={data}
+        perfil={perfil}
+        conta={nuvem?.usuario}
+        mes={mes}
+        saldoDoMes={r.saldo}
+        avisos={avisos.length}
+        onNotificacoes={() => setNotifAberto(true)}
+        onNew={onNew}
+        onOpenPage={onOpenPage}
+      />
+    )}
+    <div className={`page${heroi ? " page-heroi" : ""}`}>
+      {!heroi && (
       <header className="topbar com-sino">
         <div>
           <div className="eyebrow">Meu mês</div>
@@ -161,6 +182,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
           )}
         </button>
       </header>
+      )}
 
       <button type="button" className="cloud-row due-btn" onClick={() => onOpenPage("jarvis")}>
         <span className="cloud-icon" aria-hidden="true">
@@ -369,5 +391,6 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
         />
       )}
     </div>
+    </>
   );
 }

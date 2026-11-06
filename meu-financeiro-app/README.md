@@ -56,6 +56,13 @@ Abra o endereço mostrado pelo Vite no navegador.
   - correções, exclusões, pagamentos etc. (ou sem a chave): abre a tela Jarvis, que pede confirmação
   - sem IA, ou se a IA falhar: funciona como antes
 
+## Versão 1.0.7 — estilos e temas novos
+
+- Temas → **Estilo do app**: Clássico (o original), **Banco digital** (saldo dos bancos em destaque no topo do Início, com olho para esconder valores, botões redondos Lançar/Transferir/Pagar/Jarvis e barra de baixo com o + no meio) e **Vidro** (glassmorfismo: cartões de vidro fosco sobre fundo colorido)
+- Cor nova: Violeta Elétrico
+- **Temas prontos**: Banco digital Violeta, Verde e Azul; Vidro Aurora (escuro) e Vidro Céu (claro)
+- Na barra nova: Início, Extrato, +, Cartões e Jarvis (Bancos fica no saldo do Início; Metas no menu ⋮)
+
 ## Próximos passos
 
 - Relatórios e gráficos

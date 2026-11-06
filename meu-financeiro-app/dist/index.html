@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR" data-tema="azul" data-modo="claro">
+<html lang="pt-BR" data-tema="azul" data-modo="claro" data-estilo="classico">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -11,10 +11,11 @@
     <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
     <title>Meu Financeiro</title>
     <script>
-      // tema e modo escuro guardados neste aparelho, aplicados antes da primeira pintura (sem piscar)
+      // estilo, tema e modo escuro guardados neste aparelho, aplicados antes da primeira pintura (sem piscar)
       (function () {
         var raiz = document.documentElement;
-        var barras = { azul: "#0f172a", verde: "#022c22", roxo: "#2e1065", dourado: "#1c1917" };
+        var barras = { azul: "#0f172a", verde: "#022c22", roxo: "#2e1065", violeta: "#1b1b8f", dourado: "#1c1917" };
+        var barrasBanco = { azul: "#2563eb", verde: "#047857", roxo: "#7c3aed", violeta: "#3b3bf5", dourado: "#b45309" };
         var a = null;
         try {
           a = JSON.parse(localStorage.getItem("meu_financeiro_aparencia") || "null");
@@ -22,13 +23,15 @@
         var tema = a && barras[a.tema] ? a.tema : "azul";
         var escuro = !!(a && a.escuro === true);
         raiz.setAttribute("data-tema", tema);
+        var estilo = a && (a.estilo === "banco" || a.estilo === "vidro") ? a.estilo : "classico";
         raiz.setAttribute("data-modo", escuro ? "escuro" : "claro");
+        raiz.setAttribute("data-estilo", estilo);
         var meta = document.querySelector('meta[name="theme-color"]');
-        if (meta) meta.setAttribute("content", escuro ? "#0b1220" : barras[tema]);
+        if (meta) meta.setAttribute("content", estilo === "banco" && !escuro ? barrasBanco[tema] : escuro ? "#0b1220" : barras[tema]);
       })();
     </script>
-    <script type="module" crossorigin src="/assets/index-CvSZu1zK.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DvK8SlZ8.css">
+    <script type="module" crossorigin src="/assets/index-Nw_5JVf6.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BL0XXQrl.css">
   </head>
   <body>
     <div id="root"></div>
