@@ -17,8 +17,8 @@ export const PROVEDORES = {
   },
   claude: {
     nome: "Anthropic Claude",
-    detalhe: "pago por uso",
-    modeloPadrao: "claude-sonnet-5",
+    detalhe: "pago por uso, centavos por mês no modelo padrão",
+    modeloPadrao: "claude-haiku-5-5",
     ondePegar: "platform.claude.com → API keys"
   }
 };
