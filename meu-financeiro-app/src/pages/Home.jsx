@@ -4,6 +4,9 @@ import MonthPicker from "../components/MonthPicker.jsx";
 import Notificacoes from "../components/Notificacoes.jsx";
 import HeroBanco from "../components/HeroBanco.jsx";
 import { usarAparencia } from "../lib/aparencia.js";
+import { previsaoDoMes } from "../lib/previsao.js";
+import { receitasParaConfirmar } from "../lib/receitasFixas.js";
+import { diaMesBR } from "../lib/formato.js";
 import { ICONE_FRASE } from "./Assistant.jsx";
 import { lerData, mesDaData, money, nomeMes, MESES } from "../lib/formato.js";
 import { resumoDoMes } from "../lib/mes.js";
@@ -78,7 +81,7 @@ function situacaoDosDados(nuvem, ultimoBackup, hoje, demonstracao) {
   };
 }
 
-export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, onOpenCard, onOpenPage }) {
+export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, onOpenCard, onOpenPage, onReceber, onNaoVeio }) {
   const mesHoje = mesDaData(hoje);
   const [mes, setMes] = useState(mesHoje);
   const [notifAberto, setNotifAberto] = useState(false);
@@ -132,6 +135,8 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
     ...(situacao.aviso ? [{ id: "dados", tipo: "aviso", texto: situacao.aviso, pagina: "backup" }] : [])
   ];
   const frases = useMemo(() => analiseDoMes(data, mes, hoje), [data, mes, hoje]);
+  const previsao = useMemo(() => previsaoDoMes(data, hoje), [data, hoje]);
+  const confirmar = useMemo(() => receitasParaConfirmar(data, hoje), [data, hoje]);
 
   const maior = Math.max(1, ...r.categorias.map(([, v]) => v));
   const mapa = useMemo(() => mapaDeCategorias(data), [data]);
@@ -191,6 +196,47 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
         <span className="cloud-text">
           <b>Fale com o Jarvis</b>
           <small>Lance, corrija, pague e pergunte do seu jeito</small>
+        </span>
+      </button>
+
+      {confirmar.map(({ receita, mes: mesDaReceita, data: dia }) => (
+        <section className="cloud-row confirmar-receita" key={`${receita.id}-${mesDaReceita}`}>
+          <span className="cloud-icon" aria-hidden="true">
+            💰
+          </span>
+          <span className="cloud-text">
+            <b>
+              {receita.nome}: {money(Number(receita.valor))}
+            </b>
+            <small>Era para cair em {diaMesBR(dia)}. Recebeu?</small>
+          </span>
+          <span className="confirmar-botoes">
+            <button type="button" className="ghost" onClick={() => onNaoVeio?.(receita.id, mesDaReceita)}>
+              Não veio
+            </button>
+            <button type="button" className="primary" onClick={() => onReceber?.(receita.id, mesDaReceita)}>
+              Recebi
+            </button>
+          </span>
+        </section>
+      ))}
+
+      <button type="button" className="cloud-row due-btn previsao-row" onClick={() => onOpenPage("mes", { aba: "previsao", mes: mesHoje })}>
+        <span className="cloud-icon" aria-hidden="true">
+          🔮
+        </span>
+        <span className="cloud-text">
+          <b>
+            {previsao.previsto >= 0 ? "Sobram" : "Faltam"} <span className={previsao.previsto < 0 ? "neg-texto" : "pos-texto"}>{money(Math.abs(previsao.previsto))}</span> até {diaMesBR(previsao.fim)}
+          </b>
+          <small>
+            Previsão se nada mudar
+            {previsao.totalPagar > 0 ? ` · ${money(previsao.totalPagar)} a pagar` : ""}
+            {previsao.totalReceber > 0 ? ` · ${money(previsao.totalReceber)} a receber` : ""}
+          </small>
+        </span>
+        <span className="chevron" aria-hidden="true">
+          ›
         </span>
       </button>
 

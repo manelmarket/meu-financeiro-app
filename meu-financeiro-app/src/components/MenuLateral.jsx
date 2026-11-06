@@ -17,6 +17,7 @@ import {
   PlusCircle,
   RefreshCw,
   Repeat,
+  BadgeDollarSign,
   Settings,
   Sparkles,
   Tag,
@@ -53,6 +54,7 @@ const GRUPOS = [
     itens: [
       ["reports", BarChart3, "Relatórios"],
       ["bills", Repeat, "Contas fixas"],
+      ["receitas-fixas", BadgeDollarSign, "Receitas fixas"],
       ["emprestimos", HandCoins, "Empréstimos"],
       ["orcamentos", PiggyBank, "Orçamentos"],
       ["categorias", Tag, "Categorias"],

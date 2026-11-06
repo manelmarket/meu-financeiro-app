@@ -112,7 +112,7 @@ function BillForm({ dados, inicial, onSave, onCancel, onCriarCategoria }) {
   );
 }
 
-export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, onPagar, onDesfazerPagamento, onCriarCategoria }) {
+export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, onPagar, onDesfazerPagamento, onCriarCategoria, onReceitas }) {
   const [editando, setEditando] = useState(null);
   const [pagando, setPagando] = useState(null);
   const [historico, setHistorico] = useState(null);
@@ -180,6 +180,21 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
           <h1>🔁 Contas fixas</h1>
         </div>
       </header>
+
+      {onReceitas && (
+        <button type="button" className="cloud-row" onClick={onReceitas}>
+          <span className="cloud-icon" aria-hidden="true">
+            💰
+          </span>
+          <span className="cloud-text">
+            <b>Receitas fixas</b>
+            <small>Salário e o que mais entra todo mês</small>
+          </span>
+          <span className="chevron" aria-hidden="true">
+            ›
+          </span>
+        </button>
+      )}
 
       <section className="balance-card">
         <span>Total por mês (contas ativas)</span>

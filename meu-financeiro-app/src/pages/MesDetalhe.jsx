@@ -2,12 +2,14 @@ import React, { useMemo, useState } from "react";
 import MonthPicker from "../components/MonthPicker.jsx";
 import { diaMesBR, mesDaData, money, nomeMes, somarMeses } from "../lib/formato.js";
 import { resumoDoMes } from "../lib/mes.js";
+import { previsaoDoMes } from "../lib/previsao.js";
 import { infoDaCategoria, mapaDeCategorias } from "../lib/categorias.js";
 
 const ABAS = [
   ["saldo", "Saldo"],
   ["receitas", "Receitas"],
-  ["despesas", "Despesas"]
+  ["despesas", "Despesas"],
+  ["previsao", "Previsão"]
 ];
 
 // diferença em relação ao mês anterior: "R$ 120,00 a mais que outubro"
@@ -19,7 +21,7 @@ function comparacao(atual, anterior, mesAnterior) {
 
 // O mês em detalhe (aberto pelos cards Saldo do mês, Receita e Despesas do Início).
 // Usa a mesma conta do Início (lib/mes.js → resumoDoMes), então os totais batem com os cards.
-export default function MesDetalhe({ data, hoje, mesInicial, abaInicial = "saldo", onBack, onOpenCard, onOpenBills }) {
+export default function MesDetalhe({ data, hoje, mesInicial, abaInicial = "saldo", onBack, onOpenCard, onOpenBills, onOpenPage }) {
   const mesHoje = mesDaData(hoje);
   const [mes, setMes] = useState(mesInicial || mesHoje);
   const [aba, setAba] = useState(ABAS.some(([id]) => id === abaInicial) ? abaInicial : "saldo");
@@ -27,6 +29,9 @@ export default function MesDetalhe({ data, hoje, mesInicial, abaInicial = "saldo
   const mesAnterior = somarMeses(mes, -1);
   const ant = useMemo(() => resumoDoMes(data, mesAnterior, hoje), [data, mesAnterior, hoje]);
   const mapa = useMemo(() => mapaDeCategorias(data), [data]);
+  const p = useMemo(() => previsaoDoMes(data, hoje), [data, hoje]);
+  const abas = mes === mesHoje ? ABAS : ABAS.filter(([id]) => id !== "previsao");
+  const abaVisivel = aba === "previsao" && mes !== mesHoje ? "saldo" : aba;
 
   const receitas = r.lancamentos.filter((l) => l.tipo === "entrada");
   const gastos = r.lancamentos.filter((l) => l.tipo !== "entrada");
@@ -68,15 +73,15 @@ export default function MesDetalhe({ data, hoje, mesInicial, abaInicial = "saldo
 
       <MonthPicker mes={mes} mesHoje={mesHoje} onChange={setMes} />
 
-      <div className="segmented tres mes-abas" role="tablist" aria-label="O que ver">
-        {ABAS.map(([id, rotulo]) => (
+      <div className={`segmented mes-abas ${abas.length === 4 ? "quatro" : "tres"}`} role="tablist" aria-label="O que ver">
+        {abas.map(([id, rotulo]) => (
           <button
             type="button"
             key={id}
             role="tab"
-            aria-selected={aba === id}
-            aria-checked={aba === id}
-            className={aba === id ? `selected ${id === "receitas" ? "success" : id === "despesas" ? "danger" : "info"}` : ""}
+            aria-selected={abaVisivel === id}
+            aria-checked={abaVisivel === id}
+            className={abaVisivel === id ? `selected ${id === "receitas" ? "success" : id === "despesas" ? "danger" : "info"}` : ""}
             onClick={() => setAba(id)}
           >
             {rotulo}
@@ -84,7 +89,7 @@ export default function MesDetalhe({ data, hoje, mesInicial, abaInicial = "saldo
         ))}
       </div>
 
-      {aba === "saldo" && (
+      {abaVisivel === "saldo" && (
         <>
           <section className="section-card mes-total">
             <span>Saldo de {nomeMes(mes)}</span>
@@ -120,7 +125,7 @@ export default function MesDetalhe({ data, hoje, mesInicial, abaInicial = "saldo
         </>
       )}
 
-      {aba === "receitas" && (
+      {abaVisivel === "receitas" && (
         <>
           <section className="section-card mes-total">
             <span>Receitas de {nomeMes(mes)}</span>
@@ -136,7 +141,85 @@ export default function MesDetalhe({ data, hoje, mesInicial, abaInicial = "saldo
         </>
       )}
 
-      {aba === "despesas" && (
+      {abaVisivel === "previsao" && (
+        <>
+          <section className="section-card mes-total">
+            <span>Previsão para {diaMesBR(p.fim)}</span>
+            <strong className={p.previsto < 0 ? "neg" : "in"}>{money(p.previsto)}</strong>
+            <small>{p.previsto >= 0 ? "é o que deve sobrar se nada mudar" : "é o que deve faltar se nada mudar"}</small>
+          </section>
+          <section className="section-card">
+            <h2>A conta</h2>
+            <div className="mes-conta">
+              <span>{p.comBancos ? "Hoje nos bancos" : `Saldo de ${nomeMes(mes)} até agora`}</span>
+              <b>{money(p.base)}</b>
+            </div>
+            <div className="mes-conta">
+              <span>Ainda vai entrar</span>
+              <b className="in">+{money(p.totalReceber)}</b>
+            </div>
+            {p.comBancos && (
+              <div className="mes-conta">
+                <span>Ainda vai sair (contas e faturas)</span>
+                <b className="out">-{money(p.totalPagar)}</b>
+              </div>
+            )}
+            <div className="mes-conta total">
+              <span>Previsão</span>
+              <b className={p.previsto < 0 ? "out" : "in"}>{money(p.previsto)}</b>
+            </div>
+            {!p.comBancos && (
+              <p className="hint">Sem bancos cadastrados, a previsão parte do saldo do mês (as contas e faturas já estão nas despesas). Cadastre seus bancos para a previsão usar o dinheiro que você tem hoje.</p>
+            )}
+          </section>
+          <section className="section-card">
+            <div className="section-title">
+              <h2 className="no-margin">Vai entrar</h2>
+              <button type="button" className="link" onClick={() => onOpenPage?.("receitas-fixas")}>
+                receitas fixas
+              </button>
+            </div>
+            {p.receber.length === 0 ? (
+              <p className="muted">Nada previsto. Cadastre o salário em Receitas fixas para ele entrar na previsão.</p>
+            ) : (
+              p.receber.map((x) => (
+                <div className="transaction" key={x.id}>
+                  <div>
+                    <b>{x.descricao}</b>
+                    <span>Receita fixa · {diaMesBR(x.data)}</span>
+                  </div>
+                  <strong className="in">+{money(x.valor)}</strong>
+                </div>
+              ))
+            )}
+          </section>
+          <section className="section-card">
+            <h2>Vai sair</h2>
+            {p.pagar.length === 0 ? (
+              <p className="muted">Nenhuma conta ou fatura em aberto até o fim do mês.</p>
+            ) : (
+              p.pagar.map((x) => (
+                <button
+                  type="button"
+                  className="transaction mes-item"
+                  key={x.id}
+                  onClick={() => (x.tipo === "fatura" ? onOpenCard(x.cartaoId) : onOpenBills())}
+                >
+                  <div>
+                    <b>{x.descricao}</b>
+                    <span>
+                      {x.tipo === "fatura" ? "Fatura" : "Conta fixa"} · vence {diaMesBR(x.data)}
+                    </span>
+                  </div>
+                  <strong className="out">-{money(x.valor)}</strong>
+                </button>
+              ))
+            )}
+          </section>
+        </>
+      )}
+
+      {abaVisivel === "despesas" && (
         <>
           <section className="section-card mes-total">
             <span>Despesas de {nomeMes(mes)}</span>

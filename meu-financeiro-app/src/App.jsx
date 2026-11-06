@@ -37,6 +37,8 @@ import Categorias from "./pages/Categorias";
 import Emprestimos from "./pages/Emprestimos";
 import MesDetalhe from "./pages/MesDetalhe";
 import Importar from "./pages/Importar";
+import ReceitasFixas from "./pages/ReceitasFixas";
+import { excluirReceitaFixa, lancarReceitasDoDia, ligarReceitaFixa, pularMes, receber, salvarReceitaFixa } from "./lib/receitasFixas";
 
 import useNuvem from "./lib/useNuvem";
 import useLembretesNoCelular from "./lib/useLembretes";
@@ -86,6 +88,7 @@ const ABA_DA_TELA = {
   jarvis: "jarvis",
   mes: "home",
   importar: "home",
+  "receitas-fixas": "home",
   investments: "home",
   patrimony: "home",
   backup: "home"
@@ -369,6 +372,15 @@ export default function App(){
     nuvem.configurada &&
     (!nuvem.usuario || nuvem.status==="sessao" || nuvem.status==="entrando" || Boolean(nuvem.escolha));
 
+  // receitas fixas automáticas: no dia, entram sozinhas (sem nada a lançar, os dados ficam iguais)
+  useEffect(()=>{
+
+    if(precisaEntrar) return;
+
+    setData(d=>lancarReceitasDoDia(d, hoje));
+
+  },[data, hoje, precisaEntrar]);
+
   // lembretes de vencimento no celular (app Android): a agenda acompanha os dados
   useLembretesNoCelular(data, !precisaEntrar);
 
@@ -529,11 +541,18 @@ export default function App(){
 
   function deleteEntry(id){
 
-    const foto = data.lancamentos.find(x=>x.id===id)?.cupomId;
+    const item = data.lancamentos.find(x=>x.id===id);
 
-    if(foto) apagarCupom(foto).catch(()=>{});
+    if(item?.cupomId) apagarCupom(item.cupomId).catch(()=>{});
 
-    setData(d=>({ ...d, lancamentos: d.lancamentos.filter(x=>x.id!==id) }));
+    setData(d=>{
+
+      const sem = { ...d, lancamentos: d.lancamentos.filter(x=>x.id!==id) };
+
+      // receita fixa apagada: aquele mês fica como "não veio" (senão o app lançaria de novo)
+      return item?.receitaFixa ? pularMes(sem, item.receitaFixa.id, item.receitaFixa.mes) : sem;
+
+    });
 
   }
 
@@ -552,6 +571,38 @@ export default function App(){
     setData(d=>{ const r = editarLancamento(d, id, mudancas); return r.erro ? d : r.dados; });
 
     return { ok:true };
+
+  }
+
+
+
+  // ---------- receitas fixas ---------- (ver lib/receitasFixas.js)
+
+  function salvarDadosDaReceita(form){
+
+    const agora = Date.now();
+
+    const previa = salvarReceitaFixa(data, form, hoje, agora);
+
+    if(previa.erro) return previa;
+
+    setData(d=>{ const r = salvarReceitaFixa(d, form, hoje, agora); return r.erro ? d : r.dados; });
+
+    return { ok:true };
+
+  }
+
+
+  function receberReceita(id, mes){
+
+    setData(d=>receber(d, id, mes));
+
+  }
+
+
+  function receitaNaoVeio(id, mes){
+
+    setData(d=>pularMes(d, id, mes));
 
   }
 
@@ -1137,6 +1188,7 @@ export default function App(){
         onPagar={pagarContaFixa}
         onDesfazerPagamento={desfazerPagamentoDeConta}
         onCriarCategoria={salvarDadosDaCategoria}
+        onReceitas={()=>ir("receitas-fixas", { voltar:"bills" })}
       />;
       break;
 
@@ -1202,6 +1254,18 @@ export default function App(){
       />;
       break;
 
+    case "receitas-fixas":
+      content =
+      <ReceitasFixas
+        data={data}
+        hoje={hoje}
+        onBack={()=>ir(tela.voltar || "home")}
+        onSalvar={salvarDadosDaReceita}
+        onExcluir={(id)=>setData(d=>excluirReceitaFixa(d, id))}
+        onLigar={(id, ativa)=>setData(d=>ligarReceitaFixa(d, id, ativa))}
+      />;
+      break;
+
     case "importar":
       content =
       <Importar
@@ -1223,6 +1287,7 @@ export default function App(){
         onBack={()=>ir("home")}
         onOpenCard={(id)=>ir("card-details", { cardId:id })}
         onOpenBills={()=>ir("bills")}
+        onOpenPage={(p, extra)=>ir(p, extra)}
       />;
       break;
 
@@ -1304,6 +1369,8 @@ export default function App(){
         onOpenBills={()=>ir("bills")}
         onOpenCard={(id)=>ir("card-details", { cardId:id })}
         onOpenPage={(p, extra)=>ir(p, extra)}
+        onReceber={receberReceita}
+        onNaoVeio={receitaNaoVeio}
       />;
 
   }
