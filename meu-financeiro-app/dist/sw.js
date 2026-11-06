@@ -9,13 +9,13 @@
 // - nunca guarda os dados: eles ficam no aparelho (localStorage/IndexedDB) e na nuvem.
 
 const VERSAO = "1.0.12";
-const BUILD = "be89df90b015";
+const BUILD = "0534f30aa545";
 const CACHE = `meu-financeiro-${BUILD}`;
 const ARQUIVOS = [
-  "/assets/index-Bjp9puWc.css",
+  "/assets/index-CAUebjlR.css",
   "/assets/index-Ds4erthQ.js",
-  "/assets/index-MxgrgHca.js",
-  "/assets/nuvem-DE24d2W6.js",
+  "/assets/index-d3dnD6r-.js",
+  "/assets/nuvem-huFUe3nP.js",
   "/icons/apple-touch-icon.png",
   "/icons/favicon-32.png",
   "/icons/icon-192.png",

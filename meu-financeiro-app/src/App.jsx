@@ -38,6 +38,8 @@ import Emprestimos from "./pages/Emprestimos";
 import MesDetalhe from "./pages/MesDetalhe";
 import Importar from "./pages/Importar";
 import ReceitasFixas from "./pages/ReceitasFixas";
+import Assinaturas from "./pages/Assinaturas";
+import { ignorarAssinatura } from "./lib/assinaturas";
 import { excluirReceitaFixa, lancarReceitasDoDia, ligarReceitaFixa, pularMes, receber, salvarReceitaFixa } from "./lib/receitasFixas";
 
 import useNuvem from "./lib/useNuvem";
@@ -89,6 +91,7 @@ const ABA_DA_TELA = {
   mes: "home",
   importar: "home",
   "receitas-fixas": "home",
+  assinaturas: "home",
   investments: "home",
   patrimony: "home",
   backup: "home"
@@ -1251,6 +1254,23 @@ export default function App(){
         onSave={(item)=>salvarNaLista("bens", item)}
         onDelete={(id)=>apagarDaLista("bens", id)}
         onOpenInvestments={()=>ir("investments", { voltar:"patrimony" })}
+      />;
+      break;
+
+    case "assinaturas":
+      content =
+      <Assinaturas
+        data={data}
+        hoje={hoje}
+        onBack={()=>ir("home")}
+        onIgnorar={(chave)=>setData(d=>ignorarAssinatura(d, chave))}
+        onVirarConta={(a)=>{
+
+          if(!window.confirm(`Cadastrar ${a.nome} como conta fixa de ${a.mensal.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})} todo dia ${Number(a.ultima.slice(8,10))}?\n\nDaqui para frente, marque como paga em Contas fixas em vez de lançar o gasto (senão ele conta duas vezes).`)) return;
+
+          saveBill({ nome:a.nome.slice(0,40), valor:a.mensal, dia:Number(a.ultima.slice(8,10)), categoria:a.categoria });
+
+        }}
       />;
       break;
 
