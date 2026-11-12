@@ -1,5 +1,6 @@
-import { BadgeDollarSign, Pencil, Trash2 } from "lucide-react";
+import { BadgeDollarSign, Pencil, Repeat, Trash2 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
 import { SeletorCategoria } from "../components/Categoria.jsx";
 import PagarConta, { nomeDoMes } from "../components/PagarConta.jsx";
 import { SUGESTOES_CONTAS } from "../lib/categorias.js";
@@ -250,7 +251,7 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
         <div className="section-title">
           <h2 className="no-margin">Contas recorrentes</h2>
         </div>
-        {contas.length === 0 && <p className="muted">Nenhuma conta fixa cadastrada.</p>}
+        {contas.length === 0 && <Vazio Icone={Repeat} titulo="Nenhuma conta fixa" texto="Luz, internet, aluguel, streaming… cadastre o que vence todo mês e o app avisa antes do vencimento." botao="Cadastrar conta fixa" onBotao={rolarParaFormulario} />}
         {contas.map((conta) => {
           const ativa = conta.ativa !== false;
           const r = resumoDaConta(conta, hoje);

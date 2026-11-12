@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Banknote, CalendarClock, CalendarDays, Camera, Pencil, Trash2 } from "lucide-react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
+import { Banknote, CalendarClock, CalendarDays, Camera, Pencil, ShoppingBag, Trash2 } from "lucide-react";
 import CardSummary from "../components/CardSummary.jsx";
 import CardForm from "../components/CardForm.jsx";
 import CupomModal from "../components/CupomModal.jsx";
@@ -501,7 +502,7 @@ export default function CardDetails({
         </div>
 
         {compras.length === 0 ? (
-          <p className="muted">Nenhuma compra lançada.</p>
+          <Vazio Icone={ShoppingBag} titulo="Nenhuma compra neste cartão" texto="Use Nova compra (ou o + da barra) para lançar." />
         ) : (
           compras.map(({ compra, r }) => (
             <div className="purchase" key={compra.id}>

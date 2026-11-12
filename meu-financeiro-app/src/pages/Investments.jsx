@@ -1,5 +1,6 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, TrendingUp } from "lucide-react";
 import React, { useState } from "react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
 import { TIPOS_INVESTIMENTO } from "../lib/categorias.js";
 import { arredondar, money, parseValor } from "../lib/formato.js";
 import { totaisDeInvestimentos } from "../lib/patrimonio.js";
@@ -192,7 +193,7 @@ export default function Investments({ data, onBack, onSave, onDelete }) {
         <div className="section-title">
           <h2 className="no-margin">Meus investimentos</h2>
         </div>
-        {lista.length === 0 && <p className="muted">Nenhum investimento cadastrado.</p>}
+        {lista.length === 0 && <Vazio Icone={TrendingUp} titulo="Nenhum investimento" texto="Cadastre CDB, Tesouro, ações e veja quanto rendeu." botao="Cadastrar investimento" onBotao={rolarParaFormulario} />}
         {lista.map((inv) => {
           const rendimento = arredondar(Number(inv.atual || 0) - Number(inv.investido || 0));
           return (

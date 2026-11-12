@@ -1,5 +1,6 @@
 import React from "react";
-import { Paperclip } from "lucide-react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
+import { Paperclip, ReceiptText } from "lucide-react";
 import EditarLancamento from "../components/EditarLancamento.jsx";
 import { useMemo, useState } from "react";
 import { acharBanco } from "../lib/saldos.js";
@@ -199,7 +200,7 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
             <strong>{money(totais.saidas)}</strong>
           </section>
         </div>
-        {porDia.length === 0 && <p className="muted extrato-vazio">Nada por aqui {intervalo.rotulo}.</p>}
+        {porDia.length === 0 && <Vazio Icone={ReceiptText} titulo={`Nada por aqui ${intervalo.rotulo}`} texto={periodo === "tudo" ? "Os gastos e receitas que você lançar aparecem aqui." : "Experimente outro período."} botao={periodo === "tudo" ? null : "Ver tudo"} onBotao={() => setPeriodo("tudo")} />}
         {porDia.map((grupo) => (
           <section className="extrato-dia" key={grupo.titulo}>
             <h2>{grupo.titulo}</h2>
@@ -264,7 +265,7 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
             </button>
           ))}
         </div>
-        {lista.length === 0 && <p className="muted">Nenhum lançamento {intervalo.rotulo}.</p>}
+        {lista.length === 0 && <Vazio Icone={ReceiptText} titulo={`Nada por aqui ${intervalo.rotulo}`} texto={periodo === "tudo" ? "Os gastos e receitas que você lançar aparecem aqui." : "Experimente outro período."} botao={periodo === "tudo" ? null : "Ver tudo"} onBotao={() => setPeriodo("tudo")} />}
         {lista.map((item) => {
           if (ehTransferencia(item)) {
             return (

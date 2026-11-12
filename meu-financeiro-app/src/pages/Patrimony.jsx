@@ -1,5 +1,6 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { Landmark, Pencil, Trash2 } from "lucide-react";
 import React, { useState } from "react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
 import { TIPOS_BEM } from "../lib/categorias.js";
 import { money, parseValor } from "../lib/formato.js";
 import { patrimonio } from "../lib/patrimonio.js";
@@ -130,7 +131,7 @@ export default function Patrimony({ data, onBack, onSave, onDelete, onOpenInvest
           <h2 className="no-margin">Bens</h2>
           <b>{money(p.totalBens)}</b>
         </div>
-        {p.bens.length === 0 && <p className="muted">Nenhum bem cadastrado.</p>}
+        {p.bens.length === 0 && <Vazio Icone={Landmark} titulo="Nenhum bem cadastrado" texto="Casa, carro e dívidas entram no seu patrimônio líquido." botao="Cadastrar bem" onBotao={rolarParaFormulario} />}
         {p.bens.map((b) => (
           linha(b, false)
         ))}

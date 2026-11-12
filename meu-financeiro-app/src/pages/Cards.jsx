@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { CalendarDays, Plus, Trash2 } from "lucide-react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
+import { CalendarDays, CreditCard, Plus, Trash2 } from "lucide-react";
 import CardSummary from "../components/CardSummary.jsx";
 import CardForm from "../components/CardForm.jsx";
 import CartaoModerno from "../components/CartaoModerno.jsx";
@@ -131,7 +132,7 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
       )}
 
       {data.cartoes.length === 0 && (
-        <p className="muted empty">Nenhum cartão cadastrado ainda.</p>
+        <Vazio Icone={CreditCard} titulo="Nenhum cartão ainda" texto="Cadastre seus cartões para acompanhar faturas, parcelas e o limite disponível." botao="Cadastrar primeiro cartão" onBotao={rolarParaFormulario} />
       )}
 
       {data.cartoes.map((cartao) => (

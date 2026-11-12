@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
+import { BadgeDollarSign, Pencil, Trash2 } from "lucide-react";
 import { diaMesBR, mesDaData, money, nomeMes, parseValor } from "../lib/formato.js";
 import { FORMAS_DE_RECEITA_FIXA, diaNoMes, lerReceitasFixas, situacaoNoMes } from "../lib/receitasFixas.js";
 import { lerBancos } from "../lib/saldos.js";
@@ -132,7 +133,7 @@ export default function ReceitasFixas({ data, hoje, onBack, onSalvar, onExcluir,
 
       <section className="section-card">
         <h2>Suas receitas fixas</h2>
-        {receitas.length === 0 && <p className="muted">Cadastre o seu salário e o que mais entra todo mês: o app lança no dia e mostra quanto vai sobrar.</p>}
+        {receitas.length === 0 && !editando && <Vazio Icone={BadgeDollarSign} titulo="Nenhuma receita fixa" texto="Cadastre o salário e o que mais entra todo mês: o app lança no dia e mostra quanto vai sobrar." botao="Cadastrar salário" onBotao={() => setEditando("nova")} />}
         {receitas.map((r) => {
           const s = situacaoNoMes(data, r, mes, hoje);
           const banco = bancos.find((b) => String(b.id) === String(r.bancoId));

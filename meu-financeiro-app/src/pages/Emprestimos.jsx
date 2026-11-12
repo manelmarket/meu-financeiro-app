@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Pencil, Trash2, X } from "lucide-react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
+import { AlertTriangle, HandCoins, Pencil, Trash2, X } from "lucide-react";
 import EscolherBanco, { bancoInicial, lembrarBanco } from "../components/EscolherBanco.jsx";
 import { arredondar, dataBR, money, parseValor } from "../lib/formato.js";
 import { acharBanco, resumoDosBancos } from "../lib/saldos.js";
@@ -737,7 +738,7 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
         </p>
       )}
 
-      {daLista.itens.length === 0 && <p className="muted empty emp-vazio">{TEXTO[aba].vazio} Cadastre no formulário abaixo.</p>}
+      {daLista.itens.length === 0 && <Vazio Icone={HandCoins} titulo={TEXTO[aba].vazio} texto="Anote o que você pegou ou emprestou e acompanhe as parcelas." botao="Cadastrar empréstimo" onBotao={rolarParaFormulario} />}
 
       {abertos.map(cartao)}
 

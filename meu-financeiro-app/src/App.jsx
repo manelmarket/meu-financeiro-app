@@ -95,6 +95,7 @@ import { lerAparencia } from "./lib/aparencia";
 import { primeiroNome } from "./lib/perfil";
 
 import {
+  ehVazio,
   loadData,
   saveData,
   resetData,
@@ -117,6 +118,7 @@ import { comPerfilDaPessoa, perfilDaPessoa } from "./lib/familia";
 import { lerConvitePendente } from "./lib/convite";
 import { avisar, confirmar } from "./lib/dialogo";
 import DialogosDoApp from "./components/DialogosDoApp";
+import BoasVindas, { boasVindasVistas } from "./components/BoasVindas";
 
 // Aba do menu que fica acesa em cada tela
 const ABA_DA_TELA = {
@@ -165,6 +167,9 @@ export default function App(){
   const [erroSalvar,setErroSalvar] = useState(false);
 
   const [menuAberto,setMenuAberto] = useState(false);
+
+  // boas-vindas: conta sem nenhum registro, uma vez neste aparelho
+  const [boasVindas,setBoasVindas] = useState(()=>!boasVindasVistas());
 
   // resultado de um lançamento pedido ao Jarvis: { ok, texto }
   const [avisoJarvis,setAvisoJarvis] = useState(null);
@@ -1516,6 +1521,8 @@ export default function App(){
 
         <DialogosDoApp />
 
+      {boasVindas && ehVazio(data) && <BoasVindas onIr={(p)=>ir(p)} onFechar={()=>setBoasVindas(false)} />}
+
       {avisoJarvis &&
         <div
           role="status"
@@ -1556,7 +1563,15 @@ export default function App(){
 
         <div key={`${tela.page}-${tela.cardId ?? ""}-${escondido ? "e" : "v"}`} className={`tela-anim ${direcao.current}`}>
 
-          <Suspense fallback={<div className="page carregando-tela" aria-busy="true">Carregando…</div>}>
+          <Suspense fallback={
+
+            <div className="page esqueleto" aria-busy="true" aria-label="Carregando">
+
+              <i className="esq esq-titulo" /><i className="esq esq-card" /><i className="esq esq-linha" /><i className="esq esq-linha curta" /><i className="esq esq-card baixo" />
+
+            </div>
+
+          }>
 
             {content}
 

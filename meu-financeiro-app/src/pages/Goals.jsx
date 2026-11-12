@@ -1,5 +1,6 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Target, Trash2 } from "lucide-react";
 import React, { useState } from "react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
 import RingMeter from "../components/RingMeter.jsx";
 import { dataBR, money, parseValor } from "../lib/formato.js";
 import { confirmar } from "../lib/dialogo.js";
@@ -201,7 +202,7 @@ export default function Goals({ data, onSave, onDelete, onMove }) {
         );
       })}
 
-      {metas.length === 0 && <p className="muted empty">Nenhuma meta criada ainda.</p>}
+      {metas.length === 0 && <Vazio Icone={Target} titulo="Nenhuma meta ainda" texto="Crie uma meta (reserva de emergência, viagem, carro) e acompanhe quanto falta." botao="Criar primeira meta" onBotao={rolarParaFormulario} />}
 
       <GoalForm onSave={onSave} />
     </div>
