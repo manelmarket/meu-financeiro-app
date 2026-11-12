@@ -259,6 +259,7 @@ const INSTRUCOES = [
   "Dicas: valor sozinho com uma palavra (\"padaria 12\") é um gasto. \"caiu\", \"recebi\", \"entrou\", salário = receita.",
   "\"no crédito\", \"no cartão\", \"em 3x\" = forma Cartão. Sem forma de pagamento, use Pix. \"ontem\", \"sexta\", \"dia 5\" viram data a partir de hoje.",
   "Para corrigir ou apagar, ache o item em ultimos_lancamentos ou ultimas_compras_no_cartao (a compra no cartão tem cartao_id).",
+  "\"paguei a fatura\", \"pagamento do cartão\" = acao pagar_fatura (NUNCA lancar um gasto: as compras do cartão já contam). Conta que já está em contas_fixas = acao pagar_conta (não lancar).",
   "Várias coisas na mesma frase viram várias ações (no máximo 8)."
 ].join("\n");
 

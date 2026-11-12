@@ -10,6 +10,16 @@
 
 import { arredondar, dataValida } from "./formato.js";
 
+// "Pagamento fatura Nubank", "Pgto cartão", "Pag. fatura cartão de crédito": é o pagamento da fatura,
+// cujas compras já contam como gasto (lançar de novo conta duas vezes; o certo é o botão Pagar do cartão)
+export function pareceFatura(descricao) {
+  const t = String(descricao || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  return /\b(pag(amento|to)?\.?\s*(da\s+|de\s+|do\s+)?(fatura|cartao)|fatura\s+(do\s+|de\s+|da\s+)?(cartao|credito|nubank|itau|inter|c6|bradesco|santander|caixa|bb|next|picpay|mercado ?pago)|pgto\.?\s*(fat|cart))/.test(t);
+}
+
 export const MAXIMO_DE_PARCELAS = 12;
 
 function valorDe(v) {

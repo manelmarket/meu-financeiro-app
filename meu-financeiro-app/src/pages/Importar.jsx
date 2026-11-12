@@ -60,6 +60,7 @@ export default function Importar({ data, setData, hoje, onBack, onIr }) {
     receitas: escolhidos.filter((i) => i.tipo === "entrada"),
     duplicados: itens.filter((i) => i.duplicado).length,
     erros: itens.filter((i) => i.erro).length,
+    avisos: itens.filter((i) => i.aviso && !i.marcado).length,
     novas: [...new Set(escolhidos.filter((i) => i.categoriaNova && i.tipo === "saida").map((i) => i.categoriaNova))]
   };
   const largura = aba ? Math.max(0, ...aba.linhas.slice(0, 40).map((l) => l.length)) : 0;
@@ -314,7 +315,7 @@ export default function Importar({ data, setData, hoje, onBack, onIr }) {
               <div>
                 <small>Fora da importação</small>
                 <b>
-                  {itens.length - escolhidos.length} ({qtd(resumo.duplicados, "repetida", "repetidas")}, {resumo.erros} com problema)
+                  {itens.length - escolhidos.length} ({qtd(resumo.duplicados, "repetida", "repetidas")}, {resumo.erros} com problema{resumo.avisos ? `, ${resumo.avisos} já contadas no cartão/contas` : ""})
                 </b>
               </div>
             </div>
@@ -364,6 +365,7 @@ export default function Importar({ data, setData, hoje, onBack, onIr }) {
                     {i.categoriaNova && i.tipo === "saida" ? " (nova)" : ""}
                     {i.cartaoNome ? ` · ${i.cartaoNome}${i.parcelas > 1 ? ` ${i.parcelas}x` : ""}` : i.tipo === "saida" ? ` · ${i.forma}` : ""}
                     {i.duplicado ? " · já existe" : ""}
+                    {i.aviso ? ` · ${i.aviso}` : ""}
                     {i.erro ? ` · linha ${i.linha}: ${i.erro}` : ""}
                   </small>
                 </span>

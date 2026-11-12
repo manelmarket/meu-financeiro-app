@@ -46,7 +46,7 @@ function tituloDoDia(iso, hoje) {
   return base;
 }
 
-export default function History({ data, onDelete, onEditar, onCriarCategoria }) {
+export default function History({ data, onDelete, onEditar, onCriarCategoria, onOpenCard }) {
   const [editando, setEditando] = useState(null);
   const { estilo } = usarAparencia();
   const moderno = estilo === "banco" || estilo === "vidro";
@@ -59,18 +59,40 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
   const intervalo = intervaloDoPeriodo(periodo, hoje, mesEscolhido);
   const mapa = useMemo(() => mapaDeCategorias(data), [data]);
   // do período e da busca (os totais não dependem do filtro de tipo)
+  // compras no cartão também aparecem (pela data da compra), marcadas com o cartão; tocar abre o cartão
+  const comprasNoCartao = useMemo(
+    () =>
+      (data.cartoes || []).flatMap((c) =>
+        (c.compras || []).map((x) => ({
+          id: `compra-${c.id}-${x.id}`,
+          compra: true,
+          cartaoId: c.id,
+          cartaoNome: c.nome,
+          tipo: "saida",
+          descricao: x.descricao,
+          categoria: x.categoria,
+          valor: Number(x.valorTotal) || 0,
+          parcelas: Number(x.parcelas) || 1,
+          data: x.data,
+          obs: x.obs,
+          cupomId: x.cupomId,
+          ordem: Number(x.id) || 0
+        }))
+      ),
+    [data]
+  );
   const doPeriodo = useMemo(
     () =>
-      data.lancamentos
+      [...data.lancamentos, ...comprasNoCartao]
         .filter((x) => x && dentroDoPeriodo(x.data, intervalo))
         .filter((x) => String(x.descricao || "").toLowerCase().includes(busca.toLowerCase())),
-    [data, busca, intervalo.inicio, intervalo.fim]
+    [data, comprasNoCartao, busca, intervalo.inicio, intervalo.fim]
   );
   const lista = useMemo(
     () =>
       doPeriodo
         .filter((x) => filtro === "todos" || x.tipo === filtro)
-        .sort((a, b) => String(b.data).localeCompare(String(a.data)) || b.id - a.id),
+        .sort((a, b) => String(b.data).localeCompare(String(a.data)) || (b.ordem ?? b.id) - (a.ordem ?? a.id)),
     [doPeriodo, filtro]
   );
   const totais = {
@@ -110,17 +132,23 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
       }}
     />
   );
-  const abrir = (item) => ({
-    role: "button",
-    tabIndex: 0,
-    onClick: () => setEditando(item.id),
-    onKeyDown: (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        setEditando(item.id);
+  // lançamento: abre a edição; compra no cartão: abre o cartão (onde a compra é editada)
+  const abrir = (item) => {
+    const acao = () => (item.compra ? onOpenCard?.(item.cartaoId) : setEditando(item.id));
+    return {
+      role: "button",
+      tabIndex: 0,
+      onClick: acao,
+      onKeyDown: (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          acao();
+        }
       }
-    }
-  });
+    };
+  };
+  const pagoCom = (item) =>
+    item.compra ? `Cartão ${item.cartaoNome}${item.parcelas > 1 ? ` · ${item.parcelas}x` : ""}` : comoFoiPago(item, data);
   const extras = (item) => (
     <>
       {item.cupomId && <Paperclip size={12} className="lanc-clipe" aria-label="tem comprovante" />}
@@ -186,7 +214,7 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
                     </span>
                     <div className="extrato-texto">
                       <b>{transf ? item.descricao || rotuloDoSubtipo(item.subtipo) : item.descricao}</b>
-                      <span>{transf ? caminhoDaTransferencia(data, item) : `${c.nome} · ${comoFoiPago(item, data)}`}</span>
+                      <span>{transf ? caminhoDaTransferencia(data, item) : `${c.nome} · ${pagoCom(item)}`}</span>
                       {extras(item)}
                     </div>
                     <div className="tx-right">
@@ -194,9 +222,13 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
                         {transf ? "" : item.tipo === "entrada" ? "+" : "−"}
                         {money(item.valor)}
                       </strong>
-                      <button className="delete" onClick={(e) => { e.stopPropagation(); excluir(item); }} aria-label={`Excluir ${item.descricao || "lançamento"}`}>
-                        Excluir
-                      </button>
+                      {item.compra ? (
+                        <span className="tag-cartao">no cartão</span>
+                      ) : (
+                        <button className="delete" onClick={(e) => { e.stopPropagation(); excluir(item); }} aria-label={`Excluir ${item.descricao || "lançamento"}`}>
+                          Excluir
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -218,7 +250,7 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
         </div>
       </header>
       <section className="section-card">
-        <p className="hint extrato-dica">Toque num lançamento para editar.</p>
+        <p className="hint extrato-dica">Toque num lançamento para editar (compras no cartão abrem o cartão).</p>
         <input className="search" placeholder="Buscar lançamento..." value={busca} onChange={(e) => setBusca(e.target.value)} />
         {escolhaDoPeriodo}
         <p className="periodo-totais">
@@ -258,7 +290,7 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
               <div>
                 <b>{item.descricao}</b>
                 <span>
-                  <span aria-hidden="true">{c.icone}</span> {c.nome} · {comoFoiPago(item, data)}
+                  <span aria-hidden="true">{c.icone}</span> {c.nome} · {pagoCom(item)}
                 </span>
                 {extras(item)}
               </div>
@@ -267,9 +299,13 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
                   {item.tipo === "entrada" ? "+" : "-"}
                   {money(item.valor)}
                 </strong>
-                <button className="delete" onClick={(e) => { e.stopPropagation(); excluir(item); }}>
-                  Excluir
-                </button>
+                {item.compra ? (
+                  <span className="tag-cartao">no cartão</span>
+                ) : (
+                  <button className="delete" onClick={(e) => { e.stopPropagation(); excluir(item); }}>
+                    Excluir
+                  </button>
+                )}
               </div>
             </div>
           );
