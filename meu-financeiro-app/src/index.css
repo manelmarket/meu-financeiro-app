@@ -1264,3 +1264,13 @@ button:disabled{opacity:.6;cursor:default}
   .relatorio-folha tr{break-inside:avoid}
 }
 .carregando-tela{color:var(--apagado);text-align:center;padding-top:40vh}
+
+/* ----- período no Histórico/Extrato ----- */
+.periodo-filtros{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-top:10px}
+.periodo-filtros::-webkit-scrollbar{display:none}
+.periodo-filtros button{white-space:nowrap;flex-shrink:0}
+.extrato .periodo-filtros button{min-height:38px;padding:0 14px;font-size:14px;font-weight:700;border-radius:999px;border:1px solid var(--borda-3);background:var(--superficie);color:var(--texto-2)}
+.extrato .periodo-filtros button.active-chip{background:var(--primaria-texto);border-color:var(--primaria-texto);color:#fff}
+.periodo-filtros + .month-picker{margin-top:10px}
+.periodo-totais{margin:10px 0 2px;font-size:13px;color:var(--texto-3)}
+.periodo-totais .in{color:var(--ok)}.periodo-totais .out{color:var(--erro)}

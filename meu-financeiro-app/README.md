@@ -114,6 +114,11 @@ Nos estilos Banco digital e Vidro:
 - App mais rápido para abrir (telas carregadas sob demanda)
 - **Testes automáticos** (`npm test`, Vitest) rodando no GitHub a cada pedido de junção
 
+## Versão 1.1.1 — período no Histórico
+
+- Histórico/Extrato com filtro de período: Hoje, Ontem, Esta semana (de segunda até hoje), Este mês (padrão), Outro mês (com seletor de mês) e Tudo
+- Os totais de entradas e gastos acompanham o período escolhido
+
 ## Próximos passos
 
 - Relatórios e gráficos
