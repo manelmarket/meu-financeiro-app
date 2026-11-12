@@ -127,6 +127,16 @@ Nos estilos Banco digital e Vidro:
 - Contraste melhor em todo o app (padrão de acessibilidade WCAG AA) e textos longos não saem da tela
 - Bibliotecas atualizadas: 0 alertas de segurança no npm audit
 
+## Versão 1.2.0 — acabamento profissional
+
+- Janelas de confirmação e avisos com o visual do app (no lugar das caixas do navegador), com Desfazer ao excluir e vibração curta
+- Ícones de traço no lugar de emojis; nomes padronizados (Extrato em todo lugar)
+- Fonte Inter embutida, com números alinhados
+- Esqueleto pulsando no carregamento; telas vazias com explicação e botão; boas-vindas em 3 passos para conta nova
+- Extrato: arraste o lançamento para o lado para Editar ou Excluir
+- Números curtos em gráficos e no topo ("R$ 1,2 mil"; o exato ao tocar)
+- Ícone novo e tela de abertura na cor do tema
+
 ## Próximos passos
 
 - Relatórios e gráficos
