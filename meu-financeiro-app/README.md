@@ -119,6 +119,14 @@ Nos estilos Banco digital e Vidro:
 - Histórico/Extrato com filtro de período: Hoje, Ontem, Esta semana (de segunda até hoje), Este mês (padrão), Outro mês (com seletor de mês) e Tudo
 - Os totais de entradas e gastos acompanham o período escolhido
 
+## Versão 1.1.2 — revisão geral
+
+- Histórico/Extrato mostra também as compras no cartão (tocar abre o cartão)
+- Proteção contra contar a fatura duas vezes: aviso no Novo lançamento; na importação, pagamento de fatura e conta fixa vêm desmarcados; o Jarvis trata "paguei a fatura" como pagamento
+- Importação aceita data no formato mês/dia
+- Contraste melhor em todo o app (padrão de acessibilidade WCAG AA) e textos longos não saem da tela
+- Bibliotecas atualizadas: 0 alertas de segurança no npm audit
+
 ## Próximos passos
 
 - Relatórios e gráficos
