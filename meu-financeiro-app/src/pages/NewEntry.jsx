@@ -10,7 +10,7 @@ import { ChipsCategoria, SeletorCategoria } from "../components/Categoria.jsx";
 import { CATEGORIA_PADRAO, FORMAS_PAGAMENTO, nomesDasCategorias } from "../lib/categorias.js";
 import { arredondar, dataBR, dataValida, hojeISO, money, parseValor, rotuloMes } from "../lib/formato.js";
 import { datasDaFatura, mesDaFatura, valoresDasParcelas } from "../lib/cartao.js";
-import { MAXIMO_DE_PARCELAS, montarLancamento } from "../lib/lancar.js";
+import { MAXIMO_DE_PARCELAS, montarLancamento, pareceFatura } from "../lib/lancar.js";
 import { CRIAR_CARTEIRA, NOME_DA_CARTEIRA, acharCarteira, montarTransferencia } from "../lib/transferencias.js";
 import { comprimirImagem, salvarCupom } from "../storage/cupons.js";
 
@@ -246,6 +246,12 @@ export default function NewEntry({
     };
     const previa = montarLancamento(form, cartoes);
     if (previa.erro) return setErro(previa.erro);
+    if (tipo === "saida" && previa.lancamento && pareceFatura(descricao) && cartoes.length > 0) {
+      const seguir = window.confirm(
+        "Isso parece o pagamento de uma fatura de cartão.\n\nAs compras do cartão já contam como gasto: lançar o pagamento como gasto conta duas vezes. O certo é usar o botão Pagar no cartão (o valor sai do banco sem virar despesa).\n\nLançar como gasto mesmo assim?"
+      );
+      if (!seguir) return;
+    }
 
     setSalvando(true);
     const agora = Date.now();

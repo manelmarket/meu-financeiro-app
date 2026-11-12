@@ -13,7 +13,7 @@ import { chamarIA, extrairJSON } from "./ia.js";
 import { CATEGORIA_PADRAO, chaveDoNome, listarCategorias, salvarCategoria, CORES_DE_CATEGORIA } from "./categorias.js";
 import { interpretarFrase } from "./interpretar.js";
 import { lerBancos } from "./saldos.js";
-import { MAXIMO_DE_PARCELAS, montarLancamento } from "./lancar.js";
+import { MAXIMO_DE_PARCELAS, montarLancamento, pareceFatura } from "./lancar.js";
 import { arredondar, dataValida, montarData, parseValor } from "./formato.js";
 
 export const MAXIMO_DE_LINHAS = 5000;
@@ -291,8 +291,12 @@ export function dataDeCelula(v, anoPadrao = new Date().getFullYear()) {
   if (m) {
     let ano = m[3] ? Number(m[3]) : anoPadrao;
     if (ano < 100) ano += 2000;
-    const iso = montarData(ano, Number(m[2]), Number(m[1]));
-    return dataValida(iso) && Number(m[2]) <= 12 && Number(m[1]) <= 31 ? iso : null;
+    let dia = Number(m[1]);
+    let mes = Number(m[2]);
+    // planilha em formato americano (mês/dia): "11/25/2026"
+    if (mes > 12 && dia <= 12) [dia, mes] = [mes, dia];
+    const iso = montarData(ano, mes, dia);
+    return dataValida(iso) && mes <= 12 && dia <= 31 ? iso : null;
   }
   return null;
 }
@@ -366,6 +370,15 @@ function acharPeloNome(lista, nome) {
     lista.find((x) => chaveDoNome(x.nome).includes(chave) || chave.includes(chaveDoNome(x.nome))) ||
     null
   );
+}
+
+// a descrição tem o nome de uma conta fixa como palavra inteira ("Conta de luz" e a conta "Luz"; não "Luzia")
+function ehContaFixa(dados, descricao) {
+  const d = ` ${chaveDoNome(descricao).replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ")} `;
+  return (dados.contasFixas || []).some((c) => {
+    const n = chaveDoNome(c?.nome).replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+    return n.length >= 3 && d.includes(` ${n} `);
+  });
 }
 
 // a categoria que o próprio app acharia pela descrição ("Uber" -> Transporte)
@@ -479,6 +492,12 @@ export function converterLinhas(aba, mapa, dados, opcoes = {}) {
     else if (!tipo) erro = "não sei se é gasto ou receita";
 
     const duplicado = !erro && existentes.has(chaveDup(data, valorTotal, descricaoFinal));
+    // pagamento de fatura ou de conta fixa: já conta pelo cartão / pela conta fixa (vem desmarcado)
+    let aviso = null;
+    if (!erro && tipo === "saida" && !cartao) {
+      if (pareceFatura(descricao)) aviso = "parece pagamento de fatura (as compras já estão no cartão)";
+      else if (ehContaFixa(dados, descricao)) aviso = "já é conta fixa (marque como paga em Contas fixas)";
+    }
     itens.push({
       linha: numero,
       tipo,
@@ -494,7 +513,8 @@ export function converterLinhas(aba, mapa, dados, opcoes = {}) {
       bancoId: banco ? banco.id : null,
       erro,
       duplicado,
-      marcado: !erro && !duplicado
+      aviso,
+      marcado: !erro && !duplicado && !aviso
     });
   });
   return { itens, positivos };

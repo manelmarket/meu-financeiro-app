@@ -1162,6 +1162,7 @@ export default function App(){
         onDelete={deleteEntry}
         onEditar={editarEntry}
         onCriarCategoria={salvarDadosDaCategoria}
+        onOpenCard={(id)=>ir("card-details", { cardId:id })}
       />;
       break;
 

@@ -23,3 +23,32 @@ describe("períodos do Histórico", () => {
     expect(dentroDoPeriodo("2025-01-01", intervaloDoPeriodo("tudo", HOJE))).toBe(true);
   });
 });
+
+import { pareceFatura } from "../lib/lancar.js";
+import { converterLinhas, dataDeCelula } from "../lib/importar.js";
+import { criarSeed } from "../storage/storage.js";
+
+describe("não contar duas vezes", () => {
+  it("reconhece pagamento de fatura", () => {
+    for (const t of ["Pagamento fatura Nubank", "PGTO CARTAO", "Pag. da fatura", "pagamento cartão de crédito", "Fatura Itaú"]) expect(pareceFatura(t)).toBe(true);
+    for (const t of ["Mercado", "Farmácia", "Uber", "Compra no cartão de presente"]) expect(pareceFatura(t)).toBe(false);
+  });
+
+  it("na importação, fatura e conta fixa vêm desmarcadas (com o motivo)", () => {
+    const d = criarSeed("2026-11-06"); // tem a conta fixa "Internet"
+    d.contasFixas.push({ id: 9, nome: "Luz", valor: 100, dia: 5, ativa: true, periodos: [{ inicio: "2026-01", fim: null }] });
+    const aba = { nome: "x", linhas: [["Data", "Descrição", "Valor"], ["03/11/2026", "PAGAMENTO FATURA NUBANK", "-900,00"], ["04/11/2026", "Internet Vivo", "-126,00"], ["04/11/2026", "Luzia Padaria", "-12,00"], ["05/11/2026", "Uber", "-25,00"]] };
+    const { itens } = converterLinhas(aba, { cabecalho: 0, colunas: { data: 0, descricao: 1, valor: 2 } }, d, { hoje: "2026-11-06" });
+    expect(itens.map((i) => [i.descricao, i.marcado, Boolean(i.aviso)])).toEqual([
+      ["PAGAMENTO FATURA NUBANK", false, true],
+      ["Internet Vivo", false, true],
+      ["Luzia Padaria", true, false],
+      ["Uber", true, false]
+    ]);
+  });
+
+  it("aceita data no formato americano quando o mês passa de 12", () => {
+    expect(dataDeCelula("11/25/2026")).toBe("2026-11-25");
+    expect(dataDeCelula("05/11/2026")).toBe("2026-11-05");
+  });
+});
