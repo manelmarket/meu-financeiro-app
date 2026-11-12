@@ -137,6 +137,12 @@ Nos estilos Banco digital e Vidro:
 - Números curtos em gráficos e no topo ("R$ 1,2 mil"; o exato ao tocar)
 - Ícone novo e tela de abertura na cor do tema
 
+## Versão 1.2.1 — revisão
+
+- Botões vermelhos (Excluir) com contraste certo no modo escuro
+- Boas-vindas e lançamento automático das receitas fixas esperam a nuvem responder (num celular novo, os dados chegam alguns segundos depois de entrar)
+- Avisos e janelas não saem na impressão do relatório
+
 ## Próximos passos
 
 - Relatórios e gráficos

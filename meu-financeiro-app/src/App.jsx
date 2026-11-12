@@ -179,6 +179,10 @@ export default function App(){
 
   const hoje = hojeISO();
 
+  // a nuvem já respondeu (num aparelho novo, os dados chegam alguns segundos depois de entrar):
+  // sem isso, as boas-vindas apareceriam para quem já tem dados na conta
+  const dadosDaNuvemProntos = !nuvem.configurada || !nuvem.usuario || nuvem.status==="desligada" || nuvem.status==="ok" || Boolean(nuvem.sincronizadoEm);
+
 
 
   // os dados de agora (o pedido do Jarvis espera a IA responder)
@@ -438,11 +442,11 @@ export default function App(){
   // receitas fixas automáticas: no dia, entram sozinhas (sem nada a lançar, os dados ficam iguais)
   useEffect(()=>{
 
-    if(precisaEntrar) return;
+    if(precisaEntrar || !dadosDaNuvemProntos) return;
 
     setData(d=>lancarReceitasDoDia(d, hoje));
 
-  },[data, hoje, precisaEntrar]);
+  },[data, hoje, precisaEntrar, dadosDaNuvemProntos]);
 
   // lembretes de vencimento no celular (app Android): a agenda acompanha os dados
   useLembretesNoCelular(data, !precisaEntrar);
@@ -1521,7 +1525,7 @@ export default function App(){
 
         <DialogosDoApp />
 
-      {boasVindas && ehVazio(data) && <BoasVindas onIr={(p)=>ir(p)} onFechar={()=>setBoasVindas(false)} />}
+      {boasVindas && dadosDaNuvemProntos && ehVazio(data) && <BoasVindas onIr={(p)=>ir(p)} onFechar={()=>setBoasVindas(false)} />}
 
       {avisoJarvis &&
         <div
