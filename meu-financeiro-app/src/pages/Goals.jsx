@@ -1,3 +1,4 @@
+import { Pencil, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import RingMeter from "../components/RingMeter.jsx";
 import { dataBR, money, parseValor } from "../lib/formato.js";
@@ -104,7 +105,7 @@ export default function Goals({ data, onSave, onDelete, onMove }) {
       <header className="topbar">
         <div>
           <div className="eyebrow">Planejamento</div>
-          <h1>🎯 Minhas metas</h1>
+          <h1>Minhas metas</h1>
         </div>
       </header>
 
@@ -152,7 +153,7 @@ export default function Goals({ data, onSave, onDelete, onMove }) {
                   Guardado: <strong>{money(atual)}</strong>
                 </span>
                 {atingida ? (
-                  <span className="goal-ok">✅ Meta atingida</span>
+                  <span className="goal-ok">Meta atingida</span>
                 ) : (
                   <span className="muted small">Faltam {money(objetivo - atual)}</span>
                 )}
@@ -178,10 +179,10 @@ export default function Goals({ data, onSave, onDelete, onMove }) {
                   − Retirar
                 </button>
                 <button className="chip-btn edit" onClick={() => setEditando(meta.id)}>
-                  ✏️ Editar
+                  <Pencil size={16} aria-hidden="true" /> Editar
                 </button>
                 <button className="chip-btn danger" onClick={() => excluir(meta)}>
-                  🗑 Excluir
+                  <Trash2 size={16} aria-hidden="true" /> Excluir
                 </button>
               </div>
             )}

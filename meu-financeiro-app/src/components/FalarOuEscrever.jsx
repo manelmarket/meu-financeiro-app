@@ -30,7 +30,7 @@ export default function FalarOuEscrever({ dados, hoje, onPreencher, onConfigurar
     }
     onPreencher(resultado);
     const extras = resultado.avisos.length ? ` ${resultado.avisos.join(" ")}` : "";
-    setAviso({ tipo: resultado.avisos.length ? "info" : "ok", texto: `✅ Preenchido${origem === "ia" ? " pela IA" : ""}. Confira e toque em Salvar.${extras}` });
+    setAviso({ tipo: resultado.avisos.length ? "info" : "ok", texto: `Preenchido${origem === "ia" ? " pela IA" : ""}. Confira e toque em Salvar.${extras}` });
   }
 
   async function preencher(frase = texto) {

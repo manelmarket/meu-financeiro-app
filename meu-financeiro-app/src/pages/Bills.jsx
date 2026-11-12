@@ -1,3 +1,4 @@
+import { BadgeDollarSign, Pencil, Trash2 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { SeletorCategoria } from "../components/Categoria.jsx";
 import PagarConta, { nomeDoMes } from "../components/PagarConta.jsx";
@@ -178,14 +179,14 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
         </button>
         <div>
           <div className="eyebrow">Planejamento</div>
-          <h1>🔁 Contas fixas</h1>
+          <h1>Contas fixas</h1>
         </div>
       </header>
 
       {onReceitas && (
         <button type="button" className="cloud-row" onClick={onReceitas}>
           <span className="cloud-icon" aria-hidden="true">
-            💰
+            <BadgeDollarSign size={20} />
           </span>
           <span className="cloud-text">
             <b>Receitas fixas</b>
@@ -285,7 +286,7 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
                       setPagando(conta.id);
                     }}
                   >
-                    {r.paraPagar.some((s) => !s.adiantado) ? "💵 Pagar" : "💵 Adiantar"}
+                    {r.paraPagar.some((s) => !s.adiantado) ? "Pagar" : "Adiantar"}
                   </button>
                 )}
                 <button
@@ -295,10 +296,10 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
                     topoRef.current?.scrollIntoView({ behavior: "smooth" });
                   }}
                 >
-                  ✏️ Editar
+                  <Pencil size={16} aria-hidden="true" /> Editar
                 </button>
                 <button className="chip-btn danger" onClick={() => excluir(conta)}>
-                  🗑 Excluir
+                  <Trash2 size={16} aria-hidden="true" /> Excluir
                 </button>
                 {r.pagamentos.length > 0 && (
                   <button

@@ -128,7 +128,7 @@ export default function CardSummary({ cartao, resumo, hoje = hojeISO(), onClick,
         <span>Vence dia {cartao.vencimento}</span>
       </div>
       <small className="cc-melhor">
-        🛒 Melhor dia de compra: dia {melhor.dia} · comprando em {diaMesBR(melhor.data)}, paga só em {diaMesBR(melhor.vence)}
+        Melhor dia de compra: dia {melhor.dia} · comprando em {diaMesBR(melhor.data)}, paga só em {diaMesBR(melhor.vence)}
       </small>
     </section>
   );

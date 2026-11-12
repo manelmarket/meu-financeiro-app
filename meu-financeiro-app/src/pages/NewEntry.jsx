@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Delete, Mic, Paperclip, Sparkles, X } from "lucide-react";
+import { ArrowLeft, Camera, Delete, Mic, Paperclip, Sparkles, X } from "lucide-react";
 import { usarAparencia } from "../lib/aparencia.js";
 import { esquecerFraseDoJarvis, lerFraseDoJarvis } from "../lib/jarvis.js";
 import { interpretarFrase } from "../lib/interpretar.js";
@@ -434,7 +434,7 @@ export default function NewEntry({
         {tipo === "saida" && <ScanButton onResult={preencherPeloCupom} onConfigurar={onConfigurarIA} categorias={categoriasDisponiveis} />}
         {foto && tipo === "saida" && (
           <p className="hint">
-            📷 Foto guardada como comprovante{temCartao ? " da compra" : ""}. Confira os campos antes de salvar.
+            <Camera size={16} aria-hidden="true" /> Foto guardada como comprovante{temCartao ? " da compra" : ""}. Confira os campos antes de salvar.
           </p>
         )}
 
@@ -635,7 +635,7 @@ export default function NewEntry({
               if (!b) return null;
               return (
                 <span key={id}>
-                  🏦 {b.banco.nome}: {money(b.atual)} → <b>{money(arredondar(b.atual + delta))}</b>
+                  {b.banco.nome}: {money(b.atual)} → <b>{money(arredondar(b.atual + delta))}</b>
                 </span>
               );
             })}

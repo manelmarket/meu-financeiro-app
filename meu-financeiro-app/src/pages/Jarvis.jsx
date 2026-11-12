@@ -330,7 +330,7 @@ export default function Jarvis({ data, setData, hoje, perfil, comPerfil, guardar
         </button>
         <div>
           <div className="eyebrow">Fale do seu jeito</div>
-          <h1>🤖 Jarvis</h1>
+          <h1>Jarvis</h1>
         </div>
       </header>
 

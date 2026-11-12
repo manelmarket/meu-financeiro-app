@@ -7,7 +7,7 @@ const CLASSICO = [
   ["home", Home, "Início"],
   ["bancos", Wallet, "Bancos"],
   ["new", PlusCircle, "Novo"],
-  ["history", History, "Histórico"],
+  ["history", History, "Extrato"],
   ["cards", CreditCard, "Cartões"],
   ["goals", Target, "Metas"]
 ];

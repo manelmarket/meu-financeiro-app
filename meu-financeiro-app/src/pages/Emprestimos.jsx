@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import { AlertTriangle, Pencil, Trash2, X } from "lucide-react";
 import EscolherBanco, { bancoInicial, lembrarBanco } from "../components/EscolherBanco.jsx";
 import { arredondar, dataBR, money, parseValor } from "../lib/formato.js";
 import { acharBanco, resumoDosBancos } from "../lib/saldos.js";
@@ -28,8 +28,8 @@ const TEXTO = {
     valor: "Valor recebido",
     falta: "Falta pagar",
     tudo: "Tudo pago",
-    botaoParcela: "💵 Pagar parcela",
-    botaoLivre: "💵 Pagar",
+    botaoParcela: "Pagar parcela",
+    botaoLivre: "Pagar",
     jaPagas: "Parcelas já pagas",
     jaPago: "Já pagou (opcional)",
     pagos: "pagos",
@@ -47,8 +47,8 @@ const TEXTO = {
     valor: "Valor emprestado",
     falta: "Falta receber",
     tudo: "Tudo recebido",
-    botaoParcela: "💵 Recebi a parcela",
-    botaoLivre: "💵 Recebi",
+    botaoParcela: "Recebi a parcela",
+    botaoLivre: "Recebi",
     jaPagas: "Parcelas já recebidas",
     jaPago: "Já recebeu (opcional)",
     pagos: "recebidos",
@@ -391,10 +391,10 @@ function CartaoDoEmprestimo({ item, nomesDosBancos, historicoAberto, onHistorico
           </button>
         )}
         <button className="chip-btn edit" onClick={onEditar}>
-          ✏️ Editar
+          <Pencil size={16} aria-hidden="true" /> Editar
         </button>
         <button className="chip-btn danger" onClick={onExcluir}>
-          🗑 Excluir
+          <Trash2 size={16} aria-hidden="true" /> Excluir
         </button>
         {pagamentos.length > 0 && (
           <button className="chip-btn neutral" onClick={onHistorico} aria-expanded={historicoAberto}>
@@ -682,7 +682,7 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
         </button>
         <div>
           <div className="eyebrow">Planejamento</div>
-          <h1>🤝 Empréstimos</h1>
+          <h1>Empréstimos</h1>
         </div>
       </header>
 
@@ -703,7 +703,7 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
         <section className="alerts emp-alertas" aria-label="Empréstimos atrasados">
           {atrasados.map((i) => (
             <button type="button" className="alert aviso" key={i.emprestimo.id} onClick={() => setAba(i.emprestimo.tipo)}>
-              <span aria-hidden="true">⚠️</span>
+              <AlertTriangle size={17} aria-hidden="true" className="icone-aviso" />
               <p>{textoDoAtraso(i)}</p>
             </button>
           ))}

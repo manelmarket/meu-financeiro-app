@@ -46,8 +46,8 @@ const GRUPOS = [
       ["home", Home, "Início"],
       ["bancos", Wallet, "Bancos"],
       ["new", PlusCircle, "Novo lançamento"],
-      ["jarvis", Bot, "Jarvis (fale comigo)"],
-      ["history", History, "Histórico"],
+      ["jarvis", Bot, "Jarvis"],
+      ["history", History, "Extrato"],
       ["cards", CreditCard, "Cartões"],
       ["goals", Target, "Metas"]
     ]

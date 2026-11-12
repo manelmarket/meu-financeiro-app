@@ -84,7 +84,7 @@ export default function Orcamentos({ data, hoje, onBack, onSave }) {
         </button>
         <div>
           <div className="eyebrow">Planejamento</div>
-          <h1>🧮 Orçamentos</h1>
+          <h1>Orçamentos</h1>
         </div>
       </header>
 

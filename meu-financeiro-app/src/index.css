@@ -1,3 +1,12 @@
+/* ================= fonte do app: Inter (embutida no app, licença OFL) =================
+   Só português (latin e latin-ext); números com largura fixa nos valores. */
+@font-face{font-family:"Inter Variable";font-style:normal;font-display:swap;font-weight:100 900;
+  src:url("../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Inter Variable";font-style:normal;font-display:swap;font-weight:100 900;
+  src:url("../node_modules/@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
 /* ================= cores do app: temas e modo escuro =================
    O <html> recebe data-tema="azul|verde|roxo|dourado" e data-modo="claro|escuro" (ver lib/aparencia.js).
    Todas as telas usam estas variáveis; o tema Azul claro é o visual original do app. */
@@ -104,7 +113,7 @@
 :where([data-modo="escuro"]) button,:where([data-modo="escuro"]) input,:where([data-modo="escuro"]) select,:where([data-modo="escuro"]) textarea{color:inherit}
 :where([data-modo="escuro"]) img.cupom-img,:where([data-modo="escuro"]) .photo-preview img{background:#fff}
 
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--texto);background:var(--fundo-pagina)}
+:root{font-family:"Inter Variable",Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--texto);background:var(--fundo-pagina)}
 *{box-sizing:border-box} body{margin:0;background:var(--fundo-pagina)} button,input,select{font:inherit}
 button{cursor:pointer}.app-shell{max-width:520px;margin:0 auto;min-height:100vh;background:var(--fundo-app);position:relative;padding-bottom:88px;box-shadow:0 0 40px var(--sombra)}
 .page{padding:24px 18px 28px}.topbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--apagado);font-weight:800}.topbar h1{margin:4px 0 0;font-size:25px}.month{font-size:13px;color:var(--apagado)}
@@ -1304,3 +1313,16 @@ button:disabled{opacity:.6;cursor:default}
   :root:not([data-animacoes="nao"]) .dialogo{animation:surge .22s cubic-bezier(.2,.8,.2,1) backwards}
 }
 .modal-backdrop.dialogo-fundo{z-index:1150}
+.chip-btn svg,.ghost svg,.secondary svg,.link svg,.cc-btn svg,button.wide svg{vertical-align:-3px}
+
+/* números alinhados nos valores */
+strong,b,.num,.teclado button,.lancar-m-valor strong,.heroi-saldo strong,input[inputmode="decimal"]{font-variant-numeric:tabular-nums}
+/* ícones de traço: cor conforme o tipo */
+.icone-frase{display:inline-flex;flex-shrink:0;margin-top:1px;color:var(--apagado)}
+.icone-frase.aviso{color:var(--aviso-texto)}
+.icone-frase.ok{color:var(--ok)}
+.icone-frase.dica{color:var(--primaria-texto)}
+.cloud-icon svg{color:var(--primaria-texto)}
+.cloud-row.warn .cloud-icon svg{color:var(--aviso-texto)}
+.shortcuts button svg{color:var(--primaria-texto)}
+.icone-aviso{color:var(--aviso-texto);flex-shrink:0}

@@ -247,7 +247,7 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
       <header className="topbar">
         <div>
           <div className="eyebrow">Movimentações</div>
-          <h1>Histórico</h1>
+          <h1>Extrato</h1>
         </div>
       </header>
       <section className="section-card">

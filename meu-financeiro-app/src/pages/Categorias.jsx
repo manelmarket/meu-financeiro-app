@@ -1,3 +1,4 @@
+import { Pencil, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import { CategoriaBadge, CategoriaForm } from "../components/Categoria.jsx";
 import { listarCategorias, usosDaCategoria } from "../lib/categorias.js";
@@ -34,7 +35,7 @@ export default function Categorias({ data, onBack, onSave, onDelete }) {
         </button>
         <div>
           <div className="eyebrow">Organizar</div>
-          <h1>🏷️ Categorias</h1>
+          <h1>Categorias</h1>
         </div>
       </header>
 
@@ -61,11 +62,11 @@ export default function Categorias({ data, onBack, onSave, onDelete }) {
               {editando !== c.id && (
                 <div className="cat-linha-acoes">
                   <button type="button" className="chip-btn" onClick={() => setEditando(c.id)}>
-                    ✏️ Editar
+                    <Pencil size={16} aria-hidden="true" /> Editar
                   </button>
                   {!c.doApp && (
                     <button type="button" className="chip-btn perigo" onClick={() => excluir(c)} aria-label={`Excluir ${c.nome}`}>
-                      🗑
+                      <Trash2 size={16} aria-hidden="true" />
                     </button>
                   )}
                 </div>

@@ -35,7 +35,7 @@ const TURNOS_DA_CONVERSA = 12;
 export const PAGINAS = {
   home: "Início",
   new: "Novo lançamento",
-  history: "Histórico",
+  history: "Extrato",
   bancos: "Bancos",
   cards: "Cartões",
   goals: "Metas",

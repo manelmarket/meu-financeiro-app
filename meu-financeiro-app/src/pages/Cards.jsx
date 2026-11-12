@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CalendarDays, Plus } from "lucide-react";
+import { CalendarDays, Plus, Trash2 } from "lucide-react";
 import CardSummary from "../components/CardSummary.jsx";
 import CardForm from "../components/CardForm.jsx";
 import CartaoModerno from "../components/CartaoModerno.jsx";
@@ -114,7 +114,7 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
       <header className="topbar">
         <div>
           <div className="eyebrow">Crédito</div>
-          <h1>💳 Meus cartões</h1>
+          <h1>Meus cartões</h1>
         </div>
       </header>
 
@@ -160,7 +160,7 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
               excluirCartao(cartao);
             }}
           >
-            🗑
+            <Trash2 size={16} aria-hidden="true" />
           </button>
         </CardSummary>
       ))}

@@ -14,7 +14,7 @@ export default function FutureEntries({ cartao, hoje, onBack }) {
         </button>
         <div>
           <div className="eyebrow">{cartao.nome}</div>
-          <h1>📅 Lançamentos futuros</h1>
+          <h1>Lançamentos futuros</h1>
         </div>
       </header>
 

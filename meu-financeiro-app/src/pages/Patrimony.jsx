@@ -1,3 +1,4 @@
+import { Pencil, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import { TIPOS_BEM } from "../lib/categorias.js";
 import { money, parseValor } from "../lib/formato.js";
@@ -81,10 +82,10 @@ export default function Patrimony({ data, onBack, onSave, onDelete, onOpenInvest
         </strong>
         <div className="row-actions">
           <button className="chip-btn edit" onClick={() => setEditando(item)}>
-            ✏️ Editar
+            <Pencil size={16} aria-hidden="true" /> Editar
           </button>
           <button className="chip-btn danger" onClick={() => excluir(item)}>
-            🗑 Excluir
+            <Trash2 size={16} aria-hidden="true" /> Excluir
           </button>
         </div>
       </div>
@@ -99,7 +100,7 @@ export default function Patrimony({ data, onBack, onSave, onDelete, onOpenInvest
         </button>
         <div>
           <div className="eyebrow">Planejamento</div>
-          <h1>🏦 Meu patrimônio</h1>
+          <h1>Meu patrimônio</h1>
         </div>
       </header>
 

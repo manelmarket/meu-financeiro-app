@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Banknote } from "lucide-react";
+import { Banknote, CalendarClock, CalendarDays, Camera, Pencil, Trash2 } from "lucide-react";
 import CardSummary from "../components/CardSummary.jsx";
 import CardForm from "../components/CardForm.jsx";
 import CupomModal from "../components/CupomModal.jsx";
@@ -160,7 +160,7 @@ function PurchaseForm({ cartao, dados, inicial, onSave, onCancel, onVerCupom, on
         <div className="row-actions">
           <span className="muted small">Esta compra já tem foto do cupom.</span>
           <button type="button" className="chip-btn info" onClick={() => onVerCupom(inicial.cupomId)}>
-            📷 Ver
+            <Camera size={16} aria-hidden="true" /> Ver
           </button>
           <button type="button" className="chip-btn danger" onClick={() => setRemoverFoto(true)}>
             Remover
@@ -400,7 +400,7 @@ export default function CardDetails({
         </button>
         <div>
           <div className="eyebrow">Crédito</div>
-          <h1>💳 {cartao.nome}</h1>
+          <h1>{cartao.nome}</h1>
         </div>
       </header>
 
@@ -425,10 +425,10 @@ export default function CardDetails({
 
       <div className="btn-grid">
         <button className="primary" onClick={onFuture}>
-          📅 Lançamentos futuros
+          <CalendarDays size={16} aria-hidden="true" /> Lançamentos futuros
         </button>
         <button className="secondary" onClick={onCalendar}>
-          🗓️ Calendário de faturas
+          <CalendarClock size={16} aria-hidden="true" /> Calendário de faturas
         </button>
         <button
           className="primary"
@@ -440,7 +440,7 @@ export default function CardDetails({
           + Nova compra
         </button>
         <button className="secondary" onClick={() => setEditandoCartao((v) => !v)}>
-          ✏️ Editar cartão
+          <Pencil size={16} aria-hidden="true" /> Editar cartão
         </button>
       </div>
 
@@ -542,7 +542,7 @@ export default function CardDetails({
               <div className="row-actions">
                 {compra.cupomId && (
                   <button className="chip-btn info" onClick={() => setCupom(compra.cupomId)}>
-                    📷 Ver cupom
+                    <Camera size={16} aria-hidden="true" /> Ver cupom
                   </button>
                 )}
                 <button
@@ -552,10 +552,10 @@ export default function CardDetails({
                     setFormAberto(true);
                   }}
                 >
-                  ✏️ Editar
+                  <Pencil size={16} aria-hidden="true" /> Editar
                 </button>
                 <button className="chip-btn danger" onClick={() => excluir(compra)}>
-                  🗑 Excluir
+                  <Trash2 size={16} aria-hidden="true" /> Excluir
                 </button>
               </div>
             </div>

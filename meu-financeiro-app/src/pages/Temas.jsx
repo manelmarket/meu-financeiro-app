@@ -78,7 +78,7 @@ export default function Temas({ onBack }) {
         </button>
         <div>
           <div className="eyebrow">Aparência</div>
-          <h1>🎨 Temas</h1>
+          <h1>Temas</h1>
         </div>
       </header>
 

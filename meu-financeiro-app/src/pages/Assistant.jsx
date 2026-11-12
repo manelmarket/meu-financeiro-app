@@ -1,3 +1,4 @@
+import { AlertTriangle, CheckCircle2, Lightbulb, Pin } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import MonthPicker from "../components/MonthPicker.jsx";
 import { mesDaData, nomeMes } from "../lib/formato.js";
@@ -13,7 +14,17 @@ import {
 } from "../lib/ia.js";
 import { confirmar } from "../lib/dialogo.js";
 
-export const ICONE_FRASE = { aviso: "⚠️", ok: "✅", dica: "💡", info: "📌" };
+export const ICONE_FRASE = { aviso: AlertTriangle, ok: CheckCircle2, dica: Lightbulb, info: Pin };
+
+// ícone de uma frase de análise (aviso, ok, dica, info)
+export function IconeFrase({ tipo }) {
+  const Icone = ICONE_FRASE[tipo] || Pin;
+  return (
+    <span className={`icone-frase ${tipo || "info"}`} aria-hidden="true">
+      <Icone size={17} strokeWidth={2.2} />
+    </span>
+  );
+}
 
 export function ConfigIA({ config, onChange }) {
   const [provedor, setProvedor] = useState(config?.provedor || "gemini");
@@ -172,7 +183,7 @@ export default function Assistant({ data, hoje, onBack }) {
         </button>
         <div>
           <div className="eyebrow">Inteligência financeira</div>
-          <h1>✨ Assistente</h1>
+          <h1>Assistente</h1>
         </div>
       </header>
 
@@ -186,7 +197,7 @@ export default function Assistant({ data, hoje, onBack }) {
         <ul className="insights">
           {frases.map((f, i) => (
             <li key={i} className={`insight ${f.tipo}`}>
-              <span aria-hidden="true">{ICONE_FRASE[f.tipo]}</span>
+              <IconeFrase tipo={f.tipo} />
               <p>{f.texto}</p>
             </li>
           ))}
@@ -203,14 +214,14 @@ export default function Assistant({ data, hoje, onBack }) {
         ) : (
           <>
             <button type="button" className="primary wide-btn" onClick={analisar} disabled={carregando}>
-              {carregando ? "Analisando…" : `✨ Analisar ${nomeMes(mes)} com IA`}
+              {carregando ? "Analisando…" : `Analisar ${nomeMes(mes)} com IA`}
             </button>
             {erro && <p className="form-error">{erro}</p>}
             {resultado && resultado.mes === mes && (
               <ul className="insights ai">
                 {resultado.frases.map((f, i) => (
                   <li key={i} className="insight ia">
-                    <span aria-hidden="true">✨</span>
+                    <IconeFrase tipo="dica" />
                     <p>{f}</p>
                   </li>
                 ))}

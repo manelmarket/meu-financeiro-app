@@ -40,7 +40,7 @@ export default function Reports({ data, hoje, onBack, onImprimir }) {
         )}
         <div>
           <div className="eyebrow">Análise financeira</div>
-          <h1>📊 Relatórios</h1>
+          <h1>Relatórios</h1>
         </div>
       </header>
 

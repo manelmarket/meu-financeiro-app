@@ -1,3 +1,4 @@
+import { Pencil, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import { TIPOS_INVESTIMENTO } from "../lib/categorias.js";
 import { arredondar, money, parseValor } from "../lib/formato.js";
@@ -129,7 +130,7 @@ export default function Investments({ data, onBack, onSave, onDelete }) {
         </button>
         <div>
           <div className="eyebrow">Carteira</div>
-          <h1>📈 Investimentos</h1>
+          <h1>Investimentos</h1>
         </div>
       </header>
 
@@ -234,10 +235,10 @@ export default function Investments({ data, onBack, onSave, onDelete }) {
                       setEditando(inv);
                     }}
                   >
-                    ✏️ Editar
+                    <Pencil size={16} aria-hidden="true" /> Editar
                   </button>
                   <button className="chip-btn danger" onClick={() => excluir(inv)}>
-                    🗑 Excluir
+                    <Trash2 size={16} aria-hidden="true" /> Excluir
                   </button>
                 </div>
               )}

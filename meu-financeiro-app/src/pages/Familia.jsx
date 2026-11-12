@@ -154,7 +154,7 @@ export default function Familia({ nuvem, onBack, onIr }) {
         </button>
         <div>
           <div className="eyebrow">Compartilhar</div>
-          <h1>👨‍👩‍👧 Família</h1>
+          <h1>Família</h1>
         </div>
       </header>
 
