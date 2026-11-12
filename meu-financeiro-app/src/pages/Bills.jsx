@@ -1,10 +1,13 @@
+import { BadgeDollarSign, Pencil, Repeat, Trash2 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
 import { SeletorCategoria } from "../components/Categoria.jsx";
 import PagarConta, { nomeDoMes } from "../components/PagarConta.jsx";
 import { SUGESTOES_CONTAS } from "../lib/categorias.js";
 import { resumoDaConta, resumoDoMesDasContas } from "../lib/contasFixas.js";
 import { dataBR, diaMesBR, money, nomeMes, parseValor } from "../lib/formato.js";
 import { acharBanco, resumoDosBancos } from "../lib/saldos.js";
+import { confirmar } from "../lib/dialogo.js";
 
 // nome do banco de um pagamento ("" quando não descontou de nenhum banco)
 function nomeDoBanco(dados, id) {
@@ -138,14 +141,14 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
     return () => clearTimeout(tempo);
   }, [aviso]);
 
-  function excluir(conta) {
+  async function excluir(conta) {
     const comBanco = (Array.isArray(conta.pagamentos) ? conta.pagamentos : []).some(
       (p) => p && p.bancoId != null && p.bancoId !== ""
     );
     const pergunta = `Excluir a conta fixa "${conta.nome}"? Ela sai de todos os meses.${
       comBanco ? " Os pagamentos já feitos continuam descontados dos bancos." : ""
     }`;
-    if (!window.confirm(pergunta)) return;
+    if (!await confirmar(pergunta)) return;
     if (editando?.id === conta.id) setEditando(null);
     onDelete(conta.id);
   }
@@ -159,12 +162,12 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
     return { ok: true };
   }
 
-  function desfazer(conta, p) {
+  async function desfazer(conta, p) {
     const banco = p.bancoId != null && p.bancoId !== "" ? acharBanco(data, p.bancoId) : null;
     const pergunta = `Desfazer o pagamento de ${nomeMes(p.mes)} de ${conta.nome} (${money(Number(p.valor))})?${
       banco ? ` O valor volta para o banco (${banco.nome}).` : ""
     }`;
-    if (!window.confirm(pergunta)) return;
+    if (!await confirmar(pergunta)) return;
     const res = onDesfazerPagamento(conta.id, p.id);
     setAviso(res?.erro ? res.erro : `Pagamento de ${nomeMes(p.mes)} de ${conta.nome} desfeito.`);
   }
@@ -177,14 +180,14 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
         </button>
         <div>
           <div className="eyebrow">Planejamento</div>
-          <h1>🔁 Contas fixas</h1>
+          <h1>Contas fixas</h1>
         </div>
       </header>
 
       {onReceitas && (
         <button type="button" className="cloud-row" onClick={onReceitas}>
           <span className="cloud-icon" aria-hidden="true">
-            💰
+            <BadgeDollarSign size={20} />
           </span>
           <span className="cloud-text">
             <b>Receitas fixas</b>
@@ -248,7 +251,7 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
         <div className="section-title">
           <h2 className="no-margin">Contas recorrentes</h2>
         </div>
-        {contas.length === 0 && <p className="muted">Nenhuma conta fixa cadastrada.</p>}
+        {contas.length === 0 && <Vazio Icone={Repeat} titulo="Nenhuma conta fixa" texto="Luz, internet, aluguel, streaming… cadastre o que vence todo mês e o app avisa antes do vencimento." botao="Cadastrar conta fixa" onBotao={rolarParaFormulario} />}
         {contas.map((conta) => {
           const ativa = conta.ativa !== false;
           const r = resumoDaConta(conta, hoje);
@@ -284,7 +287,7 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
                       setPagando(conta.id);
                     }}
                   >
-                    {r.paraPagar.some((s) => !s.adiantado) ? "💵 Pagar" : "💵 Adiantar"}
+                    {r.paraPagar.some((s) => !s.adiantado) ? "Pagar" : "Adiantar"}
                   </button>
                 )}
                 <button
@@ -294,10 +297,10 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
                     topoRef.current?.scrollIntoView({ behavior: "smooth" });
                   }}
                 >
-                  ✏️ Editar
+                  <Pencil size={16} aria-hidden="true" /> Editar
                 </button>
                 <button className="chip-btn danger" onClick={() => excluir(conta)}>
-                  🗑 Excluir
+                  <Trash2 size={16} aria-hidden="true" /> Excluir
                 </button>
                 {r.pagamentos.length > 0 && (
                   <button

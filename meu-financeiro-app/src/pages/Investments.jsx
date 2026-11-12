@@ -1,7 +1,10 @@
+import { Pencil, Trash2, TrendingUp } from "lucide-react";
 import React, { useState } from "react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
 import { TIPOS_INVESTIMENTO } from "../lib/categorias.js";
 import { arredondar, money, parseValor } from "../lib/formato.js";
 import { totaisDeInvestimentos } from "../lib/patrimonio.js";
+import { confirmar } from "../lib/dialogo.js";
 
 function pctRendimento(investido, rendimento) {
   if (!(investido > 0)) return "";
@@ -113,8 +116,8 @@ export default function Investments({ data, onBack, onSave, onDelete }) {
   })).filter((t) => t.valor > 0);
   const maior = Math.max(1, ...porTipo.map((t) => t.valor));
 
-  function excluir(inv) {
-    if (!window.confirm(`Excluir o investimento "${inv.nome}"?`)) return;
+  async function excluir(inv) {
+    if (!await confirmar(`Excluir o investimento "${inv.nome}"?`)) return;
     if (editando?.id === inv.id) setEditando(null);
     if (atualizando === inv.id) setAtualizando(null);
     onDelete(inv.id);
@@ -128,7 +131,7 @@ export default function Investments({ data, onBack, onSave, onDelete }) {
         </button>
         <div>
           <div className="eyebrow">Carteira</div>
-          <h1>📈 Investimentos</h1>
+          <h1>Investimentos</h1>
         </div>
       </header>
 
@@ -190,7 +193,7 @@ export default function Investments({ data, onBack, onSave, onDelete }) {
         <div className="section-title">
           <h2 className="no-margin">Meus investimentos</h2>
         </div>
-        {lista.length === 0 && <p className="muted">Nenhum investimento cadastrado.</p>}
+        {lista.length === 0 && <Vazio Icone={TrendingUp} titulo="Nenhum investimento" texto="Cadastre CDB, Tesouro, ações e veja quanto rendeu." botao="Cadastrar investimento" onBotao={rolarParaFormulario} />}
         {lista.map((inv) => {
           const rendimento = arredondar(Number(inv.atual || 0) - Number(inv.investido || 0));
           return (
@@ -233,10 +236,10 @@ export default function Investments({ data, onBack, onSave, onDelete }) {
                       setEditando(inv);
                     }}
                   >
-                    ✏️ Editar
+                    <Pencil size={16} aria-hidden="true" /> Editar
                   </button>
                   <button className="chip-btn danger" onClick={() => excluir(inv)}>
-                    🗑 Excluir
+                    <Trash2 size={16} aria-hidden="true" /> Excluir
                   </button>
                 </div>
               )}

@@ -52,3 +52,15 @@ describe("não contar duas vezes", () => {
     expect(dataDeCelula("05/11/2026")).toBe("2026-11-05");
   });
 });
+
+import { moneyCurto } from "../lib/formato.js";
+describe("números curtos", () => {
+  it("abrevia mil e milhão em português", () => {
+    expect(moneyCurto(250.4)).toBe("R$ 250");
+    expect(moneyCurto(1241.42)).toBe("R$ 1,2 mil");
+    expect(moneyCurto(19384.61)).toBe("R$ 19,4 mil");
+    expect(moneyCurto(-18673.11)).toBe("−R$ 18,7 mil");
+    expect(moneyCurto(3400000)).toBe("R$ 3,4 mi");
+    expect(moneyCurto(1000)).toBe("R$ 1 mil");
+  });
+});

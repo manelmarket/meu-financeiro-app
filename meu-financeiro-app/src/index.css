@@ -1,3 +1,12 @@
+/* ================= fonte do app: Inter (embutida no app, licença OFL) =================
+   Só português (latin e latin-ext); números com largura fixa nos valores. */
+@font-face{font-family:"Inter Variable";font-style:normal;font-display:swap;font-weight:100 900;
+  src:url("../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Inter Variable";font-style:normal;font-display:swap;font-weight:100 900;
+  src:url("../node_modules/@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
 /* ================= cores do app: temas e modo escuro =================
    O <html> recebe data-tema="azul|verde|roxo|dourado" e data-modo="claro|escuro" (ver lib/aparencia.js).
    Todas as telas usam estas variáveis; o tema Azul claro é o visual original do app. */
@@ -104,7 +113,7 @@
 :where([data-modo="escuro"]) button,:where([data-modo="escuro"]) input,:where([data-modo="escuro"]) select,:where([data-modo="escuro"]) textarea{color:inherit}
 :where([data-modo="escuro"]) img.cupom-img,:where([data-modo="escuro"]) .photo-preview img{background:#fff}
 
-:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--texto);background:var(--fundo-pagina)}
+:root{font-family:"Inter Variable",Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--texto);background:var(--fundo-pagina)}
 *{box-sizing:border-box} body{margin:0;background:var(--fundo-pagina)} button,input,select{font:inherit}
 button{cursor:pointer}.app-shell{max-width:520px;margin:0 auto;min-height:100vh;background:var(--fundo-app);position:relative;padding-bottom:88px;box-shadow:0 0 40px var(--sombra)}
 .page{padding:24px 18px 28px}.topbar{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--apagado);font-weight:800}.topbar h1{margin:4px 0 0;font-size:25px}.month{font-size:13px;color:var(--apagado)}
@@ -1282,3 +1291,90 @@ button:disabled{opacity:.6;cursor:default}
 .transaction b,.transaction span{overflow-wrap:anywhere}
 .transaction .tx-right{flex-shrink:0}
 .tag-cartao{font-size:11px;color:var(--apagado);white-space:nowrap}
+
+/* ----- janela de confirmação e avisos do app ----- */
+.dialogo{max-width:380px;padding:22px 20px 18px;gap:10px;text-align:left;border-radius:22px}
+.dialogo h2{margin:0;font-size:18px;line-height:1.3;color:var(--texto)}
+.dialogo-texto{margin:0;font-size:14px;line-height:1.5;color:var(--texto-3);white-space:pre-line}
+.dialogo-icone{width:44px;height:44px;border-radius:50%;background:var(--erro-fundo);color:var(--erro-forte);display:flex;align-items:center;justify-content:center}
+.dialogo-botoes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.dialogo-botoes button{min-height:48px}
+.primary.perigo{background:var(--erro-forte)}
+.avisos-app{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom));width:min(480px,calc(100% - 24px));display:flex;flex-direction:column;gap:8px;z-index:1200;pointer-events:none}
+.aviso-app{pointer-events:auto;display:flex;align-items:center;gap:10px;padding:12px 10px 12px 14px;border-radius:16px;background:#111827;color:#fff;font-size:14px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.aviso-app span{flex:1;min-width:0}
+.aviso-app.ok svg:first-child{color:#4ade80}
+.aviso-app.erro svg:first-child{color:#fca5a5}
+.aviso-app.info svg:first-child{color:#93c5fd}
+.aviso-desfazer{border:0;background:transparent;color:#a5b4fc;font-weight:800;font-size:14px;padding:6px 8px}
+.aviso-fechar{border:0;background:transparent;color:#cbd5e1;padding:4px;display:flex}
+@media (prefers-reduced-motion:no-preference){
+  :root:not([data-animacoes="nao"]) .aviso-app{animation:sobe-aparece .25s cubic-bezier(.2,.8,.2,1) backwards}
+  :root:not([data-animacoes="nao"]) .dialogo{animation:surge .22s cubic-bezier(.2,.8,.2,1) backwards}
+}
+.modal-backdrop.dialogo-fundo{z-index:1150}
+.chip-btn svg,.ghost svg,.secondary svg,.link svg,.cc-btn svg,button.wide svg{vertical-align:-3px}
+
+/* números alinhados nos valores */
+strong,b,.num,.teclado button,.lancar-m-valor strong,.heroi-saldo strong,input[inputmode="decimal"]{font-variant-numeric:tabular-nums}
+/* ícones de traço: cor conforme o tipo */
+.icone-frase{display:inline-flex;flex-shrink:0;margin-top:1px;color:var(--apagado)}
+.icone-frase.aviso{color:var(--aviso-texto)}
+.icone-frase.ok{color:var(--ok)}
+.icone-frase.dica{color:var(--primaria-texto)}
+.cloud-icon svg{color:var(--primaria-texto)}
+.cloud-row.warn .cloud-icon svg{color:var(--aviso-texto)}
+.shortcuts button svg{color:var(--primaria-texto)}
+.icone-aviso{color:var(--aviso-texto);flex-shrink:0}
+
+/* ----- telas vazias ----- */
+.vazio{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:28px 18px;margin:12px 0;border:1px dashed var(--borda-3);border-radius:20px;background:var(--superficie)}
+.vazio-icone{width:60px;height:60px;border-radius:18px;background:var(--primaria-suave-2);color:var(--primaria-texto);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+.vazio b{font-size:16px;color:var(--texto)}
+.vazio p{margin:0;font-size:14px;line-height:1.5;color:var(--texto-3);max-width:300px}
+.vazio .secondary{margin-top:8px;padding:11px 18px}
+.section-card .vazio{border:0;margin:0;padding:18px 6px;background:transparent}
+
+/* ----- esqueleto de carregamento ----- */
+.esqueleto{display:flex;flex-direction:column;gap:14px}
+.esq{display:block;border-radius:16px;background:linear-gradient(90deg,var(--superficie-3) 25%,var(--superficie) 50%,var(--superficie-3) 75%);background-size:200% 100%}
+.esq-titulo{height:34px;width:55%;border-radius:10px}
+.esq-card{height:120px}
+.esq-card.baixo{height:80px}
+.esq-linha{height:18px;width:90%;border-radius:8px}
+.esq-linha.curta{width:60%}
+@keyframes brilho{from{background-position:200% 0}to{background-position:-200% 0}}
+@media (prefers-reduced-motion:no-preference){:root:not([data-animacoes="nao"]) .esq{animation:brilho 1.4s ease-in-out infinite}}
+
+/* ----- boas-vindas ----- */
+.boas-vindas{position:fixed;inset:0;z-index:1100;background:var(--fundo-app);display:flex;flex-direction:column;padding:max(20px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));max-width:520px;margin:0 auto}
+[data-estilo="vidro"] .boas-vindas{background:var(--vidro-fundo)}
+.bv-pular{align-self:flex-end;border:0;background:transparent;color:var(--texto-3);font-weight:700;font-size:15px;padding:10px 6px}
+.bv-corpo{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px}
+.bv-icone{width:84px;height:84px;border-radius:26px;background:var(--primaria);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 14px 30px var(--sombra-forte)}
+.bv-corpo h1{margin:8px 0 0;font-size:28px;line-height:1.15;letter-spacing:-.4px;outline:none}
+.bv-corpo p{margin:0;font-size:16px;line-height:1.55;color:var(--texto-3)}
+.bv-acoes{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.bv-acoes .secondary{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px}
+.bv-rodape{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.bv-pontos{display:flex;gap:7px}
+.bv-pontos i{width:8px;height:8px;border-radius:99px;background:var(--borda-3);transition:width .2s ease}
+.bv-pontos i.ativo{width:24px;background:var(--primaria)}
+.bv-seguir{display:inline-flex;align-items:center;gap:8px;min-height:52px;padding:0 24px}
+@media (prefers-reduced-motion:no-preference){:root:not([data-animacoes="nao"]) .bv-corpo{animation:tela-vai .3s cubic-bezier(.2,.8,.2,1)}}
+
+/* ----- arrastar para o lado (Extrato) ----- */
+.arrasta{position:relative;overflow:hidden}
+.arrasta-frente{position:relative;background:var(--superficie);touch-action:pan-y;transition:transform .22s cubic-bezier(.2,.8,.2,1);user-select:none;-webkit-user-select:none}
+[data-estilo="vidro"] .arrasta-frente{background:transparent}
+[data-estilo="vidro"] .arrasta.aberto .arrasta-frente{background:var(--superficie-3);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.arrasta-acoes{position:absolute;top:0;right:0;bottom:0;display:flex}
+.arrasta-acoes button{flex:1;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700;background:var(--primaria-suave-2);color:var(--primaria-tinta)}
+.arrasta-acoes button.perigo{background:var(--erro-forte);color:#fff}
+.section-card .arrasta:not(:last-child) .transaction{border-bottom:1px solid var(--borda-2)}
+.section-card .arrasta .transaction{border-bottom:0}
+.extrato-lista .arrasta:not(:last-child) .extrato-item{border-bottom:1px solid var(--borda-2)}
+/* Relatórios: os cartões de valores cabem em celular estreito */
+.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.kpi-grid .mini-card{min-width:0}
+.kpi-grid .mini-card strong{overflow-wrap:anywhere;font-size:clamp(15px,4.6vw,19px)}

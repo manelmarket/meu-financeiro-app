@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { contarDados, descreverContagem } from "../lib/backup.js";
+import { confirmar } from "../lib/dialogo.js";
 
 // Pergunta antes de sair da conta neste aparelho
-export function sairComConfirmacao(nuvem) {
-  const ok = window.confirm(
+export async function sairComConfirmacao(nuvem) {
+  const ok = await confirmar(
     "Sair da conta neste aparelho?\n\nSeus dados continuam guardados na nuvem. Para usar o app de novo, é só entrar com a sua conta Google."
   );
   if (ok) nuvem.sair();
@@ -24,7 +25,7 @@ export default function EscolhaNuvem({ nuvem, data }) {
       aparelho:
         "Usar só os dados deste aparelho?\n\nOs dados da nuvem serão trocados pelos deste aparelho. Uma cópia de segurança dos dados da nuvem fica guardada aqui."
     };
-    if (perguntas[opcao] && !window.confirm(perguntas[opcao])) return;
+    if (perguntas[opcao] && !await confirmar(perguntas[opcao])) return;
     setEnviando(true);
     try {
       await nuvem.escolher(opcao);

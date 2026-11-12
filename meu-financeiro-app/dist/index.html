@@ -30,10 +30,21 @@
         if (meta) meta.setAttribute("content", estilo === "banco" && !escuro ? barrasBanco[tema] : escuro ? "#0b1220" : barras[tema]);
       })();
     </script>
-    <script type="module" crossorigin src="/assets/index-BrIW8Qwm.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CeNdhdTr.css">
+    <script type="module" crossorigin src="/assets/index-Bl8aXrTi.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-wIV0omig.css">
   </head>
   <body>
-    <div id="root"></div>
+    <style>
+      /* tela de abertura (some quando o app desenha): ícone e nome na cor do tema escolhido */
+      .abertura{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:var(--ab-fundo,#2a1fa8);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+      .abertura img{width:88px;height:88px;border-radius:24px;box-shadow:0 14px 40px rgba(0,0,0,.35)}
+      .abertura b{font-size:20px;letter-spacing:-.2px}
+      .abertura i{width:28px;height:28px;border-radius:50%;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;animation:abgira .9s linear infinite}
+      @keyframes abgira{to{transform:rotate(360deg)}}
+      @media (prefers-reduced-motion:reduce){.abertura i{animation:none}}
+      [data-tema="azul"]{--ab-fundo:#1d4ed8}[data-tema="verde"]{--ab-fundo:#065f46}[data-tema="roxo"]{--ab-fundo:#5b21b6}
+      [data-tema="violeta"]{--ab-fundo:#2a1fa8}[data-tema="dourado"]{--ab-fundo:#1c1917}[data-modo="escuro"]{--ab-fundo:#0b1220}
+    </style>
+    <div id="root"><div class="abertura" role="status" aria-label="Abrindo o Meu Financeiro"><img src="/icons/icon-192.png" alt="" /><b>Meu Financeiro</b><i></i></div></div>
   </body>
 </html>

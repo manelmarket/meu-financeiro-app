@@ -1,6 +1,8 @@
+import { Pencil, Trash2 } from "lucide-react";
 import React, { useState } from "react";
 import { CategoriaBadge, CategoriaForm } from "../components/Categoria.jsx";
 import { listarCategorias, usosDaCategoria } from "../lib/categorias.js";
+import { confirmar } from "../lib/dialogo.js";
 
 function textoDosUsos(n) {
   if (n === 0) return "Nenhum registro ainda";
@@ -14,12 +16,12 @@ export default function Categorias({ data, onBack, onSave, onDelete }) {
   const categorias = listarCategorias(data);
   const proprias = categorias.filter((c) => !c.doApp).length;
 
-  function excluir(c) {
+  async function excluir(c) {
     const usos = usosDaCategoria(data, c.nome);
     const pergunta =
       `Excluir a categoria ${c.nome}?` +
       (usos ? `\n\n${textoDosUsos(usos)} passa${usos > 1 ? "m" : ""} para "Outros". Nada é apagado.` : "");
-    if (window.confirm(pergunta)) {
+    if (await confirmar(pergunta)) {
       onDelete(c.id);
       if (editando === c.id) setEditando(null);
     }
@@ -33,7 +35,7 @@ export default function Categorias({ data, onBack, onSave, onDelete }) {
         </button>
         <div>
           <div className="eyebrow">Organizar</div>
-          <h1>🏷️ Categorias</h1>
+          <h1>Categorias</h1>
         </div>
       </header>
 
@@ -60,11 +62,11 @@ export default function Categorias({ data, onBack, onSave, onDelete }) {
               {editando !== c.id && (
                 <div className="cat-linha-acoes">
                   <button type="button" className="chip-btn" onClick={() => setEditando(c.id)}>
-                    ✏️ Editar
+                    <Pencil size={16} aria-hidden="true" /> Editar
                   </button>
                   {!c.doApp && (
                     <button type="button" className="chip-btn perigo" onClick={() => excluir(c)} aria-label={`Excluir ${c.nome}`}>
-                      🗑
+                      <Trash2 size={16} aria-hidden="true" />
                     </button>
                   )}
                 </div>

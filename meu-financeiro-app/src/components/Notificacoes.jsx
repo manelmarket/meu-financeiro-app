@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
-const ICONE = { aviso: "⚠️", ok: "✅", info: "📅" };
+import { IconeFrase } from "../pages/Assistant.jsx";
 
 // Janela "Notificações": os avisos que antes ficavam empilhados no topo do Início
 // (limite do cartão, orçamento estourado, gastos acima do mês passado, conquistas, nuvem, backup...).
@@ -36,7 +36,7 @@ export default function Notificacoes({ avisos, onAbrir, onFechar }) {
       >
         <div className="pag-topo">
           <div>
-            <h2 id="notif-titulo">🔔 Notificações</h2>
+            <h2 id="notif-titulo">Notificações</h2>
             <small className="muted">
               {avisos.length === 0
                 ? "Tudo em ordem por aqui"
@@ -51,7 +51,7 @@ export default function Notificacoes({ avisos, onAbrir, onFechar }) {
         </div>
 
         {avisos.length === 0 ? (
-          <p className="muted no-margin">Nenhum aviso no momento. 🎉</p>
+          <p className="muted no-margin">Nenhum aviso no momento.</p>
         ) : (
           <div className="alerts notif-lista" aria-label="Avisos">
             {avisos.map((a) => (
@@ -62,7 +62,7 @@ export default function Notificacoes({ avisos, onAbrir, onFechar }) {
                 onClick={() => onAbrir(a)}
                 disabled={a.cartaoId == null && !a.pagina}
               >
-                <span aria-hidden="true">{ICONE[a.tipo]}</span>
+                <IconeFrase tipo={a.tipo} />
                 <p>{a.texto}</p>
               </button>
             ))}

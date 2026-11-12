@@ -18,7 +18,7 @@ export default function Settings({ data, nuvem, onBack, onIr, onResetar }) {
         </button>
         <div>
           <div className="eyebrow">Ajustes</div>
-          <h1>⚙️ Configurações</h1>
+          <h1>Configurações</h1>
         </div>
       </header>
 

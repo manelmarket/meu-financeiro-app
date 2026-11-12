@@ -156,7 +156,7 @@ export function SeletorCategoria({ dados, valor, onChange, onCriar, rotulo = "Ca
               {c.icone} {c.nome}
             </option>
           ))}
-          {onCriar && <option value={NOVA}>➕ Nova categoria…</option>}
+          {onCriar && <option value={NOVA}>Nova categoria…</option>}
         </select>
       </label>
       {criando && (

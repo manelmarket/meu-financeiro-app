@@ -13,6 +13,19 @@ export function money(v) {
   return valoresEscondidos() ? "R$ ••••" : moneyReal(v);
 }
 
+// valor curto para gráficos e linhas cheias: "R$ 250", "R$ 1,2 mil", "R$ 3,4 mi" (o exato aparece ao tocar)
+export function moneyCurto(v) {
+  if (valoresEscondidos()) return "R$ ••••";
+  const n = Number(v || 0);
+  const a = Math.abs(n);
+  const sinal = n < 0 ? "−" : "";
+  const umaCasa = (x) => x.toLocaleString("pt-BR", { maximumFractionDigits: 1, minimumFractionDigits: 0 });
+  if (a >= 1e6) return `${sinal}R$ ${umaCasa(a / 1e6)} mi`;
+  if (a >= 1e3) return `${sinal}R$ ${umaCasa(a / 1e3)} mil`;
+  if (a >= 10) return `${sinal}R$ ${Math.round(a).toLocaleString("pt-BR")}`;
+  return moneyReal(n);
+}
+
 // sempre o valor de verdade (arquivos exportados, IA, contas)
 export function moneyReal(v) {
   return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

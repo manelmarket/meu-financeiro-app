@@ -243,7 +243,7 @@ export default function Lembretes({ data, onBack }) {
         </button>
         <div>
           <div className="eyebrow">Avisos no celular</div>
-          <h1>🔔 Lembretes</h1>
+          <h1>Lembretes</h1>
         </div>
       </header>
 

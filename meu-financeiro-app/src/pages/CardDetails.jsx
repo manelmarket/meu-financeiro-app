@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Banknote } from "lucide-react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
+import { Banknote, CalendarClock, CalendarDays, Camera, Pencil, ShoppingBag, Trash2 } from "lucide-react";
 import CardSummary from "../components/CardSummary.jsx";
 import CardForm from "../components/CardForm.jsx";
 import CupomModal from "../components/CupomModal.jsx";
@@ -21,6 +22,7 @@ import {
 } from "../lib/cartao.js";
 import { acharBanco, resumoDosBancos } from "../lib/saldos.js";
 import { apagarCupom, comprimirImagem, salvarCupom } from "../storage/cupons.js";
+import { confirmar, avisar } from "../lib/dialogo.js";
 
 const OPCOES_PARCELAS = Array.from({ length: 12 }, (_, i) => i + 1);
 
@@ -159,7 +161,7 @@ function PurchaseForm({ cartao, dados, inicial, onSave, onCancel, onVerCupom, on
         <div className="row-actions">
           <span className="muted small">Esta compra já tem foto do cupom.</span>
           <button type="button" className="chip-btn info" onClick={() => onVerCupom(inicial.cupomId)}>
-            📷 Ver
+            <Camera size={16} aria-hidden="true" /> Ver
           </button>
           <button type="button" className="chip-btn danger" onClick={() => setRemoverFoto(true)}>
             Remover
@@ -333,9 +335,9 @@ export default function CardDetails({
     setAviso(`Pagamento de ${money(pagamento.valor)} registrado na fatura de ${rotuloMes(pagamento.fatura)}.`);
   }
 
-  function desfazerPagamento(pagamento) {
+  async function desfazerPagamento(pagamento) {
     const pergunta = `Desfazer o pagamento de ${money(pagamento.valor)} da fatura de ${rotuloMes(pagamento.fatura)}?`;
-    if (!window.confirm(pergunta)) return;
+    if (!await confirmar(pergunta)) return;
     onUndoPay(cartao.id, pagamento.id);
     setAviso("Pagamento desfeito.");
   }
@@ -372,7 +374,7 @@ export default function CardDetails({
         cupomId = null;
       }
     } catch {
-      window.alert("Não foi possível guardar a foto neste aparelho. A compra será salva sem a foto nova.");
+      avisar("Não consegui guardar a foto neste aparelho. A compra foi salva sem a foto nova.", { tipo: "erro" });
     }
 
     if (anterior && anterior !== cupomId) apagarCupom(anterior).catch(() => {});
@@ -382,13 +384,13 @@ export default function CardDetails({
     fecharForm();
   }
 
-  function excluir(compra) {
+  async function excluir(compra) {
     const n = Number(compra.parcelas) || 1;
     const pergunta =
       n > 1
         ? `Excluir a compra "${compra.descricao}" e todas as ${n} parcelas?`
         : `Excluir a compra "${compra.descricao}"?`;
-    if (window.confirm(pergunta)) onDeletePurchase(cartao.id, compra);
+    if (await confirmar(pergunta)) onDeletePurchase(cartao.id, compra);
   }
 
   return (
@@ -399,7 +401,7 @@ export default function CardDetails({
         </button>
         <div>
           <div className="eyebrow">Crédito</div>
-          <h1>💳 {cartao.nome}</h1>
+          <h1>{cartao.nome}</h1>
         </div>
       </header>
 
@@ -424,10 +426,10 @@ export default function CardDetails({
 
       <div className="btn-grid">
         <button className="primary" onClick={onFuture}>
-          📅 Lançamentos futuros
+          <CalendarDays size={16} aria-hidden="true" /> Lançamentos futuros
         </button>
         <button className="secondary" onClick={onCalendar}>
-          🗓️ Calendário de faturas
+          <CalendarClock size={16} aria-hidden="true" /> Calendário de faturas
         </button>
         <button
           className="primary"
@@ -439,7 +441,7 @@ export default function CardDetails({
           + Nova compra
         </button>
         <button className="secondary" onClick={() => setEditandoCartao((v) => !v)}>
-          ✏️ Editar cartão
+          <Pencil size={16} aria-hidden="true" /> Editar cartão
         </button>
       </div>
 
@@ -500,7 +502,7 @@ export default function CardDetails({
         </div>
 
         {compras.length === 0 ? (
-          <p className="muted">Nenhuma compra lançada.</p>
+          <Vazio Icone={ShoppingBag} titulo="Nenhuma compra neste cartão" texto="Use Nova compra (ou o + da barra) para lançar." />
         ) : (
           compras.map(({ compra, r }) => (
             <div className="purchase" key={compra.id}>
@@ -541,7 +543,7 @@ export default function CardDetails({
               <div className="row-actions">
                 {compra.cupomId && (
                   <button className="chip-btn info" onClick={() => setCupom(compra.cupomId)}>
-                    📷 Ver cupom
+                    <Camera size={16} aria-hidden="true" /> Ver cupom
                   </button>
                 )}
                 <button
@@ -551,10 +553,10 @@ export default function CardDetails({
                     setFormAberto(true);
                   }}
                 >
-                  ✏️ Editar
+                  <Pencil size={16} aria-hidden="true" /> Editar
                 </button>
                 <button className="chip-btn danger" onClick={() => excluir(compra)}>
-                  🗑 Excluir
+                  <Trash2 size={16} aria-hidden="true" /> Excluir
                 </button>
               </div>
             </div>

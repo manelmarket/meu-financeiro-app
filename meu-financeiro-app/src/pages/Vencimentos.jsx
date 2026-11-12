@@ -1,3 +1,4 @@
+import { Repeat } from "lucide-react";
 import React, { useMemo } from "react";
 import { MESES, lerData, mesDaData, money, somarDias, somarMeses } from "../lib/formato.js";
 import { resumoDoMes } from "../lib/mes.js";
@@ -23,9 +24,9 @@ export default function Vencimentos({ data, hoje, onBack, onOpenCard, onOpenBill
   const semana = somarDias(hoje, 7);
   const grupos = [
     { titulo: "⏰ Atrasados", lista: itens.filter((v) => v.data < hoje) },
-    { titulo: "📍 Vencem hoje", lista: itens.filter((v) => v.data === hoje) },
-    { titulo: "📅 Próximos 7 dias", lista: itens.filter((v) => v.data > hoje && v.data <= semana) },
-    { titulo: "🗓️ Mais à frente", lista: itens.filter((v) => v.data > semana) }
+    { titulo: "Vencem hoje", lista: itens.filter((v) => v.data === hoje) },
+    { titulo: "Próximos 7 dias", lista: itens.filter((v) => v.data > hoje && v.data <= semana) },
+    { titulo: "Mais à frente", lista: itens.filter((v) => v.data > semana) }
   ].filter((g) => g.lista.length > 0);
 
   return (
@@ -36,7 +37,7 @@ export default function Vencimentos({ data, hoje, onBack, onOpenCard, onOpenBill
         </button>
         <div>
           <div className="eyebrow">Meu mês</div>
-          <h1>🗓️ Vencimentos</h1>
+          <h1>Vencimentos</h1>
         </div>
       </header>
 
@@ -44,7 +45,7 @@ export default function Vencimentos({ data, hoje, onBack, onOpenCard, onOpenBill
 
       {grupos.length === 0 && (
         <section className="section-card">
-          <p className="muted no-margin">Nada vencendo por enquanto. 🎉</p>
+          <p className="muted no-margin">Nada vencendo por enquanto.</p>
         </section>
       )}
 
@@ -78,7 +79,7 @@ export default function Vencimentos({ data, hoje, onBack, onOpenCard, onOpenBill
       ))}
 
       <button className="ghost wide" onClick={onOpenBills}>
-        🔁 Contas fixas
+        <Repeat size={16} aria-hidden="true" /> Contas fixas
       </button>
     </div>
   );

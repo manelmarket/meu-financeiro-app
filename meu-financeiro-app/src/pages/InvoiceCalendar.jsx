@@ -22,7 +22,7 @@ export default function InvoiceCalendar({ cartoes, titulo, hoje, onBack, onOpenC
         </button>
         <div>
           <div className="eyebrow">{titulo}</div>
-          <h1>🗓️ Calendário de faturas</h1>
+          <h1>Calendário de faturas</h1>
         </div>
       </header>
 

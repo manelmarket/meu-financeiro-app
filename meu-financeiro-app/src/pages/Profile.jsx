@@ -47,7 +47,7 @@ export default function Profile({ data, perfil: perfilDaPessoa, hoje, nuvem, onB
         </button>
         <div>
           <div className="eyebrow">Configurações</div>
-          <h1>👤 Perfil</h1>
+          <h1>Perfil</h1>
         </div>
       </header>
 

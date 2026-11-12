@@ -66,7 +66,7 @@ export default function MesDetalhe({ data, hoje, mesInicial, abaInicial = "saldo
           ←
         </button>
         <div>
-          <div className="eyebrow">Meu mês</div>
+          <div className="eyebrow">Detalhes do mês</div>
           <h1>{nomeMes(mes).replace(/^./, (x) => x.toUpperCase())} em detalhe</h1>
         </div>
       </header>

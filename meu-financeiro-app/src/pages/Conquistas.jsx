@@ -38,7 +38,7 @@ export default function Conquistas({ data, hoje, familia, onBack }) {
         </button>
         <div>
           <div className="eyebrow">Gamificação</div>
-          <h1>🏆 Conquistas</h1>
+          <h1>Conquistas</h1>
         </div>
       </header>
 

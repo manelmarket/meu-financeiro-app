@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { CalendarDays, Plus } from "lucide-react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
+import { CalendarDays, CreditCard, Plus, Trash2 } from "lucide-react";
 import CardSummary from "../components/CardSummary.jsx";
 import CardForm from "../components/CardForm.jsx";
 import CartaoModerno from "../components/CartaoModerno.jsx";
@@ -8,6 +9,7 @@ import PagarFatura from "../components/PagarFatura.jsx";
 import { faturasParaPagar, resumoDoCartao } from "../lib/cartao.js";
 import { money, rotuloMes } from "../lib/formato.js";
 import { resumoDosBancos } from "../lib/saldos.js";
+import { confirmar } from "../lib/dialogo.js";
 
 export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewPurchase, onCalendar, onPay }) {
   // fatura sendo paga: { cartaoId, mes }
@@ -23,12 +25,12 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
     return () => clearTimeout(tempo);
   }, [aviso]);
 
-  function excluirCartao(cartao) {
+  async function excluirCartao(cartao) {
     const n = (cartao.compras || []).length;
     const aviso = n
       ? `Excluir o cartão ${cartao.nome} e as ${n} compras lançadas nele?`
       : `Excluir o cartão ${cartao.nome}?`;
-    if (window.confirm(aviso)) onDelete(cartao.id);
+    if (await confirmar(aviso)) onDelete(cartao.id);
   }
 
   // a janela sempre usa os dados de agora (se a fatura foi paga em outro aparelho, ela fecha)
@@ -113,7 +115,7 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
       <header className="topbar">
         <div>
           <div className="eyebrow">Crédito</div>
-          <h1>💳 Meus cartões</h1>
+          <h1>Meus cartões</h1>
         </div>
       </header>
 
@@ -130,7 +132,7 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
       )}
 
       {data.cartoes.length === 0 && (
-        <p className="muted empty">Nenhum cartão cadastrado ainda.</p>
+        <Vazio Icone={CreditCard} titulo="Nenhum cartão ainda" texto="Cadastre seus cartões para acompanhar faturas, parcelas e o limite disponível." botao="Cadastrar primeiro cartão" onBotao={rolarParaFormulario} />
       )}
 
       {data.cartoes.map((cartao) => (
@@ -159,7 +161,7 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
               excluirCartao(cartao);
             }}
           >
-            🗑
+            <Trash2 size={16} aria-hidden="true" />
           </button>
         </CardSummary>
       ))}

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Bell, Eye, EyeOff } from "lucide-react";
+import { AlertTriangle, BadgeDollarSign, Bell, Bot, CalendarClock, Cloud, CloudOff, Eye, EyeOff, HardDrive, Landmark, LineChart, RefreshCw, Repeat, Repeat2, Sparkles, TrendingUp, Users } from "lucide-react";
 import { esconderValores, usarValoresEscondidos } from "../lib/privacidade.js";
 import MonthPicker from "../components/MonthPicker.jsx";
 import Notificacoes from "../components/Notificacoes.jsx";
@@ -11,7 +11,7 @@ import { acharAssinaturas } from "../lib/assinaturas.js";
 import { Volume2 } from "lucide-react";
 import { receitasParaConfirmar } from "../lib/receitasFixas.js";
 import { diaMesBR } from "../lib/formato.js";
-import { ICONE_FRASE } from "./Assistant.jsx";
+import { IconeFrase } from "./Assistant.jsx";
 import { lerData, mesDaData, money, nomeMes, MESES } from "../lib/formato.js";
 import { resumoDoMes } from "../lib/mes.js";
 import { alertas, analiseDoMes } from "../lib/analise.js";
@@ -36,17 +36,17 @@ function situacaoDosDados(nuvem, ultimoBackup, hoje, demonstracao) {
     switch (nuvem.status) {
       case "ok":
         return {
-          icone: nuvem.familia ? "👨‍👩‍👧" : "☁️",
+          Icone: nuvem.familia ? Users : Cloud,
           titulo: nuvem.familia ? "Nuvem da família" : "Nuvem ligada",
           texto: `Tudo sincronizado${nuvem.sincronizadoEm ? ` · ${quandoFoi(nuvem.sincronizadoEm)}` : ""}`
         };
       case "offline":
-        return { icone: "📴", titulo: "Nuvem ligada", texto: "Sem internet: envio quando a conexão voltar", cor: "warn" };
+        return { Icone: CloudOff, titulo: "Nuvem ligada", texto: "Sem internet: envio quando a conexão voltar", cor: "warn" };
       case "erro":
-        return { icone: "⚠️", titulo: "Nuvem com problema", texto: "Toque para ver", cor: "warn", aviso: `Nuvem: ${nuvem.mensagem}` };
+        return { Icone: AlertTriangle, titulo: "Nuvem com problema", texto: "Toque para ver", cor: "warn", aviso: `Nuvem: ${nuvem.mensagem}` };
       case "sessao":
         return {
-          icone: "⚠️",
+          Icone: AlertTriangle,
           titulo: "Nuvem parada",
           texto: "Entre de novo na sua conta",
           cor: "warn",
@@ -54,14 +54,14 @@ function situacaoDosDados(nuvem, ultimoBackup, hoje, demonstracao) {
         };
       case "escolher":
         return {
-          icone: "⚠️",
+          Icone: AlertTriangle,
           titulo: "Falta um passo na nuvem",
           texto: "Escolha como juntar os dados",
           cor: "warn",
           aviso: "Falta escolher como juntar os dados deste aparelho com os da nuvem."
         };
       default:
-        return { icone: "🔄", titulo: "Nuvem ligada", texto: "Sincronizando…" };
+        return { Icone: RefreshCw, titulo: "Nuvem ligada", texto: "Sincronizando…" };
     }
   }
 
@@ -69,7 +69,7 @@ function situacaoDosDados(nuvem, ultimoBackup, hoje, demonstracao) {
   if (ultimoBackup && dias !== null) {
     const antigo = dias > 7 && !demonstracao;
     return {
-      icone: "💾",
+      Icone: HardDrive,
       titulo: "Backup e nuvem",
       texto: `Último backup ${dias === 0 ? "hoje" : `há ${dias} dia${dias > 1 ? "s" : ""}`}`,
       cor: antigo ? "warn" : "",
@@ -77,7 +77,7 @@ function situacaoDosDados(nuvem, ultimoBackup, hoje, demonstracao) {
     };
   }
   return {
-    icone: "💾",
+    Icone: HardDrive,
     titulo: "Backup e nuvem",
     texto: "Seus dados estão só neste aparelho",
     cor: demonstracao ? "" : "warn",
@@ -203,8 +203,8 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
       {!heroi && (
       <header className="topbar com-sino">
         <div>
-          <div className="eyebrow">Meu mês</div>
-          <h1>Olá, {nomeParaMostrar(perfil || data.usuario, nuvem?.usuario) || "você"} 👋</h1>
+          <div className="eyebrow">{nomeMes(mesHoje)} de {mesHoje.slice(0, 4)}</div>
+          <h1>Olá, {nomeParaMostrar(perfil || data.usuario, nuvem?.usuario) || "você"}</h1>
         </div>
         <button
           type="button"
@@ -234,7 +234,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
 
       <button type="button" className="cloud-row due-btn" onClick={() => onOpenPage("jarvis")}>
         <span className="cloud-icon" aria-hidden="true">
-          🤖
+          <Bot size={20} />
         </span>
         <span className="cloud-text">
           <b>Fale com o Jarvis</b>
@@ -245,7 +245,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
       {confirmar.map(({ receita, mes: mesDaReceita, data: dia }) => (
         <section className="cloud-row confirmar-receita" key={`${receita.id}-${mesDaReceita}`}>
           <span className="cloud-icon" aria-hidden="true">
-            💰
+            <BadgeDollarSign size={20} />
           </span>
           <span className="cloud-text">
             <b>
@@ -267,7 +267,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
       {mostrarResumo && (
         <section className="section-card resumo-semana" aria-label="Resumo da semana">
           <div className="section-title">
-            <h2 className="no-margin">📅 Resumo da semana</h2>
+            <h2 className="no-margin">Resumo da semana</h2>
             {"speechSynthesis" in window && (
               <button type="button" className="link resumo-ouvir" onClick={ouvirResumo}>
                 <Volume2 size={15} /> ouvir
@@ -277,7 +277,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
           <ul className="insights">
             {textoDoResumo(semana).map((t, i) => (
               <li key={i} className="insight">
-                <span aria-hidden="true">{i === 0 ? "💸" : t.includes("fora do padrão") ? "⚠️" : t.includes("vence") ? "🗓️" : "📌"}</span>
+                <IconeFrase tipo={i === 0 ? "ok" : t.includes("fora do padrão") ? "aviso" : t.includes("vence") ? "info" : "dica"} />
                 <p>{t}</p>
               </li>
             ))}
@@ -290,7 +290,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
 
       <button type="button" className="cloud-row due-btn previsao-row" onClick={() => onOpenPage("mes", { aba: "previsao", mes: mesHoje })}>
         <span className="cloud-icon" aria-hidden="true">
-          🔮
+          <LineChart size={20} />
         </span>
         <span className="cloud-text">
           <b>
@@ -310,7 +310,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
       {assinaturas.length > 0 && (
         <button type="button" className="cloud-row due-btn" onClick={() => onOpenPage("assinaturas")}>
           <span className="cloud-icon" aria-hidden="true">
-            🔁
+            <Repeat2 size={20} />
           </span>
           <span className="cloud-text">
             <b>
@@ -326,7 +326,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
 
       <button type="button" className="cloud-row due-btn" onClick={() => onOpenPage("vencimentos")}>
         <span className="cloud-icon com-badge" aria-hidden="true">
-          🗓️
+          <CalendarClock size={20} />
           {vencendo > 0 && <i className="notif-badge">{vencendo > 9 ? "9+" : vencendo}</i>}
         </span>
         <span className="cloud-text">
@@ -370,16 +370,16 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
 
       <nav className="shortcuts" aria-label="Atalhos">
         <button type="button" onClick={onOpenBills}>
-          <span aria-hidden="true">🔁</span>Contas fixas
+          <Repeat size={20} aria-hidden="true" />Contas fixas
         </button>
         <button type="button" onClick={() => onOpenPage("investments")}>
-          <span aria-hidden="true">📈</span>Investimentos
+          <TrendingUp size={20} aria-hidden="true" />Investimentos
         </button>
         <button type="button" onClick={() => onOpenPage("patrimony")}>
-          <span aria-hidden="true">🏦</span>Patrimônio
+          <Landmark size={20} aria-hidden="true" />Patrimônio
         </button>
         <button type="button" onClick={() => onOpenPage("assistant")}>
-          <span aria-hidden="true">✨</span>Assistente
+          <Sparkles size={20} aria-hidden="true" />Assistente
         </button>
       </nav>
 
@@ -389,7 +389,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
         onClick={() => onOpenPage("backup")}
       >
         <span className="cloud-icon" aria-hidden="true">
-          {situacao.icone}
+          {(() => { const I = situacao.Icone; return <I size={20} />; })()}
         </span>
         <span className="cloud-text">
           <b>{situacao.titulo}</b>
@@ -410,7 +410,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
         <ul className="insights">
           {frases.slice(0, 3).map((f, i) => (
             <li key={i} className={`insight ${f.tipo}`}>
-              <span aria-hidden="true">{ICONE_FRASE[f.tipo]}</span>
+              <IconeFrase tipo={f.tipo} />
               <p>{f.texto}</p>
             </li>
           ))}
@@ -478,7 +478,7 @@ export default function Home({ data, hoje, nuvem, perfil, onNew, onOpenBills, on
           })
         )}
         <button className="ghost wide" onClick={onOpenBills}>
-          🔁 Contas fixas
+          <Repeat size={16} aria-hidden="true" /> Contas fixas
         </button>
       </section>
 

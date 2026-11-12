@@ -1,5 +1,7 @@
 import React from "react";
-import { Paperclip } from "lucide-react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
+import { CreditCard, Paperclip, Pencil, ReceiptText, Trash2 } from "lucide-react";
+import Arrastavel from "../components/Arrastavel.jsx";
 import EditarLancamento from "../components/EditarLancamento.jsx";
 import { useMemo, useState } from "react";
 import { acharBanco } from "../lib/saldos.js";
@@ -9,6 +11,7 @@ import { usarAparencia } from "../lib/aparencia.js";
 import { MESES, arredondar, hojeISO, mesDaData, money, somarDias } from "../lib/formato.js";
 import { PERIODOS, dentroDoPeriodo, intervaloDoPeriodo } from "../lib/periodo.js";
 import MonthPicker from "../components/MonthPicker.jsx";
+import { confirmar } from "../lib/dialogo.js";
 
 // "Pix (Nubank) + Dinheiro" — e, se parte do gasto foi no cartão, "+ cartão Itaú"
 function comoFoiPago(item, data) {
@@ -125,8 +128,8 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
         if (!r?.erro) setEditando(null);
         return r;
       }}
-      onExcluir={() => {
-        if (!window.confirm(`Excluir "${lancEditando.descricao || "lançamento"}"?`)) return;
+      onExcluir={async () => {
+        if (!await confirmar(`Excluir "${lancEditando.descricao || "lançamento"}"?`)) return;
         onDelete(lancEditando.id);
         setEditando(null);
       }}
@@ -147,6 +150,14 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
       }
     };
   };
+  // ações de arrastar para o lado
+  const acoesDe = (item) =>
+    item.compra
+      ? [{ texto: "Ver cartão", Icone: CreditCard, onClick: () => onOpenCard?.(item.cartaoId) }]
+      : [
+          { texto: "Editar", Icone: Pencil, onClick: () => setEditando(item.id) },
+          { texto: "Excluir", Icone: Trash2, onClick: () => excluir(item), perigo: true }
+        ];
   const pagoCom = (item) =>
     item.compra ? `Cartão ${item.cartaoNome}${item.parcelas > 1 ? ` · ${item.parcelas}x` : ""}` : comoFoiPago(item, data);
   const extras = (item) => (
@@ -156,10 +167,10 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
     </>
   );
 
-  function excluir(item) {
+  async function excluir(item) {
     if (ehTransferencia(item)) {
       const pergunta = `Excluir ${rotuloDoSubtipo(item.subtipo).toLowerCase()} de ${money(item.valor)} (${caminhoDaTransferencia(data, item)})?\n\nO saldo dos bancos volta ao que era.`;
-      if (!window.confirm(pergunta)) return;
+      if (!await confirmar(pergunta)) return;
     }
     onDelete(item.id);
   }
@@ -198,7 +209,7 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
             <strong>{money(totais.saidas)}</strong>
           </section>
         </div>
-        {porDia.length === 0 && <p className="muted extrato-vazio">Nada por aqui {intervalo.rotulo}.</p>}
+        {porDia.length === 0 && <Vazio Icone={ReceiptText} titulo={`Nada por aqui ${intervalo.rotulo}`} texto={periodo === "tudo" ? "Os gastos e receitas que você lançar aparecem aqui." : "Experimente outro período."} botao={periodo === "tudo" ? null : "Ver tudo"} onBotao={() => setPeriodo("tudo")} />}
         {porDia.map((grupo) => (
           <section className="extrato-dia" key={grupo.titulo}>
             <h2>{grupo.titulo}</h2>
@@ -208,7 +219,8 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
                 const c = transf ? null : infoDaCategoria(data, item.categoria, mapa);
                 const cor = transf ? "var(--primaria)" : item.tipo === "entrada" ? "var(--ok)" : c.cor;
                 return (
-                  <div className="transaction extrato-item clicavel" key={item.id} {...abrir(item)}>
+                  <Arrastavel key={item.id} acoes={acoesDe(item)}>
+                  <div className="transaction extrato-item clicavel" {...abrir(item)}>
                     <span className="extrato-icone" style={{ color: cor, background: `color-mix(in srgb, ${cor} 14%, transparent)` }} aria-hidden="true">
                       {transf ? "⇄" : c.icone}
                     </span>
@@ -222,15 +234,10 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
                         {transf ? "" : item.tipo === "entrada" ? "+" : "−"}
                         {money(item.valor)}
                       </strong>
-                      {item.compra ? (
-                        <span className="tag-cartao">no cartão</span>
-                      ) : (
-                        <button className="delete" onClick={(e) => { e.stopPropagation(); excluir(item); }} aria-label={`Excluir ${item.descricao || "lançamento"}`}>
-                          Excluir
-                        </button>
-                      )}
+                      {item.compra && <span className="tag-cartao">no cartão</span>}
                     </div>
                   </div>
+                  </Arrastavel>
                 );
               })}
             </div>
@@ -246,11 +253,11 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
       <header className="topbar">
         <div>
           <div className="eyebrow">Movimentações</div>
-          <h1>Histórico</h1>
+          <h1>Extrato</h1>
         </div>
       </header>
       <section className="section-card">
-        <p className="hint extrato-dica">Toque num lançamento para editar (compras no cartão abrem o cartão).</p>
+        <p className="hint extrato-dica">Toque num lançamento para editar, ou arraste para o lado para excluir.</p>
         <input className="search" placeholder="Buscar lançamento..." value={busca} onChange={(e) => setBusca(e.target.value)} />
         {escolhaDoPeriodo}
         <p className="periodo-totais">
@@ -263,11 +270,12 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
             </button>
           ))}
         </div>
-        {lista.length === 0 && <p className="muted">Nenhum lançamento {intervalo.rotulo}.</p>}
+        {lista.length === 0 && <Vazio Icone={ReceiptText} titulo={`Nada por aqui ${intervalo.rotulo}`} texto={periodo === "tudo" ? "Os gastos e receitas que você lançar aparecem aqui." : "Experimente outro período."} botao={periodo === "tudo" ? null : "Ver tudo"} onBotao={() => setPeriodo("tudo")} />}
         {lista.map((item) => {
           if (ehTransferencia(item)) {
             return (
-              <div className="transaction clicavel" key={item.id} {...abrir(item)}>
+              <Arrastavel key={item.id} acoes={acoesDe(item)}>
+              <div className="transaction clicavel" {...abrir(item)}>
                 <div>
                   <b>{item.descricao || rotuloDoSubtipo(item.subtipo)}</b>
                   <span>
@@ -277,16 +285,15 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
                 </div>
                 <div className="tx-right">
                   <strong className="neutro">{money(item.valor)}</strong>
-                  <button className="delete" onClick={(e) => { e.stopPropagation(); excluir(item); }}>
-                    Excluir
-                  </button>
                 </div>
               </div>
+              </Arrastavel>
             );
           }
           const c = infoDaCategoria(data, item.categoria, mapa);
           return (
-            <div className="transaction clicavel" key={item.id} {...abrir(item)}>
+            <Arrastavel key={item.id} acoes={acoesDe(item)}>
+            <div className="transaction clicavel" {...abrir(item)}>
               <div>
                 <b>{item.descricao}</b>
                 <span>
@@ -299,15 +306,10 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
                   {item.tipo === "entrada" ? "+" : "-"}
                   {money(item.valor)}
                 </strong>
-                {item.compra ? (
-                  <span className="tag-cartao">no cartão</span>
-                ) : (
-                  <button className="delete" onClick={(e) => { e.stopPropagation(); excluir(item); }}>
-                    Excluir
-                  </button>
-                )}
+                {item.compra && <span className="tag-cartao">no cartão</span>}
               </div>
             </div>
+            </Arrastavel>
           );
         })}
       </section>

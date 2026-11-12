@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { X } from "lucide-react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
+import { AlertTriangle, HandCoins, Pencil, Trash2, X } from "lucide-react";
 import EscolherBanco, { bancoInicial, lembrarBanco } from "../components/EscolherBanco.jsx";
 import { arredondar, dataBR, money, parseValor } from "../lib/formato.js";
 import { acharBanco, resumoDosBancos } from "../lib/saldos.js";
@@ -9,6 +10,7 @@ import {
   resumoDosEmprestimos,
   valorSugerido
 } from "../lib/emprestimos.js";
+import { confirmar } from "../lib/dialogo.js";
 
 // Tela "Empréstimos": o que a pessoa pegou emprestado (Peguei) e o que ela emprestou (Emprestei).
 // Cada empréstimo pode ser em parcelas (valores do contrato) ou sem parcelas (paga quando puder).
@@ -27,8 +29,8 @@ const TEXTO = {
     valor: "Valor recebido",
     falta: "Falta pagar",
     tudo: "Tudo pago",
-    botaoParcela: "💵 Pagar parcela",
-    botaoLivre: "💵 Pagar",
+    botaoParcela: "Pagar parcela",
+    botaoLivre: "Pagar",
     jaPagas: "Parcelas já pagas",
     jaPago: "Já pagou (opcional)",
     pagos: "pagos",
@@ -46,8 +48,8 @@ const TEXTO = {
     valor: "Valor emprestado",
     falta: "Falta receber",
     tudo: "Tudo recebido",
-    botaoParcela: "💵 Recebi a parcela",
-    botaoLivre: "💵 Recebi",
+    botaoParcela: "Recebi a parcela",
+    botaoLivre: "Recebi",
     jaPagas: "Parcelas já recebidas",
     jaPago: "Já recebeu (opcional)",
     pagos: "recebidos",
@@ -390,10 +392,10 @@ function CartaoDoEmprestimo({ item, nomesDosBancos, historicoAberto, onHistorico
           </button>
         )}
         <button className="chip-btn edit" onClick={onEditar}>
-          ✏️ Editar
+          <Pencil size={16} aria-hidden="true" /> Editar
         </button>
         <button className="chip-btn danger" onClick={onExcluir}>
-          🗑 Excluir
+          <Trash2 size={16} aria-hidden="true" /> Excluir
         </button>
         {pagamentos.length > 0 && (
           <button className="chip-btn neutral" onClick={onHistorico} aria-expanded={historicoAberto}>
@@ -590,7 +592,7 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
     if (pagando != null && (!itemPagando || itemPagando.resumo.situacao === "quitado")) setPagando(null);
   }, [pagando, itemPagando]);
 
-  function excluir({ emprestimo: e }) {
+  async function excluir({ emprestimo: e }) {
     const pagamentos = pagamentosDoEmprestimo(e);
     const n = pagamentos.length;
     const comBanco = pagamentos.some((p) => p.bancoId != null && p.bancoId !== "");
@@ -600,13 +602,13 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
         ? " O que já entrou nos bancos continua lá."
         : " O que já saiu dos bancos continua descontado.";
     const pergunta = `Excluir o empréstimo "${nomeDoEmprestimo(e)}"${n ? ` e os ${n} pagamentos registrados nele` : ""}?${nosBancos}`;
-    if (!window.confirm(pergunta)) return;
+    if (!await confirmar(pergunta)) return;
     const res = onExcluir(e.id);
     setAviso(res?.erro ? res.erro : `Empréstimo "${nomeDoEmprestimo(e)}" excluído.`);
     if (editando === e.id) setEditando(null);
   }
 
-  function desfazer({ emprestimo: e }, p) {
+  async function desfazer({ emprestimo: e }, p) {
     const banco = p.bancoId != null && p.bancoId !== "" ? acharBanco(data, p.bancoId) : null;
     const noBanco = !banco
       ? ""
@@ -614,7 +616,7 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
         ? ` O valor sai do banco (${banco.nome}).`
         : ` O valor volta para o banco (${banco.nome}).`;
     const pergunta = `Desfazer ${e.tipo === "peguei" ? "o pagamento" : "o recebimento"} de ${money(Number(p.valor))}${p.parcela ? ` (parcela ${p.parcela})` : ""}?${noBanco}`;
-    if (!window.confirm(pergunta)) return;
+    if (!await confirmar(pergunta)) return;
     const res = onDesfazer(e.id, p.id);
     if (res?.erro) setAviso(res.erro);
   }
@@ -681,7 +683,7 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
         </button>
         <div>
           <div className="eyebrow">Planejamento</div>
-          <h1>🤝 Empréstimos</h1>
+          <h1>Empréstimos</h1>
         </div>
       </header>
 
@@ -702,7 +704,7 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
         <section className="alerts emp-alertas" aria-label="Empréstimos atrasados">
           {atrasados.map((i) => (
             <button type="button" className="alert aviso" key={i.emprestimo.id} onClick={() => setAba(i.emprestimo.tipo)}>
-              <span aria-hidden="true">⚠️</span>
+              <AlertTriangle size={17} aria-hidden="true" className="icone-aviso" />
               <p>{textoDoAtraso(i)}</p>
             </button>
           ))}
@@ -736,7 +738,7 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
         </p>
       )}
 
-      {daLista.itens.length === 0 && <p className="muted empty emp-vazio">{TEXTO[aba].vazio} Cadastre no formulário abaixo.</p>}
+      {daLista.itens.length === 0 && <Vazio Icone={HandCoins} titulo={TEXTO[aba].vazio} texto="Anote o que você pegou ou emprestou e acompanhe as parcelas." botao="Cadastrar empréstimo" onBotao={rolarParaFormulario} />}
 
       {abertos.map(cartao)}
 

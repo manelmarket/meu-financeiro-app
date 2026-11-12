@@ -1,6 +1,9 @@
+import { Pencil, Target, Trash2 } from "lucide-react";
 import React, { useState } from "react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
 import RingMeter from "../components/RingMeter.jsx";
 import { dataBR, money, parseValor } from "../lib/formato.js";
+import { confirmar } from "../lib/dialogo.js";
 
 function GoalForm({ inicial, onSave, onCancel }) {
   const [nome, setNome] = useState(inicial?.nome || "");
@@ -94,8 +97,8 @@ export default function Goals({ data, onSave, onDelete, onMove }) {
   const totalGuardado = metas.reduce((t, m) => t + Number(m.atual || 0), 0);
   const totalObjetivo = metas.reduce((t, m) => t + Number(m.objetivo || 0), 0);
 
-  function excluir(meta) {
-    if (window.confirm(`Excluir a meta "${meta.nome}"?`)) onDelete(meta.id);
+  async function excluir(meta) {
+    if (await confirmar(`Excluir a meta "${meta.nome}"?`)) onDelete(meta.id);
   }
 
   return (
@@ -103,7 +106,7 @@ export default function Goals({ data, onSave, onDelete, onMove }) {
       <header className="topbar">
         <div>
           <div className="eyebrow">Planejamento</div>
-          <h1>🎯 Minhas metas</h1>
+          <h1>Minhas metas</h1>
         </div>
       </header>
 
@@ -151,7 +154,7 @@ export default function Goals({ data, onSave, onDelete, onMove }) {
                   Guardado: <strong>{money(atual)}</strong>
                 </span>
                 {atingida ? (
-                  <span className="goal-ok">✅ Meta atingida</span>
+                  <span className="goal-ok">Meta atingida</span>
                 ) : (
                   <span className="muted small">Faltam {money(objetivo - atual)}</span>
                 )}
@@ -177,10 +180,10 @@ export default function Goals({ data, onSave, onDelete, onMove }) {
                   − Retirar
                 </button>
                 <button className="chip-btn edit" onClick={() => setEditando(meta.id)}>
-                  ✏️ Editar
+                  <Pencil size={16} aria-hidden="true" /> Editar
                 </button>
                 <button className="chip-btn danger" onClick={() => excluir(meta)}>
-                  🗑 Excluir
+                  <Trash2 size={16} aria-hidden="true" /> Excluir
                 </button>
               </div>
             )}
@@ -199,7 +202,7 @@ export default function Goals({ data, onSave, onDelete, onMove }) {
         );
       })}
 
-      {metas.length === 0 && <p className="muted empty">Nenhuma meta criada ainda.</p>}
+      {metas.length === 0 && <Vazio Icone={Target} titulo="Nenhuma meta ainda" texto="Crie uma meta (reserva de emergência, viagem, carro) e acompanhe quanto falta." botao="Criar primeira meta" onBotao={rolarParaFormulario} />}
 
       <GoalForm onSave={onSave} />
     </div>

@@ -1,7 +1,10 @@
+import { Landmark, Pencil, Trash2 } from "lucide-react";
 import React, { useState } from "react";
+import Vazio, { rolarParaFormulario } from "../components/Vazio.jsx";
 import { TIPOS_BEM } from "../lib/categorias.js";
 import { money, parseValor } from "../lib/formato.js";
 import { patrimonio } from "../lib/patrimonio.js";
+import { confirmar } from "../lib/dialogo.js";
 
 function BemForm({ inicial, onSave, onCancel }) {
   const [nome, setNome] = useState(inicial?.nome || "");
@@ -61,8 +64,8 @@ export default function Patrimony({ data, onBack, onSave, onDelete, onOpenInvest
   const [editando, setEditando] = useState(null);
   const p = patrimonio(data);
 
-  function excluir(item) {
-    if (!window.confirm(`Excluir "${item.nome}"?`)) return;
+  async function excluir(item) {
+    if (!await confirmar(`Excluir "${item.nome}"?`)) return;
     if (editando?.id === item.id) setEditando(null);
     onDelete(item.id);
   }
@@ -80,10 +83,10 @@ export default function Patrimony({ data, onBack, onSave, onDelete, onOpenInvest
         </strong>
         <div className="row-actions">
           <button className="chip-btn edit" onClick={() => setEditando(item)}>
-            ✏️ Editar
+            <Pencil size={16} aria-hidden="true" /> Editar
           </button>
           <button className="chip-btn danger" onClick={() => excluir(item)}>
-            🗑 Excluir
+            <Trash2 size={16} aria-hidden="true" /> Excluir
           </button>
         </div>
       </div>
@@ -98,7 +101,7 @@ export default function Patrimony({ data, onBack, onSave, onDelete, onOpenInvest
         </button>
         <div>
           <div className="eyebrow">Planejamento</div>
-          <h1>🏦 Meu patrimônio</h1>
+          <h1>Meu patrimônio</h1>
         </div>
       </header>
 
@@ -128,7 +131,7 @@ export default function Patrimony({ data, onBack, onSave, onDelete, onOpenInvest
           <h2 className="no-margin">Bens</h2>
           <b>{money(p.totalBens)}</b>
         </div>
-        {p.bens.length === 0 && <p className="muted">Nenhum bem cadastrado.</p>}
+        {p.bens.length === 0 && <Vazio Icone={Landmark} titulo="Nenhum bem cadastrado" texto="Casa, carro e dívidas entram no seu patrimônio líquido." botao="Cadastrar bem" onBotao={rolarParaFormulario} />}
         {p.bens.map((b) => (
           linha(b, false)
         ))}

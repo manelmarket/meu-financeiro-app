@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Copy, LogOut, Share2, Trash2, UserPlus, Users } from "lucide-react";
 import { limparCodigo, mostrarCodigo } from "../lib/familia.js";
 import { esquecerConvite, lerConvitePendente } from "../lib/convite.js";
+import { confirmar } from "../lib/dialogo.js";
 
 function textoDoConvite(codigo) {
   const link = `${window.location.origin}/?convite=${codigo}`;
@@ -103,21 +104,21 @@ export default function Familia({ nuvem, onBack, onIr }) {
   }
 
   async function sair() {
-    const ok = window.confirm(
+    const ok = await confirmar(
       "Sair da família?\n\nVocê deixa de ver os dados da família e voltam os seus dados pessoais (os de antes de entrar)."
     );
     if (ok) await fazer("sair", () => nuvem.sairDaFamilia(), null);
   }
 
   async function tirar(m) {
-    const ok = window.confirm(`Tirar ${m.nome || m.email || "esta pessoa"} da família?\n\nEla deixa de ver os dados da família.`);
+    const ok = await confirmar(`Tirar ${m.nome || m.email || "esta pessoa"} da família?\n\nEla deixa de ver os dados da família.`);
     if (!ok) return;
     const r = await fazer("tirar", () => nuvem.tirarDaFamilia(m.uid), `${m.nome || m.email} saiu da família.`);
     if (r !== null) await carregar();
   }
 
   async function encerrar() {
-    const ok = window.confirm(
+    const ok = await confirmar(
       "Encerrar a família?\n\nAs outras pessoas deixam de ver os dados. Todos os dados e fotos continuam com você."
     );
     if (ok) await fazer("encerrar", () => nuvem.encerrarFamilia(), null);
@@ -153,7 +154,7 @@ export default function Familia({ nuvem, onBack, onIr }) {
         </button>
         <div>
           <div className="eyebrow">Compartilhar</div>
-          <h1>👨‍👩‍👧 Família</h1>
+          <h1>Família</h1>
         </div>
       </header>
 

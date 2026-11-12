@@ -20,6 +20,7 @@ import {
   salvarEstadoNuvem,
   salvarUltimaConta
 } from "../storage/nuvemLocal.js";
+import { confirmar } from "./dialogo.js";
 
 const carregarNuvem = () => import("./nuvem.js");
 
@@ -758,7 +759,7 @@ export default function useNuvem(data, setData) {
       aparelho: [pendente.remoto, "que estavam na nuvem antes de usar os deste aparelho", new Date(), meta.uid]
     };
     if (copias[opcao] && !guardarCopia(...copias[opcao])) {
-      const seguir = window.confirm(
+      const seguir = await confirmar(
         "Não consegui guardar a cópia de segurança (pouco espaço neste aparelho).\n\nContinuar mesmo assim?"
       );
       if (!seguir) return;

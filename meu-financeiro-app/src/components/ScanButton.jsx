@@ -1,3 +1,4 @@
+import { Camera } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { lerConfigIA, lerCupomComIA } from "../lib/ia.js";
 import { comprimirImagem } from "../storage/cupons.js";
@@ -12,7 +13,7 @@ export default function ScanButton({ onResult, onConfigurar, categorias }) {
   if (!cfg) {
     return (
       <p className="scan-off">
-        📷 Para preencher pela foto do cupom, configure a IA no{" "}
+        <Camera size={16} aria-hidden="true" /> Para preencher pela foto do cupom, configure a IA no{" "}
         {onConfigurar ? (
           <button type="button" className="link" onClick={onConfigurar}>
             Assistente
@@ -45,7 +46,7 @@ export default function ScanButton({ onResult, onConfigurar, categorias }) {
   return (
     <div className="scan-box">
       <button type="button" className="secondary wide-btn" onClick={() => entrada.current?.click()} disabled={lendo}>
-        {lendo ? "Lendo o cupom…" : "📷 Ler cupom com IA"}
+        {lendo ? "Lendo o cupom…" : "Ler cupom com IA"}
       </button>
       <input ref={entrada} type="file" accept="image/*" hidden onChange={escolher} />
       {erro && <p className="form-error">{erro}</p>}

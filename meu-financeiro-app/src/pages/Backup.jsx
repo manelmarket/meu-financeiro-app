@@ -1,3 +1,4 @@
+import { Download, FolderOpen, Share2, Trash2 } from "lucide-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   apagarCopia,
@@ -15,6 +16,7 @@ import {
 } from "../lib/backup.js";
 import { lerCupom } from "../storage/cupons.js";
 import EscolhaNuvem, { sairComConfirmacao } from "../components/EscolhaNuvem.jsx";
+import { confirmar } from "../lib/dialogo.js";
 
 function baixarArquivo(arquivo) {
   const url = URL.createObjectURL(arquivo);
@@ -55,7 +57,7 @@ function SecaoNuvem({ nuvem, data }) {
   if (!nuvem.configurada) {
     return (
       <section className="section-card">
-        <h2>☁️ Nuvem</h2>
+        <h2>Nuvem</h2>
         <p className="muted no-margin">A nuvem ainda não foi configurada nesta versão do app.</p>
       </section>
     );
@@ -69,7 +71,7 @@ function SecaoNuvem({ nuvem, data }) {
     const entrando = status === "entrando";
     return (
       <section className="section-card">
-        <h2>☁️ Nuvem</h2>
+        <h2>Nuvem</h2>
         <p className="muted small intro-text">
           Entre com sua conta Google para guardar seus dados na nuvem e usar o mesmo app no celular e no computador. O
           que você lançar em um aparece no outro.
@@ -97,7 +99,7 @@ function SecaoNuvem({ nuvem, data }) {
   if (status === "escolher" && nuvem.escolha) {
     return (
       <section className="section-card">
-        <h2>☁️ Nuvem</h2>
+        <h2>Nuvem</h2>
         {quem}
         <EscolhaNuvem nuvem={nuvem} data={data} />
       </section>
@@ -107,9 +109,9 @@ function SecaoNuvem({ nuvem, data }) {
   if (status === "sessao") {
     return (
       <section className="section-card">
-        <h2>☁️ Nuvem</h2>
+        <h2>Nuvem</h2>
         {quem}
-        <p className="cloud-status warn">⚠️ {mensagem || "Entre de novo na sua conta para continuar sincronizando."}</p>
+        <p className="cloud-status warn">{mensagem || "Entre de novo na sua conta para continuar sincronizando."}</p>
         <div className="btn-grid">
           <button type="button" className="primary" onClick={nuvem.entrar}>
             Entrar com Google
@@ -126,26 +128,26 @@ function SecaoNuvem({ nuvem, data }) {
   if (status === "ok") {
     linha = (
       <p className="cloud-status ok">
-        ✅ Tudo sincronizado{nuvem.sincronizadoEm ? ` · ${quandoFoi(nuvem.sincronizadoEm)}` : ""}
+        Tudo sincronizado{nuvem.sincronizadoEm ? ` · ${quandoFoi(nuvem.sincronizadoEm)}` : ""}
       </p>
     );
   } else if (status === "offline") {
     linha = (
       <p className="cloud-status warn">
-        📴 Sem internet agora. Seus dados ficam guardados aqui e vão para a nuvem quando a conexão voltar.
+        Sem internet agora. Seus dados ficam guardados aqui e vão para a nuvem quando a conexão voltar.
       </p>
     );
   } else if (status === "erro") {
-    linha = <p className="form-error cloud-status">⚠️ {mensagem}</p>;
+    linha = <p className="form-error cloud-status">{mensagem}</p>;
   } else if (status === "entrando") {
     linha = <p className="cloud-status">Abrindo a janela de login do Google…</p>;
   } else {
-    linha = <p className="cloud-status">🔄 Sincronizando…</p>;
+    linha = <p className="cloud-status">Sincronizando…</p>;
   }
 
   return (
     <section className="section-card">
-      <h2>☁️ Nuvem</h2>
+      <h2>Nuvem</h2>
       {quem}
       {linha}
       <p className="muted small intro-text">
@@ -249,7 +251,7 @@ export default function Backup({ data, hoje, nuvem, onBack, onRestaurar }) {
     }
 
     const quando = backup.criadoEm ? ` de ${dataHoraBR(backup.criadoEm)}` : "";
-    const ok = window.confirm(
+    const ok = await confirmar(
       `Restaurar o backup${quando}?\n\n` +
         `Ele tem ${descreverContagem(contarDados(backup.dados))}.\n\n` +
         `Os dados atuais deste aparelho${nuvemLigada ? (nuvem.familia ? " e da família inteira (todas as pessoas)" : " e da nuvem") : ""} serão trocados pelos do backup. ` +
@@ -284,8 +286,8 @@ export default function Backup({ data, hoje, nuvem, onBack, onRestaurar }) {
     }
   }
 
-  function descartarCopia() {
-    if (!window.confirm("Apagar a cópia de segurança deste aparelho?")) return;
+  async function descartarCopia() {
+    if (!await confirmar("Apagar a cópia de segurança deste aparelho?")) return;
     apagarCopia(copia);
     setCopia(lerCopia(dono));
   }
@@ -298,14 +300,14 @@ export default function Backup({ data, hoje, nuvem, onBack, onRestaurar }) {
         </button>
         <div>
           <div className="eyebrow">Seus dados</div>
-          <h1>☁️ Backup e nuvem</h1>
+          <h1>Backup e nuvem</h1>
         </div>
       </header>
 
       <SecaoNuvem nuvem={nuvem} data={data} />
 
       <section className="section-card">
-        <h2>💾 Backup em arquivo</h2>
+        <h2>Backup em arquivo</h2>
         <p className="muted small intro-text">
           Um arquivo com todos os seus dados ({contagem}) e as fotos dos cupons. Guarde no Google Drive, no e-mail ou no
           computador. Também serve para passar os dados para outro aparelho.
@@ -320,15 +322,15 @@ export default function Backup({ data, hoje, nuvem, onBack, onRestaurar }) {
 
         <div className="stack">
           <button type="button" className="primary wide-btn" onClick={baixar} disabled={ocupado}>
-            💾 Baixar backup
+            <Download size={16} aria-hidden="true" /> Baixar backup
           </button>
           {compartilhar && (
             <button type="button" className="secondary wide-btn" onClick={enviarPara} disabled={ocupado}>
-              📤 Enviar backup (Drive, WhatsApp, e-mail…)
+              <Share2 size={16} aria-hidden="true" /> Enviar backup (Drive, WhatsApp, e-mail…)
             </button>
           )}
           <button type="button" className="ghost wide-btn" onClick={() => entradaRef.current?.click()} disabled={ocupado}>
-            📂 Restaurar um backup
+            <FolderOpen size={16} aria-hidden="true" /> Restaurar um backup
           </button>
           <input
             ref={entradaRef}
@@ -343,17 +345,17 @@ export default function Backup({ data, hoje, nuvem, onBack, onRestaurar }) {
 
       {copia && (
         <section className="section-card">
-          <h2>🛟 Cópia de segurança</h2>
+          <h2>Cópia de segurança</h2>
           <p className="muted small intro-text">
             Cópia dos dados {copia.motivo}, de {dataHoraBR(copia.em)}. Se precisar, baixe e use o botão Restaurar um
             backup.
           </p>
           <div className="row-actions">
             <button type="button" className="chip-btn info" onClick={baixarCopia}>
-              💾 Baixar essa cópia
+              <Download size={16} aria-hidden="true" /> Baixar essa cópia
             </button>
             <button type="button" className="chip-btn danger" onClick={descartarCopia}>
-              🗑 Apagar cópia
+              <Trash2 size={16} aria-hidden="true" /> Apagar cópia
             </button>
           </div>
         </section>

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine } from "lucide-react";
+import { ArrowDownToLine, ArrowLeftRight, ArrowUpFromLine, Pencil, Trash2 } from "lucide-react";
 import MovimentoBanco from "../components/MovimentoBanco.jsx";
 import { diaMesBR, money, parseValor } from "../lib/formato.js";
 import { bancoDoCartao, estiloDoBanco } from "../lib/bancos.js";
 import { resumoDosBancos } from "../lib/saldos.js";
 import { rotuloDoSubtipo } from "../lib/transferencias.js";
+import { confirmar } from "../lib/dialogo.js";
 
 function dataDoMomento(ms) {
   const d = new Date(Number(ms) || 0);
@@ -83,10 +84,10 @@ function PainelDoBanco({ item, onEditar, onExcluir, onMover }) {
         </div>
         <div className="cc-actions">
           <button type="button" className="cc-btn" onClick={onEditar}>
-            ✏️ Editar
+            <Pencil size={16} aria-hidden="true" /> Editar
           </button>
           <button type="button" className="cc-btn" title="Excluir banco" aria-label={`Excluir ${banco.nome}`} onClick={onExcluir}>
-            🗑
+            <Trash2 size={16} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -163,9 +164,9 @@ export default function Bancos({ data, hoje, onSalvar, onExcluir, onTransferir }
     setMovendo(null);
   }
 
-  function excluir(banco) {
+  async function excluir(banco) {
     const pergunta = `Excluir o banco ${banco.nome}?\n\nOs lançamentos continuam; só deixam de mexer nesse saldo.`;
-    if (window.confirm(pergunta)) onExcluir(banco.id);
+    if (await confirmar(pergunta)) onExcluir(banco.id);
   }
 
   return (
@@ -173,7 +174,7 @@ export default function Bancos({ data, hoje, onSalvar, onExcluir, onTransferir }
       <header className="topbar">
         <div>
           <div className="eyebrow">Contas</div>
-          <h1>🏦 Meus bancos</h1>
+          <h1>Meus bancos</h1>
         </div>
       </header>
 
