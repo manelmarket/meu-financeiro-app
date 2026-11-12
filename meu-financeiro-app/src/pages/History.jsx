@@ -6,8 +6,9 @@ import { acharBanco } from "../lib/saldos.js";
 import { mapaDeCategorias, infoDaCategoria } from "../lib/categorias.js";
 import { caminhoDaTransferencia, ehTransferencia, rotuloDoSubtipo } from "../lib/transferencias.js";
 import { usarAparencia } from "../lib/aparencia.js";
-import { resumoDoMes } from "../lib/mes.js";
-import { MESES, hojeISO, mesDaData, money, somarDias } from "../lib/formato.js";
+import { MESES, arredondar, hojeISO, mesDaData, money, somarDias } from "../lib/formato.js";
+import { PERIODOS, dentroDoPeriodo, intervaloDoPeriodo } from "../lib/periodo.js";
+import MonthPicker from "../components/MonthPicker.jsx";
 
 // "Pix (Nubank) + Dinheiro" — e, se parte do gasto foi no cartão, "+ cartão Itaú"
 function comoFoiPago(item, data) {
@@ -51,14 +52,42 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
   const moderno = estilo === "banco" || estilo === "vidro";
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState("todos");
+  // período: começa em "Este mês" (o mês passado não aparece misturado)
+  const hoje = hojeISO();
+  const [periodo, setPeriodo] = useState("mes");
+  const [mesEscolhido, setMesEscolhido] = useState(() => mesDaData(somarDias(`${mesDaData(hoje)}-01`, -1)));
+  const intervalo = intervaloDoPeriodo(periodo, hoje, mesEscolhido);
   const mapa = useMemo(() => mapaDeCategorias(data), [data]);
+  // do período e da busca (os totais não dependem do filtro de tipo)
+  const doPeriodo = useMemo(
+    () =>
+      data.lancamentos
+        .filter((x) => x && dentroDoPeriodo(x.data, intervalo))
+        .filter((x) => String(x.descricao || "").toLowerCase().includes(busca.toLowerCase())),
+    [data, busca, intervalo.inicio, intervalo.fim]
+  );
   const lista = useMemo(
     () =>
-      [...data.lancamentos]
-        .filter((x) => x && (filtro === "todos" || x.tipo === filtro))
-        .filter((x) => String(x.descricao || "").toLowerCase().includes(busca.toLowerCase()))
-        .sort((a, b) => b.id - a.id),
-    [data, busca, filtro]
+      doPeriodo
+        .filter((x) => filtro === "todos" || x.tipo === filtro)
+        .sort((a, b) => String(b.data).localeCompare(String(a.data)) || b.id - a.id),
+    [doPeriodo, filtro]
+  );
+  const totais = {
+    entradas: arredondar(doPeriodo.filter((x) => x.tipo === "entrada").reduce((t, x) => t + (Number(x.valor) || 0), 0)),
+    saidas: arredondar(doPeriodo.filter((x) => x.tipo === "saida").reduce((t, x) => t + (Number(x.valor) || 0), 0))
+  };
+  const escolhaDoPeriodo = (
+    <>
+      <div className="chips periodo-filtros" role="radiogroup" aria-label="Período">
+        {PERIODOS.map(([id, rotulo]) => (
+          <button key={id} role="radio" aria-checked={periodo === id} className={periodo === id ? "active-chip" : ""} onClick={() => setPeriodo(id)}>
+            {rotulo}
+          </button>
+        ))}
+      </div>
+      {periodo === "outro" && <MonthPicker mes={mesEscolhido} mesHoje={mesDaData(hoje)} onChange={setMesEscolhido} />}
+    </>
   );
 
   const lancEditando = editando != null ? data.lancamentos.find((l) => l && l.id === editando) : null;
@@ -108,8 +137,6 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
   }
 
   if (moderno) {
-    const hoje = hojeISO();
-    const r = resumoDoMes(data, mesDaData(hoje), hoje);
     const porDia = [];
     for (const item of [...lista].sort((a, b) => String(b.data).localeCompare(String(a.data)) || b.id - a.id)) {
       const titulo = tituloDoDia(item.data, hoje);
@@ -125,6 +152,7 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
           </div>
         </header>
         <input className="search extrato-busca" placeholder="Buscar lançamento" aria-label="Buscar no extrato" value={busca} onChange={(e) => setBusca(e.target.value)} />
+        {escolhaDoPeriodo}
         <div className="chips extrato-filtros" role="radiogroup" aria-label="Filtro">
           {FILTROS.map(([id, rotulo]) => (
             <button key={id} role="radio" aria-checked={filtro === id} className={filtro === id ? "active-chip" : ""} onClick={() => setFiltro(id)}>
@@ -134,15 +162,15 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
         </div>
         <div className="grid2 extrato-resumo">
           <section className="mini-card positive">
-            <span>Entradas em {MESES[Number(hoje.slice(5, 7)) - 1].toLowerCase()}</span>
-            <strong>{money(r.receitas)}</strong>
+            <span>Entradas {intervalo.rotulo}</span>
+            <strong>{money(totais.entradas)}</strong>
           </section>
           <section className="mini-card negative">
-            <span>Saídas em {MESES[Number(hoje.slice(5, 7)) - 1].toLowerCase()}</span>
-            <strong>{money(r.despesas)}</strong>
+            <span>Gastos lançados {intervalo.rotulo}</span>
+            <strong>{money(totais.saidas)}</strong>
           </section>
         </div>
-        {porDia.length === 0 && <p className="muted extrato-vazio">Nada por aqui neste filtro.</p>}
+        {porDia.length === 0 && <p className="muted extrato-vazio">Nada por aqui {intervalo.rotulo}.</p>}
         {porDia.map((grupo) => (
           <section className="extrato-dia" key={grupo.titulo}>
             <h2>{grupo.titulo}</h2>
@@ -192,6 +220,10 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
       <section className="section-card">
         <p className="hint extrato-dica">Toque num lançamento para editar.</p>
         <input className="search" placeholder="Buscar lançamento..." value={busca} onChange={(e) => setBusca(e.target.value)} />
+        {escolhaDoPeriodo}
+        <p className="periodo-totais">
+          Entradas {intervalo.rotulo}: <b className="in">{money(totais.entradas)}</b> · Gastos: <b className="out">{money(totais.saidas)}</b>
+        </p>
         <div className="chips">
           {FILTROS.map(([id, rotulo]) => (
             <button key={id} className={filtro === id ? "active-chip" : ""} onClick={() => setFiltro(id)}>
@@ -199,7 +231,7 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria }) 
             </button>
           ))}
         </div>
-        {lista.length === 0 && <p className="muted">Nenhum lançamento por aqui.</p>}
+        {lista.length === 0 && <p className="muted">Nenhum lançamento {intervalo.rotulo}.</p>}
         {lista.map((item) => {
           if (ehTransferencia(item)) {
             return (
