@@ -8,6 +8,7 @@ import PagarFatura from "../components/PagarFatura.jsx";
 import { faturasParaPagar, resumoDoCartao } from "../lib/cartao.js";
 import { money, rotuloMes } from "../lib/formato.js";
 import { resumoDosBancos } from "../lib/saldos.js";
+import { confirmar } from "../lib/dialogo.js";
 
 export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewPurchase, onCalendar, onPay }) {
   // fatura sendo paga: { cartaoId, mes }
@@ -23,12 +24,12 @@ export default function Cards({ data, hoje, onSaveCard, onDelete, onOpen, onNewP
     return () => clearTimeout(tempo);
   }, [aviso]);
 
-  function excluirCartao(cartao) {
+  async function excluirCartao(cartao) {
     const n = (cartao.compras || []).length;
     const aviso = n
       ? `Excluir o cartão ${cartao.nome} e as ${n} compras lançadas nele?`
       : `Excluir o cartão ${cartao.nome}?`;
-    if (window.confirm(aviso)) onDelete(cartao.id);
+    if (await confirmar(aviso)) onDelete(cartao.id);
   }
 
   // a janela sempre usa os dados de agora (se a fatura foi paga em outro aparelho, ela fecha)

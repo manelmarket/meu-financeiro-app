@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import RingMeter from "../components/RingMeter.jsx";
 import { dataBR, money, parseValor } from "../lib/formato.js";
+import { confirmar } from "../lib/dialogo.js";
 
 function GoalForm({ inicial, onSave, onCancel }) {
   const [nome, setNome] = useState(inicial?.nome || "");
@@ -94,8 +95,8 @@ export default function Goals({ data, onSave, onDelete, onMove }) {
   const totalGuardado = metas.reduce((t, m) => t + Number(m.atual || 0), 0);
   const totalObjetivo = metas.reduce((t, m) => t + Number(m.objetivo || 0), 0);
 
-  function excluir(meta) {
-    if (window.confirm(`Excluir a meta "${meta.nome}"?`)) onDelete(meta.id);
+  async function excluir(meta) {
+    if (await confirmar(`Excluir a meta "${meta.nome}"?`)) onDelete(meta.id);
   }
 
   return (

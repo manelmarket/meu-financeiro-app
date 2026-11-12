@@ -5,6 +5,7 @@ import { SUGESTOES_CONTAS } from "../lib/categorias.js";
 import { resumoDaConta, resumoDoMesDasContas } from "../lib/contasFixas.js";
 import { dataBR, diaMesBR, money, nomeMes, parseValor } from "../lib/formato.js";
 import { acharBanco, resumoDosBancos } from "../lib/saldos.js";
+import { confirmar } from "../lib/dialogo.js";
 
 // nome do banco de um pagamento ("" quando não descontou de nenhum banco)
 function nomeDoBanco(dados, id) {
@@ -138,14 +139,14 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
     return () => clearTimeout(tempo);
   }, [aviso]);
 
-  function excluir(conta) {
+  async function excluir(conta) {
     const comBanco = (Array.isArray(conta.pagamentos) ? conta.pagamentos : []).some(
       (p) => p && p.bancoId != null && p.bancoId !== ""
     );
     const pergunta = `Excluir a conta fixa "${conta.nome}"? Ela sai de todos os meses.${
       comBanco ? " Os pagamentos já feitos continuam descontados dos bancos." : ""
     }`;
-    if (!window.confirm(pergunta)) return;
+    if (!await confirmar(pergunta)) return;
     if (editando?.id === conta.id) setEditando(null);
     onDelete(conta.id);
   }
@@ -159,12 +160,12 @@ export default function Bills({ data, hoje, onBack, onSave, onDelete, onToggle, 
     return { ok: true };
   }
 
-  function desfazer(conta, p) {
+  async function desfazer(conta, p) {
     const banco = p.bancoId != null && p.bancoId !== "" ? acharBanco(data, p.bancoId) : null;
     const pergunta = `Desfazer o pagamento de ${nomeMes(p.mes)} de ${conta.nome} (${money(Number(p.valor))})?${
       banco ? ` O valor volta para o banco (${banco.nome}).` : ""
     }`;
-    if (!window.confirm(pergunta)) return;
+    if (!await confirmar(pergunta)) return;
     const res = onDesfazerPagamento(conta.id, p.id);
     setAviso(res?.erro ? res.erro : `Pagamento de ${nomeMes(p.mes)} de ${conta.nome} desfeito.`);
   }

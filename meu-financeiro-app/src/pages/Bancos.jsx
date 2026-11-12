@@ -5,6 +5,7 @@ import { diaMesBR, money, parseValor } from "../lib/formato.js";
 import { bancoDoCartao, estiloDoBanco } from "../lib/bancos.js";
 import { resumoDosBancos } from "../lib/saldos.js";
 import { rotuloDoSubtipo } from "../lib/transferencias.js";
+import { confirmar } from "../lib/dialogo.js";
 
 function dataDoMomento(ms) {
   const d = new Date(Number(ms) || 0);
@@ -163,9 +164,9 @@ export default function Bancos({ data, hoje, onSalvar, onExcluir, onTransferir }
     setMovendo(null);
   }
 
-  function excluir(banco) {
+  async function excluir(banco) {
     const pergunta = `Excluir o banco ${banco.nome}?\n\nOs lançamentos continuam; só deixam de mexer nesse saldo.`;
-    if (window.confirm(pergunta)) onExcluir(banco.id);
+    if (await confirmar(pergunta)) onExcluir(banco.id);
   }
 
   return (

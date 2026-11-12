@@ -15,6 +15,7 @@ import {
 } from "../lib/backup.js";
 import { lerCupom } from "../storage/cupons.js";
 import EscolhaNuvem, { sairComConfirmacao } from "../components/EscolhaNuvem.jsx";
+import { confirmar } from "../lib/dialogo.js";
 
 function baixarArquivo(arquivo) {
   const url = URL.createObjectURL(arquivo);
@@ -249,7 +250,7 @@ export default function Backup({ data, hoje, nuvem, onBack, onRestaurar }) {
     }
 
     const quando = backup.criadoEm ? ` de ${dataHoraBR(backup.criadoEm)}` : "";
-    const ok = window.confirm(
+    const ok = await confirmar(
       `Restaurar o backup${quando}?\n\n` +
         `Ele tem ${descreverContagem(contarDados(backup.dados))}.\n\n` +
         `Os dados atuais deste aparelho${nuvemLigada ? (nuvem.familia ? " e da família inteira (todas as pessoas)" : " e da nuvem") : ""} serão trocados pelos do backup. ` +
@@ -284,8 +285,8 @@ export default function Backup({ data, hoje, nuvem, onBack, onRestaurar }) {
     }
   }
 
-  function descartarCopia() {
-    if (!window.confirm("Apagar a cópia de segurança deste aparelho?")) return;
+  async function descartarCopia() {
+    if (!await confirmar("Apagar a cópia de segurança deste aparelho?")) return;
     apagarCopia(copia);
     setCopia(lerCopia(dono));
   }

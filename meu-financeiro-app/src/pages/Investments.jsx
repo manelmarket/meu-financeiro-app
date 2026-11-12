@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { TIPOS_INVESTIMENTO } from "../lib/categorias.js";
 import { arredondar, money, parseValor } from "../lib/formato.js";
 import { totaisDeInvestimentos } from "../lib/patrimonio.js";
+import { confirmar } from "../lib/dialogo.js";
 
 function pctRendimento(investido, rendimento) {
   if (!(investido > 0)) return "";
@@ -113,8 +114,8 @@ export default function Investments({ data, onBack, onSave, onDelete }) {
   })).filter((t) => t.valor > 0);
   const maior = Math.max(1, ...porTipo.map((t) => t.valor));
 
-  function excluir(inv) {
-    if (!window.confirm(`Excluir o investimento "${inv.nome}"?`)) return;
+  async function excluir(inv) {
+    if (!await confirmar(`Excluir o investimento "${inv.nome}"?`)) return;
     if (editando?.id === inv.id) setEditando(null);
     if (atualizando === inv.id) setAtualizando(null);
     onDelete(inv.id);

@@ -115,6 +115,8 @@ import { desfazerPagamento, excluirEmprestimo, registrarPagamento, salvarEmprest
 import { desfazerPagamentoDaConta, pagarConta } from "./lib/contasFixas";
 import { comPerfilDaPessoa, perfilDaPessoa } from "./lib/familia";
 import { lerConvitePendente } from "./lib/convite";
+import { avisar, confirmar } from "./lib/dialogo";
+import DialogosDoApp from "./components/DialogosDoApp";
 
 // Aba do menu que fica acesa em cada tela
 const ABA_DA_TELA = {
@@ -538,6 +540,8 @@ export default function App(){
 
     }));
 
+    avisar(compras?.length && !lancamento ? "Compra lançada no cartão" : "Lançamento salvo");
+
     ir("home");
 
   }
@@ -570,6 +574,8 @@ export default function App(){
 
     setData(d=>{ const r = registrarTransferencia(d, form); return r.erro ? d : r.dados; });
 
+    avisar("Transferência registrada");
+
     if(voltarParaOInicio) ir("home");
 
     return { ok:true };
@@ -599,7 +605,21 @@ export default function App(){
 
     const item = data.lancamentos.find(x=>x.id===id);
 
-    if(item?.cupomId) apagarCupom(item.cupomId).catch(()=>{});
+    let desfeito = false;
+
+    if(item?.cupomId) setTimeout(()=>{ if(!desfeito) apagarCupom(item.cupomId).catch(()=>{}); }, 7000);
+
+    if(item) avisar(`"${item.descricao || "Lançamento"}" excluído`, {
+
+      desfazer: ()=>{
+
+        desfeito = true;
+
+        setData(d=> d.lancamentos.some(x=>x.id===item.id) ? d : { ...d, lancamentos:[ ...d.lancamentos, item ] });
+
+      }
+
+    });
 
     setData(d=>{
 
@@ -625,6 +645,8 @@ export default function App(){
     if(mudancas.cupomId!==undefined && fotoAntiga && fotoAntiga!==mudancas.cupomId) apagarCupom(fotoAntiga).catch(()=>{});
 
     setData(d=>{ const r = editarLancamento(d, id, mudancas); return r.erro ? d : r.dados; });
+
+    avisar("Alterações salvas");
 
     return { ok:true };
 
@@ -801,6 +823,8 @@ export default function App(){
 
     }));
 
+    avisar("Pagamento da fatura registrado");
+
   }
 
 
@@ -902,6 +926,8 @@ export default function App(){
     if(previa.erro) return previa;
 
     setData(d=>{ const r = pagarConta(d, id, form, agora); return r.erro ? d : r.dados; });
+
+    avisar("Conta marcada como paga");
 
     return { ok:true };
 
@@ -1020,7 +1046,7 @@ export default function App(){
 
     const naNuvem = Boolean(nuvem.usuario);
 
-    const confirmar = window.confirm(
+    const confirmar = await confirmar(
       "Restaurar os dados de demonstração?\n\n" +
       "Isso APAGA todos os seus lançamentos, cartões, compras, contas fixas, metas, investimentos e bens deste aparelho." +
       (naNuvem ? "\n\nEste aparelho também sai da sua conta na nuvem (os dados da nuvem continuam guardados lá)." : "")
@@ -1047,7 +1073,7 @@ export default function App(){
 
     if(!guardarCopia(data, "antes de restaurar um backup", new Date(), nuvem.usuario?.uid || null)){
 
-      const seguir = window.confirm(
+      const seguir = await confirmar(
         "Não consegui guardar uma cópia de segurança dos dados atuais (pouco espaço neste aparelho).\n\n" +
         "Restaurar o backup mesmo assim?"
       );
@@ -1329,9 +1355,9 @@ export default function App(){
         hoje={hoje}
         onBack={()=>ir("home")}
         onIgnorar={(chave)=>setData(d=>ignorarAssinatura(d, chave))}
-        onVirarConta={(a)=>{
+        onVirarConta={async (a)=>{
 
-          if(!window.confirm(`Cadastrar ${a.nome} como conta fixa de ${a.mensal.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})} todo dia ${Number(a.ultima.slice(8,10))}?\n\nDaqui para frente, marque como paga em Contas fixas em vez de lançar o gasto (senão ele conta duas vezes).`)) return;
+          if(!await confirmar(`Cadastrar ${a.nome} como conta fixa de ${a.mensal.toLocaleString("pt-BR",{style:"currency",currency:"BRL"})} todo dia ${Number(a.ultima.slice(8,10))}?\n\nDaqui para frente, marque como paga em Contas fixas em vez de lançar o gasto (senão ele conta duas vezes).`)) return;
 
           saveBill({ nome:a.nome.slice(0,40), valor:a.mensal, dia:Number(a.ultima.slice(8,10)), categoria:a.categoria });
 
@@ -1470,6 +1496,8 @@ export default function App(){
 
         <AvisoAtualizacao />
 
+        <DialogosDoApp />
+
         <Entrada nuvem={nuvem} data={data} />
 
       </div>
@@ -1485,6 +1513,8 @@ export default function App(){
     <div className="app-shell">
 
       <AvisoAtualizacao />
+
+        <DialogosDoApp />
 
       {avisoJarvis &&
         <div

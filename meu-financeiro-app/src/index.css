@@ -1282,3 +1282,25 @@ button:disabled{opacity:.6;cursor:default}
 .transaction b,.transaction span{overflow-wrap:anywhere}
 .transaction .tx-right{flex-shrink:0}
 .tag-cartao{font-size:11px;color:var(--apagado);white-space:nowrap}
+
+/* ----- janela de confirmação e avisos do app ----- */
+.dialogo{max-width:380px;padding:22px 20px 18px;gap:10px;text-align:left;border-radius:22px}
+.dialogo h2{margin:0;font-size:18px;line-height:1.3;color:var(--texto)}
+.dialogo-texto{margin:0;font-size:14px;line-height:1.5;color:var(--texto-3);white-space:pre-line}
+.dialogo-icone{width:44px;height:44px;border-radius:50%;background:var(--erro-fundo);color:var(--erro-forte);display:flex;align-items:center;justify-content:center}
+.dialogo-botoes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+.dialogo-botoes button{min-height:48px}
+.primary.perigo{background:var(--erro-forte)}
+.avisos-app{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(92px + env(safe-area-inset-bottom));width:min(480px,calc(100% - 24px));display:flex;flex-direction:column;gap:8px;z-index:1200;pointer-events:none}
+.aviso-app{pointer-events:auto;display:flex;align-items:center;gap:10px;padding:12px 10px 12px 14px;border-radius:16px;background:#111827;color:#fff;font-size:14px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.aviso-app span{flex:1;min-width:0}
+.aviso-app.ok svg:first-child{color:#4ade80}
+.aviso-app.erro svg:first-child{color:#fca5a5}
+.aviso-app.info svg:first-child{color:#93c5fd}
+.aviso-desfazer{border:0;background:transparent;color:#a5b4fc;font-weight:800;font-size:14px;padding:6px 8px}
+.aviso-fechar{border:0;background:transparent;color:#cbd5e1;padding:4px;display:flex}
+@media (prefers-reduced-motion:no-preference){
+  :root:not([data-animacoes="nao"]) .aviso-app{animation:sobe-aparece .25s cubic-bezier(.2,.8,.2,1) backwards}
+  :root:not([data-animacoes="nao"]) .dialogo{animation:surge .22s cubic-bezier(.2,.8,.2,1) backwards}
+}
+.modal-backdrop.dialogo-fundo{z-index:1150}

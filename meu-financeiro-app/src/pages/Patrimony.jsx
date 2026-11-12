@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { TIPOS_BEM } from "../lib/categorias.js";
 import { money, parseValor } from "../lib/formato.js";
 import { patrimonio } from "../lib/patrimonio.js";
+import { confirmar } from "../lib/dialogo.js";
 
 function BemForm({ inicial, onSave, onCancel }) {
   const [nome, setNome] = useState(inicial?.nome || "");
@@ -61,8 +62,8 @@ export default function Patrimony({ data, onBack, onSave, onDelete, onOpenInvest
   const [editando, setEditando] = useState(null);
   const p = patrimonio(data);
 
-  function excluir(item) {
-    if (!window.confirm(`Excluir "${item.nome}"?`)) return;
+  async function excluir(item) {
+    if (!await confirmar(`Excluir "${item.nome}"?`)) return;
     if (editando?.id === item.id) setEditando(null);
     onDelete(item.id);
   }

@@ -13,6 +13,7 @@ import { datasDaFatura, mesDaFatura, valoresDasParcelas } from "../lib/cartao.js
 import { MAXIMO_DE_PARCELAS, montarLancamento, pareceFatura } from "../lib/lancar.js";
 import { CRIAR_CARTEIRA, NOME_DA_CARTEIRA, acharCarteira, montarTransferencia } from "../lib/transferencias.js";
 import { comprimirImagem, salvarCupom } from "../storage/cupons.js";
+import { confirmar } from "../lib/dialogo.js";
 
 const OPCOES_PARCELAS = Array.from({ length: MAXIMO_DE_PARCELAS }, (_, i) => i + 1);
 const FORMAS_DE_RECEITA = FORMAS_PAGAMENTO.filter((f) => f !== "Cartão");
@@ -247,7 +248,7 @@ export default function NewEntry({
     const previa = montarLancamento(form, cartoes);
     if (previa.erro) return setErro(previa.erro);
     if (tipo === "saida" && previa.lancamento && pareceFatura(descricao) && cartoes.length > 0) {
-      const seguir = window.confirm(
+      const seguir = await confirmar(
         "Isso parece o pagamento de uma fatura de cartão.\n\nAs compras do cartão já contam como gasto: lançar o pagamento como gasto conta duas vezes. O certo é usar o botão Pagar no cartão (o valor sai do banco sem virar despesa).\n\nLançar como gasto mesmo assim?"
       );
       if (!seguir) return;

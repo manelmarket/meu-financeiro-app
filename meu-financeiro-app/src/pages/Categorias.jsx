@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { CategoriaBadge, CategoriaForm } from "../components/Categoria.jsx";
 import { listarCategorias, usosDaCategoria } from "../lib/categorias.js";
+import { confirmar } from "../lib/dialogo.js";
 
 function textoDosUsos(n) {
   if (n === 0) return "Nenhum registro ainda";
@@ -14,12 +15,12 @@ export default function Categorias({ data, onBack, onSave, onDelete }) {
   const categorias = listarCategorias(data);
   const proprias = categorias.filter((c) => !c.doApp).length;
 
-  function excluir(c) {
+  async function excluir(c) {
     const usos = usosDaCategoria(data, c.nome);
     const pergunta =
       `Excluir a categoria ${c.nome}?` +
       (usos ? `\n\n${textoDosUsos(usos)} passa${usos > 1 ? "m" : ""} para "Outros". Nada é apagado.` : "");
-    if (window.confirm(pergunta)) {
+    if (await confirmar(pergunta)) {
       onDelete(c.id);
       if (editando === c.id) setEditando(null);
     }

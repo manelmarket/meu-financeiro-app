@@ -10,6 +10,7 @@ import { lerAparencia, mudarAparencia } from "../lib/aparencia.js";
 import { apagarCupom } from "../storage/cupons.js";
 import { primeiroNome } from "../lib/perfil.js";
 import { lerAbrirNoJarvis, salvarAbrirNoJarvis } from "../lib/jarvis.js";
+import { confirmar } from "../lib/dialogo.js";
 
 const CHAVE_CONVERSA = "meu_financeiro_jarvis_conversa";
 const CHAVE_VOZ = "meu_financeiro_jarvis_voz";
@@ -314,8 +315,8 @@ export default function Jarvis({ data, setData, hoje, perfil, comPerfil, guardar
     setAbrirAqui(ligado);
   }
 
-  function limpar() {
-    if (!window.confirm("Apagar a conversa com o Jarvis? (seus dados não mudam)")) return;
+  async function limpar() {
+    if (!await confirmar("Apagar a conversa com o Jarvis? (seus dados não mudam)")) return;
     setMensagens([]);
   }
 

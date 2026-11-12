@@ -9,6 +9,7 @@ import { usarAparencia } from "../lib/aparencia.js";
 import { MESES, arredondar, hojeISO, mesDaData, money, somarDias } from "../lib/formato.js";
 import { PERIODOS, dentroDoPeriodo, intervaloDoPeriodo } from "../lib/periodo.js";
 import MonthPicker from "../components/MonthPicker.jsx";
+import { confirmar } from "../lib/dialogo.js";
 
 // "Pix (Nubank) + Dinheiro" — e, se parte do gasto foi no cartão, "+ cartão Itaú"
 function comoFoiPago(item, data) {
@@ -125,8 +126,8 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
         if (!r?.erro) setEditando(null);
         return r;
       }}
-      onExcluir={() => {
-        if (!window.confirm(`Excluir "${lancEditando.descricao || "lançamento"}"?`)) return;
+      onExcluir={async () => {
+        if (!await confirmar(`Excluir "${lancEditando.descricao || "lançamento"}"?`)) return;
         onDelete(lancEditando.id);
         setEditando(null);
       }}
@@ -156,10 +157,10 @@ export default function History({ data, onDelete, onEditar, onCriarCategoria, on
     </>
   );
 
-  function excluir(item) {
+  async function excluir(item) {
     if (ehTransferencia(item)) {
       const pergunta = `Excluir ${rotuloDoSubtipo(item.subtipo).toLowerCase()} de ${money(item.valor)} (${caminhoDaTransferencia(data, item)})?\n\nO saldo dos bancos volta ao que era.`;
-      if (!window.confirm(pergunta)) return;
+      if (!await confirmar(pergunta)) return;
     }
     onDelete(item.id);
   }

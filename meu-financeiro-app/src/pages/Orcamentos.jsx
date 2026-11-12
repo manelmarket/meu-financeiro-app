@@ -3,6 +3,7 @@ import MonthPicker from "../components/MonthPicker.jsx";
 import { mesDaData, money, nomeMes, parseValor } from "../lib/formato.js";
 import { orcamentoDoMes, porcentagem } from "../lib/orcamento.js";
 import { infoDaCategoria, mapaDeCategorias } from "../lib/categorias.js";
+import { confirmar } from "../lib/dialogo.js";
 
 function FormLimite({ categoria, limite, onSalvar, onRemover, onCancelar }) {
   const [valor, setValor] = useState(limite ? String(limite).replace(".", ",") : "");
@@ -67,8 +68,8 @@ export default function Orcamentos({ data, hoje, onBack, onSave }) {
     setEditando(null);
   }
 
-  function remover(categoria) {
-    if (!window.confirm(`Remover o limite de ${categoria}? Os gastos continuam como estão.`)) return;
+  async function remover(categoria) {
+    if (!await confirmar(`Remover o limite de ${categoria}? Os gastos continuam como estão.`)) return;
     onSave(categoria, null);
     setEditando(null);
   }

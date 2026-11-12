@@ -11,6 +11,7 @@ import {
   salvarConfigIA,
   testarIA
 } from "../lib/ia.js";
+import { confirmar } from "../lib/dialogo.js";
 
 export const ICONE_FRASE = { aviso: "⚠️", ok: "✅", dica: "💡", info: "📌" };
 
@@ -66,8 +67,8 @@ export function ConfigIA({ config, onChange }) {
     }
   }
 
-  function remover() {
-    if (!window.confirm("Remover a chave de IA deste aparelho?")) return;
+  async function remover() {
+    if (!await confirmar("Remover a chave de IA deste aparelho?")) return;
     removerConfigIA();
     setChave("");
     setModelo("");

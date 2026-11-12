@@ -21,6 +21,7 @@ import {
 } from "../lib/cartao.js";
 import { acharBanco, resumoDosBancos } from "../lib/saldos.js";
 import { apagarCupom, comprimirImagem, salvarCupom } from "../storage/cupons.js";
+import { confirmar, avisar } from "../lib/dialogo.js";
 
 const OPCOES_PARCELAS = Array.from({ length: 12 }, (_, i) => i + 1);
 
@@ -333,9 +334,9 @@ export default function CardDetails({
     setAviso(`Pagamento de ${money(pagamento.valor)} registrado na fatura de ${rotuloMes(pagamento.fatura)}.`);
   }
 
-  function desfazerPagamento(pagamento) {
+  async function desfazerPagamento(pagamento) {
     const pergunta = `Desfazer o pagamento de ${money(pagamento.valor)} da fatura de ${rotuloMes(pagamento.fatura)}?`;
-    if (!window.confirm(pergunta)) return;
+    if (!await confirmar(pergunta)) return;
     onUndoPay(cartao.id, pagamento.id);
     setAviso("Pagamento desfeito.");
   }
@@ -372,7 +373,7 @@ export default function CardDetails({
         cupomId = null;
       }
     } catch {
-      window.alert("Não foi possível guardar a foto neste aparelho. A compra será salva sem a foto nova.");
+      avisar("Não consegui guardar a foto neste aparelho. A compra foi salva sem a foto nova.", { tipo: "erro" });
     }
 
     if (anterior && anterior !== cupomId) apagarCupom(anterior).catch(() => {});
@@ -382,13 +383,13 @@ export default function CardDetails({
     fecharForm();
   }
 
-  function excluir(compra) {
+  async function excluir(compra) {
     const n = Number(compra.parcelas) || 1;
     const pergunta =
       n > 1
         ? `Excluir a compra "${compra.descricao}" e todas as ${n} parcelas?`
         : `Excluir a compra "${compra.descricao}"?`;
-    if (window.confirm(pergunta)) onDeletePurchase(cartao.id, compra);
+    if (await confirmar(pergunta)) onDeletePurchase(cartao.id, compra);
   }
 
   return (

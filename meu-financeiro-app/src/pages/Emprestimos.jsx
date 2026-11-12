@@ -9,6 +9,7 @@ import {
   resumoDosEmprestimos,
   valorSugerido
 } from "../lib/emprestimos.js";
+import { confirmar } from "../lib/dialogo.js";
 
 // Tela "Empréstimos": o que a pessoa pegou emprestado (Peguei) e o que ela emprestou (Emprestei).
 // Cada empréstimo pode ser em parcelas (valores do contrato) ou sem parcelas (paga quando puder).
@@ -590,7 +591,7 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
     if (pagando != null && (!itemPagando || itemPagando.resumo.situacao === "quitado")) setPagando(null);
   }, [pagando, itemPagando]);
 
-  function excluir({ emprestimo: e }) {
+  async function excluir({ emprestimo: e }) {
     const pagamentos = pagamentosDoEmprestimo(e);
     const n = pagamentos.length;
     const comBanco = pagamentos.some((p) => p.bancoId != null && p.bancoId !== "");
@@ -600,13 +601,13 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
         ? " O que já entrou nos bancos continua lá."
         : " O que já saiu dos bancos continua descontado.";
     const pergunta = `Excluir o empréstimo "${nomeDoEmprestimo(e)}"${n ? ` e os ${n} pagamentos registrados nele` : ""}?${nosBancos}`;
-    if (!window.confirm(pergunta)) return;
+    if (!await confirmar(pergunta)) return;
     const res = onExcluir(e.id);
     setAviso(res?.erro ? res.erro : `Empréstimo "${nomeDoEmprestimo(e)}" excluído.`);
     if (editando === e.id) setEditando(null);
   }
 
-  function desfazer({ emprestimo: e }, p) {
+  async function desfazer({ emprestimo: e }, p) {
     const banco = p.bancoId != null && p.bancoId !== "" ? acharBanco(data, p.bancoId) : null;
     const noBanco = !banco
       ? ""
@@ -614,7 +615,7 @@ export default function Emprestimos({ data, hoje, onBack, onSalvar, onExcluir, o
         ? ` O valor sai do banco (${banco.nome}).`
         : ` O valor volta para o banco (${banco.nome}).`;
     const pergunta = `Desfazer ${e.tipo === "peguei" ? "o pagamento" : "o recebimento"} de ${money(Number(p.valor))}${p.parcela ? ` (parcela ${p.parcela})` : ""}?${noBanco}`;
-    if (!window.confirm(pergunta)) return;
+    if (!await confirmar(pergunta)) return;
     const res = onDesfazer(e.id, p.id);
     if (res?.erro) setAviso(res.erro);
   }

@@ -3,6 +3,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { diaMesBR, mesDaData, money, nomeMes, parseValor } from "../lib/formato.js";
 import { FORMAS_DE_RECEITA_FIXA, diaNoMes, lerReceitasFixas, situacaoNoMes } from "../lib/receitasFixas.js";
 import { lerBancos } from "../lib/saldos.js";
+import { confirmar } from "../lib/dialogo.js";
 
 const TEXTO_DA_SITUACAO = {
   recebida: "recebida",
@@ -161,7 +162,7 @@ export default function ReceitasFixas({ data, hoje, onBack, onSalvar, onExcluir,
                   type="button"
                   className="icone-btn perigo"
                   aria-label={`Excluir ${r.nome}`}
-                  onClick={() => window.confirm(`Excluir a receita fixa ${r.nome}? (o que já foi lançado continua)`) && onExcluir(r.id)}
+                  onClick={async () => (await confirmar(`Excluir a receita fixa ${r.nome}?\n\nO que já foi lançado continua.`)) && onExcluir(r.id)}
                 >
                   <Trash2 size={16} />
                 </button>
