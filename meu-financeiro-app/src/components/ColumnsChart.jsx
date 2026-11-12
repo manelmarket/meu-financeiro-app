@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MESES, lerMes, money, rotuloMes } from "../lib/formato.js";
+import { MESES, lerMes, money, moneyCurto, rotuloMes } from "../lib/formato.js";
 
 // Evolução mês a mês: colunas de Receitas e Despesas, um eixo só (cores do tema: ver index.css).
 const COR = { receitas: "var(--graf-receitas)", despesas: "var(--graf-despesas)" };
@@ -64,12 +64,12 @@ export default function ColumnsChart({ meses, mesSelecionado }) {
         <b>{rotuloMes(destaque.mes)}</b>
         <span>
           <i className="line-key" style={{ background: COR.receitas }} />
-          <strong>{money(destaque.receitas)}</strong>
+          <strong>{ativo === null ? moneyCurto(destaque.receitas) : money(destaque.receitas)}</strong>
           <small>receitas</small>
         </span>
         <span>
           <i className="line-key" style={{ background: COR.despesas }} />
-          <strong>{money(destaque.despesas)}</strong>
+          <strong>{ativo === null ? moneyCurto(destaque.despesas) : money(destaque.despesas)}</strong>
           <small>despesas</small>
         </span>
       </div>

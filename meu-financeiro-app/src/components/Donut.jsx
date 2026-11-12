@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { money } from "../lib/formato.js";
+import { money, moneyCurto } from "../lib/formato.js";
 
 // Pizza (rosca) das despesas: 1º, 2º e 3º maiores em tons da cor do tema (do escuro ao claro)
 // e "Outros" em cinza. As cores indicam a posição no ranking; o nome vem sempre na legenda.
@@ -75,7 +75,7 @@ export default function Donut({ fatias, total, titulo }) {
           {selecionada ? selecionada.nome : "Total"}
         </text>
         <text x={CX} y={CY + 14} textAnchor="middle" className="donut-value">
-          {money(selecionada ? selecionada.valor : total)}
+          {selecionada ? money(selecionada.valor) : moneyCurto(total)}
         </text>
         {selecionada && (
           <text x={CX} y={CY + 32} textAnchor="middle" className="donut-label">

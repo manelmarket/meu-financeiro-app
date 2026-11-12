@@ -1362,3 +1362,15 @@ strong,b,.num,.teclado button,.lancar-m-valor strong,.heroi-saldo strong,input[i
 .bv-pontos i.ativo{width:24px;background:var(--primaria)}
 .bv-seguir{display:inline-flex;align-items:center;gap:8px;min-height:52px;padding:0 24px}
 @media (prefers-reduced-motion:no-preference){:root:not([data-animacoes="nao"]) .bv-corpo{animation:tela-vai .3s cubic-bezier(.2,.8,.2,1)}}
+
+/* ----- arrastar para o lado (Extrato) ----- */
+.arrasta{position:relative;overflow:hidden}
+.arrasta-frente{position:relative;background:var(--superficie);touch-action:pan-y;transition:transform .22s cubic-bezier(.2,.8,.2,1);user-select:none;-webkit-user-select:none}
+[data-estilo="vidro"] .arrasta-frente{background:transparent}
+[data-estilo="vidro"] .arrasta.aberto .arrasta-frente{background:var(--superficie-3);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.arrasta-acoes{position:absolute;top:0;right:0;bottom:0;display:flex}
+.arrasta-acoes button{flex:1;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:700;background:var(--primaria-suave-2);color:var(--primaria-tinta)}
+.arrasta-acoes button.perigo{background:var(--erro-forte);color:#fff}
+.section-card .arrasta:not(:last-child) .transaction{border-bottom:1px solid var(--borda-2)}
+.section-card .arrasta .transaction{border-bottom:0}
+.extrato-lista .arrasta:not(:last-child) .extrato-item{border-bottom:1px solid var(--borda-2)}

@@ -1,6 +1,6 @@
 import React from "react";
 import { ArrowLeftRight, Bell, CalendarCheck, Eye, EyeOff, Mic, Plus } from "lucide-react";
-import { money, nomeMes } from "../lib/formato.js";
+import { money, moneyCurto, nomeMes } from "../lib/formato.js";
 import { resumoDosBancos } from "../lib/saldos.js";
 import { nomeParaMostrar, primeiroNome } from "../lib/perfil.js";
 import { esconderValores, usarValoresEscondidos } from "../lib/privacidade.js";
@@ -23,7 +23,7 @@ export default function HeroBanco({ data, perfil, conta, mes, saldoDoMes, avisos
   const detalhe = temBancos
     ? bancos
         .slice(0, 2)
-        .map((b) => `${b.banco.nome} ${mostrar(b.atual)}`)
+        .map((b) => `${b.banco.nome} ${moneyCurto(b.atual)}`)
         .join(" · ") + (bancos.length > 2 ? ` · +${bancos.length - 2}` : "")
     : `Receitas menos despesas de ${nomeMes(mes)}`;
 
